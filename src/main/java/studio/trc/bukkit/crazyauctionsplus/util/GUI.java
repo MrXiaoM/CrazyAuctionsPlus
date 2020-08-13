@@ -618,6 +618,8 @@ public class GUI
             player.sendMessage(Messages.getValue("Item-Doesnt-Exist"));
             return;
         }
+        MarketGoods mg = market.getMarketGoods(uid);
+        bidding.put(player.getUniqueId(), (int) mg.getPrice());
         Inventory inv = Bukkit.createInventory(null, 27, PluginControl.color(config.getString("Settings.Bidding-On-Item")));
         if (!bidding.containsKey(player.getUniqueId())) bidding.put(player.getUniqueId(), 0);
         if (Version.getCurrentVersion().isNewer(Version.v1_12_R1)) {
@@ -644,6 +646,7 @@ public class GUI
         
         inv.setItem(4, getBiddingItem(player, uid));
         player.openInventory(inv);
+
         GUIAction.openingGUI.put(player.getUniqueId(), GUIType.BIDDING_ITEM);
     }
     
