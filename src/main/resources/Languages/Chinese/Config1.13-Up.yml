@@ -129,9 +129,13 @@ Settings:
         Toggle: true
         Sound: 'UI_BUTTON_CLICK'
         #可用声音的列表: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
+    #物品黑名单（以下物品禁止上架到市场）
     BlackList:
     - 'BEDROCK'
     - 'END_PORTAL_FRAME'
+    #标签黑名单（包含此标签的物品禁止上架到市场）
+    Lore-Blacklist:
+    - '已绑定'
     #告示牌商店
     #当玩家点击告示牌时打开指定玩家的个人商品界面的功能
     Shop-Sign:

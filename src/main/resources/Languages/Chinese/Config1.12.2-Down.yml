@@ -130,9 +130,13 @@ Settings:
         Sound: 'CLICK'
         #1.8 声音列表在这里: http://badbones69.com/javadocs/1.8.8/org/bukkit/Sound.html
         #1.9 声音列表在这里: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
+    #物品黑名单（以下物品禁止上架到市场）
     BlackList:
     - '7'
     - '120'
+    #标签黑名单（包含此标签的物品禁止上架到市场）
+    Lore-Blacklist:
+    - '已绑定'
     #告示牌商店
     #当玩家点击告示牌时打开指定玩家的个人商品界面的功能
     Shop-Sign:

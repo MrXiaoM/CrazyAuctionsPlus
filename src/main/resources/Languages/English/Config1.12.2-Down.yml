@@ -87,6 +87,9 @@ Settings:
     BlackList: #Item Black List
     - '7'
     - '120'
+    #Item lores blacklist (If this lore text is included, it will not be listed into market)
+    Lore-Blacklist: 
+    - '[Blacklist]' #If this text "[Blacklist]" is included in item's lore, it will not be listed into market.
     #Sign's Shop
     #When the player clicks on the sign, open the shop viewer of the specified player
     Shop-Sign:

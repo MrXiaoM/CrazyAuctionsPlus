@@ -83,9 +83,13 @@ Settings:
         Toggle: true #Disable the clicking sound.
         Sound: 'UI_BUTTON_CLICK' #Make sure if you use 1.8 or lower you use the 1.8 sound and 1.9 and up use 1.9 sounds. The default sound is 1.8.
         #Sounds are found here: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
-    BlackList: #Item Black List
+    #Item Blacklist
+    BlackList:
     - 'BEDROCK'
     - 'END_PORTAL_FRAME'
+    #Item lores blacklist (If this lore text is included, it will not be listed into market)
+    Lore-Blacklist: 
+    - '[Blacklist]' #If this text "[Blacklist]" is included in item's lore, it will not be listed into market.
     #Sign's Shop
     #When the player clicks on the sign, open the shop viewer of the specified player
     Shop-Sign:

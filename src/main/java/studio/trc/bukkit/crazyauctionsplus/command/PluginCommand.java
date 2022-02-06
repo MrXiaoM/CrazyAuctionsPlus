@@ -203,7 +203,7 @@ public class PluginCommand
                                 return true;
                             }
                             if (args.length == 2) {
-                                Messages.sendMessage(sender, "Admin-Command.Info.Help");
+                                Messages.sendMessage(sender, "Admin-Command.RollBack.Help");
                                 return true;
                             } else if (args.length >= 3) {
                                 File backupFile = new File("plugins/CrazyAuctionsPlus/Backup/" + args[2]);
@@ -1415,6 +1415,14 @@ public class PluginCommand
                             Messages.sendMessage(sender, "CrazyAuctions-Buy");
                             return true;
                         }
+                        if (PluginControl.isItemBlacklisted(item)) {
+                            Messages.sendMessage(player, "Item-BlackListed");
+                            return true;
+                        }
+                        if (PluginControl.isItemLoreBlacklisted(item)) {
+                            Messages.sendMessage(player, "Item-LoreBlackListed");
+                            return true;
+                        }
                         item.setAmount(amount);
                         MarketGoods goods = new MarketGoods(
                             market.makeUID(),
@@ -1576,11 +1584,13 @@ public class PluginCommand
                                 }
                             }
                         }
-                        for (String id : FileManager.Files.CONFIG.getFile().getStringList("Settings.BlackList")) {
-                            if (item.getType() == PluginControl.makeItem(id, 1).getType()) {
-                                Messages.sendMessage(player, "Item-BlackListed");
-                                return true;
-                            }
+                        if (PluginControl.isItemBlacklisted(item)) {
+                            Messages.sendMessage(player, "Item-BlackListed");
+                            return true;
+                        }
+                        if (PluginControl.isItemLoreBlacklisted(item)) {
+                            Messages.sendMessage(player, "Item-LoreBlackListed");
+                            return true;
                         }
                         if (!FileManager.Files.CONFIG.getFile().getBoolean("Settings.Allow-Damaged-Items")) {
                             for (Material i : getDamageableItems()) {

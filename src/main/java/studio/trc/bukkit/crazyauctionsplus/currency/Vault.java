@@ -1,7 +1,6 @@
 package studio.trc.bukkit.crazyauctionsplus.currency;
 
 import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -13,7 +12,6 @@ import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
 public class Vault {
     
     public static Economy econ = null;
-    public static EconomyResponse r;
     
     public static boolean hasVault() {
         return Bukkit.getServer().getPluginManager().getPlugin("Vault") != null;

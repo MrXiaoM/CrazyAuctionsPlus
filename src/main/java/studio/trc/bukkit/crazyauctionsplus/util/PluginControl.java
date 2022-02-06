@@ -229,6 +229,8 @@ public class PluginControl
     }
     
     public static boolean isNumber(String value) {
+        if (value.equalsIgnoreCase("Infinity")) return false;
+        if (value.equalsIgnoreCase("NaN")) return false;
         try {
             Double.valueOf(value);
             return true;
@@ -570,6 +572,15 @@ public class PluginControl
             }
         }
         return false;
+    }
+    
+    public static boolean isItemBlacklisted(ItemStack item) {
+        return FileManager.Files.CONFIG.getFile().getStringList("Settings.BlackList").stream().anyMatch(id -> item.getType() == PluginControl.makeItem(id, 1).getType());
+    }
+    
+    public static boolean isItemLoreBlacklisted(ItemStack item) {
+        if (item.getItemMeta() == null) return false;
+        return FileManager.Files.CONFIG.getFile().getStringList("Settings.Lore-Blacklist").stream().anyMatch(text -> item.getItemMeta().getLore().stream().anyMatch(lore -> lore.contains(text)));
     }
     
     public static boolean isWorldDisabled(Player player) {

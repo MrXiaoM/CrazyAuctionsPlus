@@ -59,14 +59,14 @@ public class Join
         /**
          * Written at Jul, 2021
          */
-        if (PluginControl.enableUpdater()) {
+//        if (PluginControl.enableUpdater()) {
             String now = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
             String checkUpdateTime = new SimpleDateFormat("yyyy-MM-dd").format(Updater.getTimeOfLastCheckUpdate());
             if (!now.equals(checkUpdateTime)) {
                 Updater.checkUpdate();
             }
-        }
-        if (Updater.isFoundANewVersion() && PluginControl.enableUpdater()) {
+//        }
+        if (Updater.isFoundANewVersion()) {
             if (PluginControl.hasPermission(player, "Permissions.Updater", false)) {
                 String nowVersion = Bukkit.getPluginManager().getPlugin("CrazyAuctionsPlus").getDescription().getVersion();
                 Map<String, String> placeholders = new HashMap();
