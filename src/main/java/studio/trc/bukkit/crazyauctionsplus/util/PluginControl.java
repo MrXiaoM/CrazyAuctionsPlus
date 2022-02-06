@@ -579,8 +579,11 @@ public class PluginControl
     }
     
     public static boolean isItemLoreBlacklisted(ItemStack item) {
-        if (item.getItemMeta() == null) return false;
-        return FileManager.Files.CONFIG.getFile().getStringList("Settings.Lore-Blacklist").stream().anyMatch(text -> item.getItemMeta().getLore().stream().anyMatch(lore -> lore.contains(text)));
+        if (item.getItemMeta() == null || item.getItemMeta().getLore() == null) return false;
+        return FileManager.Files.CONFIG.getFile().getStringList("Settings.Lore-Blacklist")
+                .stream().anyMatch(text -> 
+                        item.getItemMeta().getLore().stream()
+                                .anyMatch(lore -> lore.contains(text)));
     }
     
     public static boolean isWorldDisabled(Player player) {
