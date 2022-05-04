@@ -1352,7 +1352,7 @@ public class PluginCommand
                         if (!PluginControl.bypassTaxRate(player, ShopType.BUY)) {
                             tax = reward * PluginControl.getTaxRate(player, ShopType.BUY);
                         }
-                        if (CurrencyManager.getMoney(player) < reward) { 
+                        if (CurrencyManager.getMoney(player) < reward + tax) { 
                             HashMap<String, String> placeholders = new HashMap();
                             placeholders.put("%Money_Needed%", String.valueOf((reward + tax) - CurrencyManager.getMoney(player)));
                             placeholders.put("%money_needed%", String.valueOf((reward + tax) - CurrencyManager.getMoney(player)));
