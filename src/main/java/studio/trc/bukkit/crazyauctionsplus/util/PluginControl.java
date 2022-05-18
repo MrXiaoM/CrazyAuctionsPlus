@@ -497,6 +497,29 @@ public class PluginControl
         return maxPage;
     }
     
+    public static int getMaterialAmount(Player player, Material material, ItemMeta meta) {
+        if (player == null) return 0;
+        if (Files.CONFIG.getFile().getBoolean("Settings.Item-NBT-comparison")) {
+            int amount = 0;
+            for (ItemStack targetItem : player.getInventory().getContents()) {
+                if (targetItem == null) continue;
+                if (targetItem.getType().equals(material) && targetItem.getItemMeta().equals(meta)) {
+                    amount += targetItem.getAmount();
+                }
+            }
+            return amount;
+        } else {
+            int amount = 0;
+            for (ItemStack targetItem : player.getInventory().getContents()) {
+                if (targetItem == null) continue;
+                if (targetItem.getType().equals(material)) {
+                    amount += targetItem.getAmount();
+                }
+            }
+            return amount;
+        }
+    }
+    
     public static String convertToTime(long time, boolean isExpire) {
         if (isExpire) {
             return Messages.getValue("Date-Settings.Never");
@@ -552,28 +575,6 @@ public class PluginControl
         return player.getInventory().firstEmpty() == -1;
     }
     
-    public static boolean itemExists(Player player, ItemStack is) {
-        Material material = is.getType();
-        if (Files.CONFIG.getFile().getBoolean("Settings.Item-NBT-comparison")) {
-            for (ItemStack items : player.getInventory().getContents()) {
-                if (items == null) continue;
-                if (items.getType().equals(material) && items.getItemMeta().equals(is.getItemMeta()) && items.getAmount() >= is.getAmount()) {
-                    return true;
-                }
-            }
-        } else {
-            for (ItemStack items : player.getInventory().getContents()) {
-                if (items == null) continue;
-                if (items.getType().equals(material)) {
-                    if (is.getAmount() <= items.getAmount()) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-    
     public static boolean isItemBlacklisted(ItemStack item) {
         return FileManager.Files.CONFIG.getFile().getStringList("Settings.BlackList").stream().anyMatch(id -> item.getType() == PluginControl.makeItem(id, 1).getType());
     }
@@ -596,26 +597,67 @@ public class PluginControl
         }
         return false;
     }
+
+    public static boolean hasMaterial(Player player, ItemStack item) {
+        return hasMaterial(player, item.getType(), item.getItemMeta(), item.getAmount());
+    }
     
-    public static void takeItem(Player player, ItemStack item) {
+    public static boolean hasMaterial(Player player, Material material, ItemMeta meta, int amountRequired) {
+        if (player == null) return false;
+        int amount = getMaterialAmount(player, material, meta);
+        return amountRequired <= amount;
+    }
+
+    public static boolean takeMaterial(Player player, ItemStack item) {
+        return takeMaterial(player, item.getType(), item.getItemMeta(), item.getAmount());
+    }
+    
+    public static boolean takeMaterial(Player player, Material material, ItemMeta meta, int amountRequired) {
+        if (player == null) return false;
+        boolean isChanged = false;
+        ItemStack[] contents = player.getInventory().getContents();
         if (Files.CONFIG.getFile().getBoolean("Settings.Item-NBT-comparison")) {
-            for (ItemStack is : player.getInventory().getContents()) {
-                if (is != null) {
-                    if (item.getType().equals(is.getType()) && item.getItemMeta().equals(is.getItemMeta()) && item.getAmount() <= is.getAmount()) {
-                        is.setAmount(is.getAmount() - item.getAmount());
+            for (int sort = 0; sort < contents.length;sort++) {
+                ItemStack targetItem = contents[sort];
+                if (targetItem == null) continue;
+                if (targetItem.getType().equals(material) && targetItem.getItemMeta().equals(meta)) {
+                    if (amountRequired > targetItem.getAmount()) {
+                        amountRequired -= targetItem.getAmount();
+                        player.getInventory().setItem(sort, new ItemStack(Material.AIR));
+                        isChanged = true;
+                    } else {
+                        if (targetItem.getAmount() == amountRequired) {
+                            player.getInventory().setItem(sort, new ItemStack(Material.AIR));
+                        } else {
+                            targetItem.setAmount(targetItem.getAmount() - amountRequired);
+                        }
+                        isChanged = true;
                         break;
                     }
                 }
             }
         } else {
-            for (ItemStack is : player.getInventory().getContents()) {
-                if (is != null) {
-                    if (item.getType().equals(is.getType()) && item.getAmount() <= is.getAmount()) {
-                        is.setAmount(item.getAmount() - is.getAmount());
+            for (int sort = 0; sort < contents.length;sort++) {
+                ItemStack targetItem = contents[sort];
+                if (targetItem == null) continue;
+                if (targetItem.getType().equals(material)) {
+                    if (amountRequired > targetItem.getAmount()) {
+                        amountRequired -= targetItem.getAmount();
+                        player.getInventory().setItem(sort, new ItemStack(Material.AIR));
+                        isChanged = true;
+                    } else {
+                        if (targetItem.getAmount() == amountRequired) {
+                            player.getInventory().setItem(sort, new ItemStack(Material.AIR));
+                        } else {
+                            targetItem.setAmount(targetItem.getAmount() - amountRequired);
+                        }
+                        isChanged = true;
+                        break;
                     }
                 }
             }
         }
+        return isChanged;
     }
     
     public static void printStackTrace(Exception ex) {

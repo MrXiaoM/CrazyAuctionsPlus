@@ -409,7 +409,7 @@ public class GUIAction
                                                 playClick(player);
                                                 Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable, 3 * 20);
                                                 return;
-                                            } else if (mgs.getShopType().equals(ShopType.BUY) && !PluginControl.itemExists(player, mgs.getItem())) {
+                                            } else if (mgs.getShopType().equals(ShopType.BUY) && !PluginControl.hasMaterial(player, mgs.getItem())) {
                                                 String it = config.getString("Settings.GUISettings.OtherSettings.Not-owned.Item");
                                                 String name = config.getString("Settings.GUISettings.OtherSettings.Not-owned.Name");
                                                 ItemStack I;
@@ -559,7 +559,7 @@ public class GUIAction
                                     return;
                                 }
                                 ItemStack i = mg.getItem();
-                                if (!PluginControl.itemExists(player, i)) {
+                                if (!PluginControl.hasMaterial(player, i)) {
                                     playClick(player);
                                     Messages.sendMessage(player, "Item-Not-Found");
                                     return;
@@ -571,7 +571,10 @@ public class GUIAction
                                 placeholders.put("%reward%", String.valueOf(mg.getReward()));
                                 placeholders.put("%Player%", player.getName());
                                 placeholders.put("%player%", player.getName());
-                                PluginControl.takeItem(player, i);
+                                if (!PluginControl.takeMaterial(player, i)) {
+                                    Messages.sendMessage(player, "Item-Not-Found");
+                                    return;
+                                }
                                 CurrencyManager.addMoney(player, mg.getReward());
                                 Storage playerdata = Storage.getPlayer(Bukkit.getOfflinePlayer(owner));
                                 playerdata.addItem(new ItemMail(playerdata.makeUID(), Bukkit.getOfflinePlayer(owner), mg.getItem(), PluginControl.convertToMill(FileManager.Files.CONFIG.getFile().getString("Settings.Full-Expire-Time")), System.currentTimeMillis(), true));
