@@ -1409,6 +1409,12 @@ public class PluginCommand
                                 Messages.sendMessage(sender, "Unknown-Item", placeholders);
                                 return true;
                             }
+                            if (item.getType().equals(Material.AIR)) {
+                                Map<String, String> placeholders = new HashMap();
+                                placeholders.put("%item%", args[3]);
+                                Messages.sendMessage(sender, "Unknown-Item", placeholders);
+                                return true;
+                            }
                         } else if (PluginControl.getItemInHand(player).getType() != Material.AIR) {
                             item = PluginControl.getItemInHand(player).clone();
                         } else {
