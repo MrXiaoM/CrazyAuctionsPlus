@@ -7,7 +7,7 @@ import org.bukkit.event.HandlerList;
 import studio.trc.bukkit.crazyauctionsplus.util.MarketGoods;
 
 /**
- * @author TRCRedstoner
+ * @author TRCStudioDean
  */
 public class AuctionSellEvent extends Event {
     

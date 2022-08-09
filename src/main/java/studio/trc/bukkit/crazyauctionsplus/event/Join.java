@@ -1,11 +1,9 @@
 package studio.trc.bukkit.crazyauctionsplus.event;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import studio.trc.bukkit.crazyauctionsplus.util.enums.Messages;
+import studio.trc.bukkit.crazyauctionsplus.util.MessageUtil;
 import studio.trc.bukkit.crazyauctionsplus.util.Category;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager;
@@ -35,16 +33,6 @@ public class Join
         if (!Files.CONFIG.getFile().getBoolean("Settings.Join-Message")) return;
         new Thread(() -> {
             try {
-                /**
-                 * Hi, I'm Dean.
-                 * Today is Jul, 2021, I'm writting this message.
-                 * This code was developed in 2020
-                 * I can't understand WHY I FUCKING WRITTEN LIKE THIS.
-                 * WTF is Thread.sleep(2000) ?????
-                 * Why did I do this?? I don't know.
-                 * So I make a decision, I want to remake this plugin.
-                 * If you interesting, you can follow me at spigotmc or Github https://github.com/TRCStudioDean
-                 */
                 Thread.sleep(2000);
             } catch (InterruptedException ex) {
                 PluginControl.printStackTrace(ex);
@@ -52,20 +40,14 @@ public class Join
             if (player == null) return;
             Storage data = Storage.getPlayer(player);
             if (data.getMailNumber() > 0) {
-                Messages.sendMessage(player, "Email-of-player-owned-items");
+                MessageUtil.sendMessage(player, "Email-of-player-owned-items");
             }
         }).start();
         
         /**
          * Written at Jul, 2021
          */
-//        if (PluginControl.enableUpdater()) {
-            String now = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-            String checkUpdateTime = new SimpleDateFormat("yyyy-MM-dd").format(Updater.getTimeOfLastCheckUpdate());
-            if (!now.equals(checkUpdateTime)) {
-                Updater.checkUpdate();
-            }
-//        }
+        PluginControl.checkUpdate();
         if (Updater.isFoundANewVersion()) {
             if (PluginControl.hasPermission(player, "Permissions.Updater", false)) {
                 String nowVersion = Bukkit.getPluginManager().getPlugin("CrazyAuctionsPlus").getDescription().getVersion();
@@ -74,7 +56,12 @@ public class Join
                     placeholders.put("%version%", Updater.getNewVersion());
                     placeholders.put("%link%", Updater.getLink());
                     placeholders.put("%description%", Updater.getDescription());
-                Messages.sendMessage(player, "Updater.Checked", placeholders);
+                MessageUtil.sendMessage(player, "Updater.Checked", placeholders);
+                if (!Updater.getExtraMessages().isEmpty()) {
+                    Updater.getExtraMessages().forEach(message -> {
+                        player.sendMessage(PluginControl.color(message));
+                    });
+                }
             }
         }
     }

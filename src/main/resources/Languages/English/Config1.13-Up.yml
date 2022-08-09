@@ -140,6 +140,55 @@ Settings:
             Messages: 
                 - '{prefix}&aPlayer &e%bidder% &awon the auction for item &r%item% &aat the highest price of &e$%price%&a! Congratulations!'
     GUISettings: #Settings for things in the gui.
+        Auction-Settings:
+            Top-Bidder: #The item for when a player is already the top bidder.
+                Item: 'BARRIER'
+                Name: '&cYou are already the top bidder.'
+            Bidding: #The item in the middle when bidding on an item.
+                Item: 'BLACK_STAINED_GLASS_PANE'
+                Name: '&7Bidding'
+                Lore:
+                - '&7<--&aAdd &cRemove&7-->'
+                - '&9Your Current Bid: &e$%bid%'
+                - '&9Current Top Bid: &e$%topbid%'
+            Bid: #The button for when you want to confirm your bid.
+                Item: 'LIGHT_BLUE_STAINED_GLASS_PANE'
+                Name: '&bBid Now'
+                Lore:
+                - '&7Click here to Bid Now.'
+            Bidding-Buttons:
+                1:
+                    Item: LIME_STAINED_GLASS_PANE
+                    Name: '&a+1'
+                    Slot: 9
+                10:
+                    Item: LIME_STAINED_GLASS_PANE
+                    Name: '&a+10'
+                    Slot: 10
+                100:
+                    Item: LIME_STAINED_GLASS_PANE
+                    Name: '&a+100'
+                    Slot: 11
+                1000:
+                    Item: LIME_STAINED_GLASS_PANE
+                    Name: '&a+1000'
+                    Slot: 12
+                -1:
+                    Item: RED_STAINED_GLASS_PANE
+                    Name: '&c-1'
+                    Slot: 14
+                -10:
+                    Item: RED_STAINED_GLASS_PANE
+                    Name: '&c-10'
+                    Slot: 15
+                -100:
+                    Item: RED_STAINED_GLASS_PANE
+                    Name: '&c-100'
+                    Slot: 16
+                -1000:
+                    Item: RED_STAINED_GLASS_PANE
+                    Name: '&c-1000'
+                    Slot: 17
         Category-Settings:
             GUI-Size: 45 #GUI interface size
             ShopType-Category:
@@ -466,21 +515,6 @@ Settings:
             Not-owned: #When you can't pay for what you need.
                 Item: 'BARRIER'
                 Name: '&cYou do not own this item!'
-            Top-Bidder: #The item for when a player is already the top bidder.
-                Item: 'BARRIER'
-                Name: '&cYou are already the top bidder.'
-            Bidding: #The item in the middle when bidding on an item.
-                Item: 'BLACK_STAINED_GLASS_PANE'
-                Name: '&7Bidding'
-                Lore:
-                - '&7<--&aAdd &cRemove&7-->'
-                - '&9Your Current Bid: &e$%bid%'
-                - '&9Current Top Bid: &e$%topbid%'
-            Bid: #The button for when you want to confirm your bid.
-                Item: 'LIGHT_BLUE_STAINED_GLASS_PANE'
-                Name: '&bBid Now'
-                Lore:
-                - '&7Click here to Bid Now.'
     #Permission's settings
     Permissions:
         #View update information

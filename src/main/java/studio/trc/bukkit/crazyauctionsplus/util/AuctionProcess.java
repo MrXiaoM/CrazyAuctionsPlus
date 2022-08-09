@@ -17,7 +17,6 @@ import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
 import studio.trc.bukkit.crazyauctionsplus.database.Storage;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.Files;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.ProtectedConfiguration;
-import studio.trc.bukkit.crazyauctionsplus.util.enums.Messages;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 
 public class AuctionProcess
@@ -55,7 +54,7 @@ public class AuctionProcess
                             playerdata.addItem(im);
                             market.removeGoods(mg.getUID());
                             if (mg.getItemOwner().getPlayer() != null) {
-                                Messages.sendMessage(mg.getItemOwner().getPlayer(), "Item-Has-Expired", placeholders);
+                                MessageUtil.sendMessage(mg.getItemOwner().getPlayer(), "Item-Has-Expired", placeholders);
                             }
                         } else {
                             UUID buyer = UUID.fromString(mg.getTopBidder().split(":")[1]);
@@ -78,11 +77,11 @@ public class AuctionProcess
                                         Bukkit.getPluginManager().callEvent(event);
                                     }
                                 }.runTask(Main.getInstance());
-                                Messages.sendMessage(player, "Win-Bidding", placeholders);
+                                MessageUtil.sendMessage(player, "Win-Bidding", placeholders);
                             }
                             Player player = Bukkit.getPlayer(seller);
                             if (player != null) {
-                                Messages.sendMessage(player, "Someone-Won-Players-Bid", placeholders);
+                                MessageUtil.sendMessage(player, "Someone-Won-Players-Bid", placeholders);
                             }
                         }
                     } else {

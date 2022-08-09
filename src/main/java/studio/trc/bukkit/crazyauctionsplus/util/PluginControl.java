@@ -42,7 +42,6 @@ import studio.trc.bukkit.crazyauctionsplus.util.AuctionProcess.AuctionUpdateThre
 import studio.trc.bukkit.crazyauctionsplus.util.enums.Version;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.*;
-import studio.trc.bukkit.crazyauctionsplus.util.enums.Messages;
 
 public class PluginControl
 {
@@ -296,6 +295,14 @@ public class PluginControl
         return false;
     }
     
+    public static void checkUpdate() {
+        String now = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String checkUpdateTime = new SimpleDateFormat("yyyy-MM-dd").format(Updater.getTimeOfLastCheckUpdate());
+        if (!now.equals(checkUpdateTime)) {
+            Updater.checkUpdate();
+        }
+    }
+    
     public static boolean isOnline(UUID uuid) {
         return Bukkit.getPlayer(uuid) != null;
     }
@@ -306,14 +313,14 @@ public class PluginControl
                 return true;
             }
         }
-        Messages.sendMessage(p, "Not-Online");
+        MessageUtil.sendMessage(p, "Not-Online");
         return false;
     }
     
     public static boolean hasCommandPermission(Player player, String perm, boolean message) {
         if (Files.CONFIG.getFile().getBoolean("Settings.Permissions.Commands." + perm + ".Default")) return true;
         if (!player.hasPermission(Files.CONFIG.getFile().getString("Settings.Permissions.Commands." + perm + ".Permission"))) {
-            if (message) Messages.sendMessage(player, "No-Permission");
+            if (message) MessageUtil.sendMessage(player, "No-Permission");
             return false;
         }
         return true;
@@ -322,7 +329,7 @@ public class PluginControl
     public static boolean hasCommandPermission(CommandSender sender, String perm, boolean message) {
         if (Files.CONFIG.getFile().getBoolean("Settings.Permissions.Commands." + perm + ".Default")) return true;
         if (!sender.hasPermission(Files.CONFIG.getFile().getString("Settings.Permissions.Commands." + perm + ".Permission"))) {
-            if (message) Messages.sendMessage(sender, "No-Permission");
+            if (message) MessageUtil.sendMessage(sender, "No-Permission");
             return false;
         }
         return true;
@@ -331,7 +338,7 @@ public class PluginControl
     public static boolean hasPermission(Player player, String path, boolean message) {
         if (Files.CONFIG.getFile().getBoolean("Settings." + path + ".Default")) return true;
         if (!player.hasPermission(Files.CONFIG.getFile().getString("Settings." + path + ".Permission"))) {
-            if (message) Messages.sendMessage(player, "No-Permission");
+            if (message) MessageUtil.sendMessage(player, "No-Permission");
             return false;
         }
         return true;
@@ -522,7 +529,7 @@ public class PluginControl
     
     public static String convertToTime(long time, boolean isExpire) {
         if (isExpire) {
-            return Messages.getValue("Date-Settings.Never");
+            return MessageUtil.getValue("Date-Settings.Never");
         }
         Calendar C = Calendar.getInstance();
         Calendar cal = Calendar.getInstance();
@@ -538,16 +545,16 @@ public class PluginControl
         S += total;
         StringBuilder sb = new StringBuilder();
         if (D > 0) {
-            sb.append(D).append(Messages.getValue("Date-Settings.Day")).append(" ");
+            sb.append(D).append(MessageUtil.getValue("Date-Settings.Day")).append(" ");
         }
         if (H > 0) {
-            sb.append(H).append(Messages.getValue("Date-Settings.Hour")).append(" ");
+            sb.append(H).append(MessageUtil.getValue("Date-Settings.Hour")).append(" ");
         }
         if (M > 0) {
-            sb.append(M).append(Messages.getValue("Date-Settings.Minute")).append(" ");
+            sb.append(M).append(MessageUtil.getValue("Date-Settings.Minute")).append(" ");
         }
         if (S > 0) {
-            sb.append(S).append(Messages.getValue("Date-Settings.Second"));
+            sb.append(S).append(MessageUtil.getValue("Date-Settings.Second"));
         }
         return sb.toString();
     }
@@ -672,7 +679,7 @@ public class PluginControl
                 if (stackTraceVisible.get(player)) {
                     Map<String, String> placeholders = new HashMap();
                     placeholders.put("%stacktrace%", sb.toString());
-                    Messages.sendMessage(player, "Admin-Command.PrintStackTrace.Messages", placeholders);
+                    MessageUtil.sendMessage(player, "Admin-Command.PrintStackTrace.Messages", placeholders);
                 }
             }
         }
@@ -680,7 +687,7 @@ public class PluginControl
             if (stackTraceVisible.get(Bukkit.getServer().getConsoleSender())) {
                 Map<String, String> placeholders = new HashMap();
                 placeholders.put("%stacktrace%", sb.toString());
-                Messages.sendMessage(Bukkit.getServer().getConsoleSender(), "Admin-Command.PrintStackTrace.Messages", placeholders);
+                MessageUtil.sendMessage(Bukkit.getServer().getConsoleSender(), "Admin-Command.PrintStackTrace.Messages", placeholders);
             }
         }
     }
@@ -715,7 +722,7 @@ public class PluginControl
                                     item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
                                 }
                                 placeholders.put("%item%", item);
-                                Messages.sendMessage(player, "Item-Has-Expired", placeholders);
+                                MessageUtil.sendMessage(player, "Item-Has-Expired", placeholders);
                             }
                             AuctionExpireEvent event = new AuctionExpireEvent(player, mg, ShopType.BUY);
                             new BukkitRunnable() {
@@ -740,7 +747,7 @@ public class PluginControl
                                     item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
                                 }
                                 placeholders.put("%item%", item);
-                                Messages.sendMessage(player, "Item-Has-Expired", placeholders);
+                                MessageUtil.sendMessage(player, "Item-Has-Expired", placeholders);
                             }
                             AuctionExpireEvent event = new AuctionExpireEvent(player, mg, ShopType.SELL);
                             new BukkitRunnable() {
@@ -1029,6 +1036,8 @@ public class PluginControl
         
         /**
          * Config.yml
+         *//**
+         * Config.yml
          */
         CONFIG,
         
@@ -1043,7 +1052,7 @@ public class PluginControl
         MARKET,
         
         /**
-         * Messages.yml
+         * MessageUtil.yml
          */
         MESSAGES,
         
@@ -1080,7 +1089,7 @@ public class PluginControl
         }
         
         public static void backup() throws SQLException, IOException {
-            String fileName = Messages.getValue("Admin-Command.Backup.Backup-Name").replace("%date%", new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date())) + ".db";
+            String fileName = MessageUtil.getValue("Admin-Command.Backup.Backup-Name").replace("%date%", new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date())) + ".db";
             GlobalMarket market = GlobalMarket.getMarket();
             File folder = new File("plugins/CrazyAuctionsPlus/Backup");
             if (!folder.exists()) folder.mkdir();
@@ -1415,14 +1424,14 @@ public class PluginControl
                     if (sender != null) {
                         Map<String, String> placeholders = new HashMap();
                         placeholders.put("%file%", rollBackFile.getName());
-                        Messages.sendMessage(sender, "Admin-Command.RollBack.Successfully", placeholders);
+                        MessageUtil.sendMessage(sender, "Admin-Command.RollBack.Successfully", placeholders);
                     }
                 }
             } catch (Exception ex) {
                 for (CommandSender sender : senders) {
                     Map<String, String> placeholders = new HashMap();
                     placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
-                    Messages.sendMessage(sender, "Admin-Command.RollBack.Failed", placeholders);
+                    MessageUtil.sendMessage(sender, "Admin-Command.RollBack.Failed", placeholders);
                 }
                 PluginControl.printStackTrace(ex);
             }

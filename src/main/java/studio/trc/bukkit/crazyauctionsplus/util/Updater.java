@@ -7,13 +7,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
+import studio.trc.bukkit.crazyauctionsplus.Main;
 
-import studio.trc.bukkit.crazyauctionsplus.util.enums.Messages;
 
 public class Updater
 {
@@ -22,6 +23,7 @@ public class Updater
     private static String link;
     private static String description;
     private static Thread checkUpdateThread;
+    private static List<String> extraMessages;
     private static Date date = new Date();
     
     /**
@@ -31,15 +33,18 @@ public class Updater
         checkUpdateThread = new Thread(() -> {
             try {
                 String language = FileManager.Files.CONFIG.getFile().getString("Settings.Language");
-                URL url = new URL("https://trc.studio/resources/spigot/crazyauctionsplus/update.yml");
+                URL url = new URL("https://api.trc.studio/resources/spigot/crazyauctionsplus/update.yml");
                 try (Reader reader = new InputStreamReader(url.openStream(), "UTF-8")) {
                     YamlConfiguration yaml = new YamlConfiguration();
                     yaml.load(reader);
                     String version = yaml.getString("latest-version");
+                    String versionBelongingTo = yaml.getString("Version-Belonging-to");
                     String downloadLink = yaml.getString("link");
                     String description_ = "description.Default";
+                    List<String> extra = yaml.getStringList("Extra.Default");
                     if (yaml.get("description." + language) != null) {
                         description_ = yaml.getString("description." + FileManager.Files.CONFIG.getFile().getString("Settings.Language"));
+                        extra = yaml.getStringList("Extra." + FileManager.Files.CONFIG.getFile().getString("Settings.Language"));
                     } else {
                         for (String languages : yaml.getConfigurationSection("description").getKeys(false)) {
                             if (language.contains(languages)) {
@@ -48,24 +53,30 @@ public class Updater
                             }
                         }
                     }
-                    String nowVersion = Bukkit.getPluginManager().getPlugin("CrazyAuctionsPlus").getDescription().getVersion();
-                    if (!nowVersion.equalsIgnoreCase(version)) {
+                    String nowVersion = Main.getInstance().getDescription().getVersion();
+                    if (!nowVersion.startsWith(versionBelongingTo)) {
                         newVersion = version;
                         foundANewVersion = true;
                         link = downloadLink;
                         description = description_;
+                        extraMessages = extra;
                         Map<String, String> placeholders = new HashMap();
                         placeholders.put("%version%", version);
                         placeholders.put("%link%", downloadLink);
                         placeholders.put("%nowVersion%", nowVersion);
                         placeholders.put("%description%", description_);
-                        Messages.sendMessage(Bukkit.getConsoleSender(), "Updater.Checked", placeholders);
+                        MessageUtil.sendMessage(Bukkit.getConsoleSender(), "Updater.Checked", placeholders);
+                        if (!extraMessages.isEmpty()) {
+                            extraMessages.stream().forEach(message -> {
+                                Bukkit.getConsoleSender().sendMessage(PluginControl.color(message));
+                            });
+                        }
                     }
                 } catch (InvalidConfigurationException | IOException ex) {
-                    Messages.sendMessage(Bukkit.getConsoleSender(), "Updater.Error");
+                    MessageUtil.sendMessage(Bukkit.getConsoleSender(), "Updater.Error");
                 }
             } catch (MalformedURLException ex) {
-                Messages.sendMessage(Bukkit.getConsoleSender(), "Updater.Error");
+                MessageUtil.sendMessage(Bukkit.getConsoleSender(), "Updater.Error");
             }
             date = new Date();
         });
@@ -117,5 +128,13 @@ public class Updater
      */
     public static Date getTimeOfLastCheckUpdate() {
         return date;
+    }
+    
+    /**
+     * Get extra messages.
+     * @return 
+     */
+    public static List<String> getExtraMessages() {
+        return extraMessages;
     }
 }

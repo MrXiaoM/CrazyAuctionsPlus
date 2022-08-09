@@ -10,13 +10,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import studio.trc.bukkit.crazyauctionsplus.command.CrazyAuctionsCommand;
+import studio.trc.bukkit.crazyauctionsplus.command.CrazyAuctionsSubCommandType;
 import studio.trc.bukkit.crazyauctionsplus.metrics.Metrics;
-import studio.trc.bukkit.crazyauctionsplus.command.PluginCommand;
 import studio.trc.bukkit.crazyauctionsplus.currency.Vault;
 import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
 import studio.trc.bukkit.crazyauctionsplus.database.engine.MySQLEngine;
@@ -29,7 +31,7 @@ import studio.trc.bukkit.crazyauctionsplus.event.Join;
 import studio.trc.bukkit.crazyauctionsplus.event.GUIAction;
 import studio.trc.bukkit.crazyauctionsplus.event.Quit;
 import studio.trc.bukkit.crazyauctionsplus.event.ShopSign;
-import studio.trc.bukkit.crazyauctionsplus.util.enums.Messages;
+import studio.trc.bukkit.crazyauctionsplus.util.MessageUtil;
 import studio.trc.bukkit.crazyauctionsplus.util.MarketGoods;
 import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
 import studio.trc.bukkit.crazyauctionsplus.util.CrazyAuctions;
@@ -88,12 +90,7 @@ public class Main
         pm.registerEvents(new EasyCommand(), this);
         pm.registerEvents(new ShopSign(), this);
         pm.registerEvents(new AuctionEvents(), this);
-        PluginCommand pc = new PluginCommand();
-        getCommand("CrazyAuctionsPlus").setExecutor(pc);
-        getCommand("CrazyAuctions").setExecutor(pc);
-        getCommand("CrazyAuction").setExecutor(pc);
-        getCommand("CA").setExecutor(pc);
-        getCommand("CAP").setExecutor(pc);
+        registerCommandExecutor();
         startCheck();
         metrics = new Metrics(this, 12254);
         if (language.get("PluginEnabledSuccessfully") != null) getServer().getConsoleSender().sendMessage(language.getProperty("PluginEnabledSuccessfully").replace("{time}", String.valueOf(System.currentTimeMillis() - time)).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
@@ -101,9 +98,7 @@ public class Main
             @Override
             public void run() {
                 Vault.setupEconomy();
-                if (PluginControl.enableUpdater()) {
-                    Updater.checkUpdate();
-                }
+                Updater.checkUpdate();
             }
         }.runTask(this);
     }
@@ -193,7 +188,7 @@ public class Main
                                     } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
                                         placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " "));
                                     }
-                                    Messages.sendMessage(p, "Repricing-Undo", placeholders);
+                                    MessageUtil.sendMessage(p, "Repricing-Undo", placeholders);
                                 }
                                 GUIAction.repricing.remove(p.getUniqueId());
                             } catch (ClassCastException ex) {}
@@ -208,5 +203,15 @@ public class Main
                 RepricingTimeoutCheckThread.start();
             }
         }.runTask(this);
+    }
+    
+    private void registerCommandExecutor() {
+        PluginCommand command = getCommand("ca");
+        CrazyAuctionsCommand commandExecutor = new CrazyAuctionsCommand();
+        command.setExecutor(commandExecutor);
+        command.setTabCompleter(commandExecutor);
+        for (CrazyAuctionsSubCommandType subCommandType : CrazyAuctionsSubCommandType.values()) {
+            CrazyAuctionsCommand.getSubCommands().put(subCommandType.getSubCommandName(), subCommandType.getSubCommand());
+        }
     }
 }
