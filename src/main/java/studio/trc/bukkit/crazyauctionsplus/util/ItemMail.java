@@ -122,8 +122,12 @@ public class ItemMail
      */
     public void giveItem() {
         if (Bukkit.getPlayer(uuid) != null) {
-            Player p = Bukkit.getPlayer(uuid);
-            p.getInventory().addItem(is.clone());
+            Player player = Bukkit.getPlayer(uuid);
+            if (player.getInventory().firstEmpty() != -1) {
+                player.getInventory().addItem(is.clone());
+            } else {
+                player.getWorld().dropItem(player.getLocation(), is.clone());
+            }
             is.setType(Material.AIR);
         }
     }

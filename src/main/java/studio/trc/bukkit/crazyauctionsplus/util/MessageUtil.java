@@ -1,7 +1,6 @@
 package studio.trc.bukkit.crazyauctionsplus.util;
 
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.*;
-import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
 
 import java.util.HashMap;
 import java.util.List;

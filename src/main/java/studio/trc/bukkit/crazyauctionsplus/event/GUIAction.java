@@ -517,7 +517,11 @@ public class GUIAction
                                     Player p = PluginControl.getPlayer(owner);
                                     MessageUtil.sendMessage(p, "Player-Bought-Item", placeholders);
                                 }
-                                player.getInventory().addItem(mg.getItem());
+                                if (player.getInventory().firstEmpty() != -1) {
+                                    player.getInventory().addItem(mg.getItem());
+                                } else {
+                                    player.getWorld().dropItem(player.getLocation(), mg.getItem());
+                                }
                                 market.removeGoods(uid);
                                 playClick(player);
                                 openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);

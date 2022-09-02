@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
@@ -46,9 +48,22 @@ import studio.trc.bukkit.crazyauctionsplus.util.FileManager.*;
 public class PluginControl
 {
     public static Map<CommandSender, Boolean> stackTraceVisible = new HashMap();
+    public static String nmsVersion = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+    private static final Pattern hexColorPattern = Pattern.compile("#[a-fA-F0-9]{6}");
     
-    public static String color(String msg) {
-        return ChatColor.translateAlternateColorCodes('&', msg);
+    public static String color(String text) {
+        if (nmsVersion != null && !nmsVersion.startsWith("v1_7") && !nmsVersion.startsWith("v1_8") && !nmsVersion.startsWith("v1_9") && !nmsVersion.startsWith("v1_10") &&
+            !nmsVersion.startsWith("v1_11") && !nmsVersion.startsWith("v1_12") && !nmsVersion.startsWith("v1_13") && !nmsVersion.startsWith("v1_14") && !nmsVersion.startsWith("v1_15")) {
+            try {
+                Matcher matcher = hexColorPattern.matcher(text);
+                while (matcher.find()) {
+                    String color = text.substring(matcher.start(), matcher.end());
+                    text = text.replace(color, net.md_5.bungee.api.ChatColor.of(color).toString());
+                    matcher = hexColorPattern.matcher(text);
+                }
+            } catch (Throwable t) {}
+        }
+        return ChatColor.translateAlternateColorCodes('&', text);
     }
     
     public static String getPrefix() {
