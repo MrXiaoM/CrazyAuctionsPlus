@@ -8,6 +8,8 @@ api-version: 1.13
 description: Plus version of CrazyAuctions plugin, by TRCStudioDean (TRC Studio & PA Project), The original author was BadBones69.
 depend:
   - Vault
+softdepend:
+  - LangUtils
 commands:
     ca:
         description: Crazy Auctions Plus Main command.

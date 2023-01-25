@@ -730,13 +730,7 @@ public class PluginControl
                             Player player = getPlayer(owner);
                             if (player != null) {
                                 Map<String, String> placeholders = new HashMap();
-                                String item;
-                                try {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem());
-                                } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
-                                }
-                                placeholders.put("%item%", item);
+                                placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                 MessageUtil.sendMessage(player, "Item-Has-Expired", placeholders);
                             }
                             AuctionExpireEvent event = new AuctionExpireEvent(player, mg, ShopType.BUY);
@@ -755,13 +749,7 @@ public class PluginControl
                             Player player = getPlayer(owner);
                             if (player != null) {
                                 Map<String, String> placeholders = new HashMap();
-                                String item;
-                                try {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem());
-                                } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
-                                }
-                                placeholders.put("%item%", item);
+                                placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                 MessageUtil.sendMessage(player, "Item-Has-Expired", placeholders);
                             }
                             AuctionExpireEvent event = new AuctionExpireEvent(player, mg, ShopType.SELL);

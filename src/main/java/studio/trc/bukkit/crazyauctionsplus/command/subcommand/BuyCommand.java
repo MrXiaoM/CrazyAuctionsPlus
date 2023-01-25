@@ -20,11 +20,7 @@ import studio.trc.bukkit.crazyauctionsplus.command.CrazyAuctionsSubCommand;
 import studio.trc.bukkit.crazyauctionsplus.command.CrazyAuctionsSubCommandType;
 import studio.trc.bukkit.crazyauctionsplus.currency.CurrencyManager;
 import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
-import studio.trc.bukkit.crazyauctionsplus.util.FileManager;
-import studio.trc.bukkit.crazyauctionsplus.util.ItemOwner;
-import studio.trc.bukkit.crazyauctionsplus.util.MarketGoods;
-import studio.trc.bukkit.crazyauctionsplus.util.MessageUtil;
-import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
+import studio.trc.bukkit.crazyauctionsplus.util.*;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 
 public class BuyCommand
@@ -156,11 +152,7 @@ public class BuyCommand
             Map<String, String> placeholders = new HashMap();
             placeholders.put("%reward%", String.valueOf(reward));
             placeholders.put("%tax%", String.valueOf(tax));
-            try {
-                placeholders.put("%item%", item.getItemMeta().hasDisplayName() ? item.getItemMeta().getDisplayName() : (String) item.getClass().getMethod("getI18NDisplayName").invoke(item));
-            } catch (Exception ex) {
-                placeholders.put("%item%", item.getItemMeta().hasDisplayName() ? item.getItemMeta().getDisplayName() : item.getType().toString().toLowerCase().replace("_", " "));
-            }
+            placeholders.put("%item%", LangUtilsHook.getItemName(item));
             MessageUtil.sendMessage(player, "Added-Item-For-Acquisition", placeholders);
         }
     }

@@ -1,17 +1,11 @@
 package studio.trc.bukkit.crazyauctionsplus.event;
 
-import studio.trc.bukkit.crazyauctionsplus.util.Category;
-import studio.trc.bukkit.crazyauctionsplus.util.MessageUtil;
+import studio.trc.bukkit.crazyauctionsplus.util.*;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
-import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.*;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.CancelledReason;
-import studio.trc.bukkit.crazyauctionsplus.util.GUI;
-import studio.trc.bukkit.crazyauctionsplus.util.FileManager;
 import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
 import studio.trc.bukkit.crazyauctionsplus.database.Storage;
-import studio.trc.bukkit.crazyauctionsplus.util.MarketGoods;
-import studio.trc.bukkit.crazyauctionsplus.util.ItemMail;
 import studio.trc.bukkit.crazyauctionsplus.api.events.AuctionSellEvent;
 import studio.trc.bukkit.crazyauctionsplus.api.events.AuctionBuyEvent;
 import studio.trc.bukkit.crazyauctionsplus.api.events.AuctionCancelledEvent;
@@ -629,11 +623,7 @@ public class GUIAction
                                 switch (mg.getShopType()) {
                                     case BID: {
                                         Map<String, String> placeholders = new HashMap();
-                                        try {
-                                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem()));
-                                        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " "));
-                                        }
+                                        placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                         MessageUtil.sendMessage(player, "Cancelled-Item-On-Bid", placeholders);
                                         AuctionCancelledEvent event = new AuctionCancelledEvent(player, mg, CancelledReason.PLAYER_FORCE_CANCEL, ShopType.BID);
                                         Bukkit.getPluginManager().callEvent(event);
@@ -655,11 +645,7 @@ public class GUIAction
                                         if (Repricing) {
                                             repricing.put(player.getUniqueId(), new Object[] {mg, String.valueOf(System.currentTimeMillis() + (config.getInt("Settings.Repricing-Timeout") * 1000))});
                                             Map<String, String> placeholders = new HashMap();
-                                            try {
-                                                placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem()));
-                                            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                                placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " "));
-                                            }
+                                            placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                             placeholders.put("%timeout%", config.getString("Settings.Repricing-Timeout"));
                                             MessageUtil.sendMessage(player, "Repricing", placeholders);
                                             playClick(player);
@@ -669,11 +655,7 @@ public class GUIAction
                                         Map<String, String> placeholders = new HashMap();
                                         placeholders.put("%reward%", String.valueOf(mg.getReward()));
                                         placeholders.put("%reward%", String.valueOf(mg.getReward()));
-                                        try {
-                                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem()));
-                                        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " "));
-                                        }
+                                        placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                         MessageUtil.sendMessage(player, "Cancelled-Item-On-Buy", placeholders);
                                         AuctionCancelledEvent event = new AuctionCancelledEvent(player, mg, CancelledReason.PLAYER_FORCE_CANCEL, ShopType.BUY);
                                         Bukkit.getPluginManager().callEvent(event);
@@ -688,11 +670,7 @@ public class GUIAction
                                         if (Repricing) {
                                             repricing.put(player.getUniqueId(), new Object[] {mg, String.valueOf(System.currentTimeMillis() + (config.getInt("Settings.Repricing-Timeout") * 1000))});
                                             Map<String, String> placeholders = new HashMap();
-                                            try {
-                                                placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem()));
-                                            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                                placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " "));
-                                            }
+                                            placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                             placeholders.put("%timeout%", config.getString("Settings.Repricing-Timeout"));
                                             MessageUtil.sendMessage(player, "Repricing", placeholders);
                                             playClick(player);
@@ -700,11 +678,7 @@ public class GUIAction
                                             return;
                                         }
                                         Map<String, String> placeholders = new HashMap();
-                                        try {
-                                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem()));
-                                        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " "));
-                                        }
+                                        placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                         MessageUtil.sendMessage(player, "Cancelled-Item-On-Sale", placeholders);
                                         AuctionCancelledEvent event = new AuctionCancelledEvent(player, mg, CancelledReason.PLAYER_FORCE_CANCEL, ShopType.SELL);
                                         Bukkit.getPluginManager().callEvent(event);
@@ -872,11 +846,7 @@ public class GUIAction
                         Map<String, String> placeholders = new HashMap();
                         placeholders.put("%money%", String.valueOf(money));
                         placeholders.put("%tax%", String.valueOf(tax));
-                        try {
-                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem()));
-                        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " "));
-                        }
+                        placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                         MessageUtil.sendMessage(player, "Repricing-Succeeded", placeholders);
                         repricing.remove(player.getUniqueId());
                         e.setCancelled(true);
@@ -916,11 +886,7 @@ public class GUIAction
                         Map<String, String> placeholders = new HashMap();
                         placeholders.put("%money%", String.valueOf(money));
                         placeholders.put("%tax%", String.valueOf(tax));
-                        try {
-                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem()));
-                        } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                            placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " "));
-                        }
+                        placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                         MessageUtil.sendMessage(player, "Repricing-Succeeded", placeholders);
                         repricing.remove(player.getUniqueId());
                         e.setCancelled(true);

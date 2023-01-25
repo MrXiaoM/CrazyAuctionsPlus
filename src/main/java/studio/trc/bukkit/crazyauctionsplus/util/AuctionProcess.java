@@ -88,12 +88,7 @@ public class AuctionProcess
                         if (config.getBoolean("Settings.Auction-Process-Settings.Countdown-Tips.Enabled")) {
                             long l = (mg.getTimeTillExpire() - System.currentTimeMillis()) / 1000;
                             if (config.get("Settings.Auction-Process-Settings.Countdown-Tips.Times." + l) != null) {
-                                String item;
-                                try {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem());
-                                } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
-                                }
+                                String item = LangUtilsHook.getItemName(mg.getItem());
                                 for (String message : config.getStringList("Settings.Auction-Process-Settings.Countdown-Tips.Times." + l)) {
                                     Bukkit.broadcastMessage(message.replace("%owner%", mg.getItemOwner().getName()).replace("%item%", item).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
                                 }

@@ -31,14 +31,9 @@ import studio.trc.bukkit.crazyauctionsplus.event.Join;
 import studio.trc.bukkit.crazyauctionsplus.event.GUIAction;
 import studio.trc.bukkit.crazyauctionsplus.event.Quit;
 import studio.trc.bukkit.crazyauctionsplus.event.ShopSign;
-import studio.trc.bukkit.crazyauctionsplus.util.MessageUtil;
-import studio.trc.bukkit.crazyauctionsplus.util.MarketGoods;
-import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
-import studio.trc.bukkit.crazyauctionsplus.util.CrazyAuctions;
-import studio.trc.bukkit.crazyauctionsplus.util.FileManager;
+import studio.trc.bukkit.crazyauctionsplus.util.*;
 import studio.trc.bukkit.crazyauctionsplus.util.PluginControl.ReloadType;
 import studio.trc.bukkit.crazyauctionsplus.util.PluginControl.RollBackMethod;
-import studio.trc.bukkit.crazyauctionsplus.util.Updater;
 
 public class Main
     extends JavaPlugin 
@@ -58,6 +53,7 @@ public class Main
     
     @Override
     public void onEnable() {
+        LangUtilsHook.initialize();
         long time = System.currentTimeMillis();
         main = this;
         if (lang.equalsIgnoreCase("zh_cn")) {
@@ -183,11 +179,7 @@ public class Main
                                 Player p = Bukkit.getPlayer(value);
                                 if (p != null) {
                                     Map<String, String> placeholders = new HashMap();
-                                    try {
-                                        placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem()));
-                                    } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                        placeholders.put("%item%", mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " "));
-                                    }
+                                    placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                     MessageUtil.sendMessage(p, "Repricing-Undo", placeholders);
                                 }
                                 GUIAction.repricing.remove(p.getUniqueId());

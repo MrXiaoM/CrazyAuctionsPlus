@@ -34,14 +34,8 @@ import studio.trc.bukkit.crazyauctionsplus.database.Storage;
 import studio.trc.bukkit.crazyauctionsplus.database.StorageMethod;
 import studio.trc.bukkit.crazyauctionsplus.database.engine.MySQLEngine;
 import studio.trc.bukkit.crazyauctionsplus.database.engine.SQLiteEngine;
-import studio.trc.bukkit.crazyauctionsplus.util.FileManager;
+import studio.trc.bukkit.crazyauctionsplus.util.*;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.Files;
-import studio.trc.bukkit.crazyauctionsplus.util.GUI;
-import studio.trc.bukkit.crazyauctionsplus.util.ItemCollection;
-import studio.trc.bukkit.crazyauctionsplus.util.ItemMail;
-import studio.trc.bukkit.crazyauctionsplus.util.MarketGoods;
-import studio.trc.bukkit.crazyauctionsplus.util.MessageUtil;
-import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 
 public class AdminCommand
@@ -520,11 +514,7 @@ public class AdminCommand
             StringBuilder formatList = new StringBuilder();
             for (int i = page * nosp - nosp;i < list.size() && i < page * nosp;i++) {
                 String format = MessageUtil.getValue("Admin-Command.Market.List.Format").replace("%uid%", String.valueOf(list.get(i).getUID())).replace("%money%", String.valueOf(list.get(i).getShopType().equals(ShopType.BUY) ? list.get(i).getReward() : list.get(i).getPrice())).replace("%owner%", list.get(i).getItemOwner().getName());
-                try {
-                    format = format.replace("%item%", list.get(i).getItem().getItemMeta().hasDisplayName() ? list.get(i).getItem().getItemMeta().getDisplayName() : (String) list.get(i).getItem().getClass().getMethod("getI18NDisplayName").invoke(list.get(i).getItem()));
-                } catch (Exception ex) {
-                    format = format.replace("%item%", list.get(i).getItem().getItemMeta().hasDisplayName() ? list.get(i).getItem().getItemMeta().getDisplayName() : list.get(i).getItem().getType().toString().toLowerCase().replace("_", " "));
-                }
+                format = format.replace("%item%", LangUtilsHook.getItemName(list.get(i).getItem()));
                 formatList.append(format);
             }
             int maxpage = ((int) list.size() / nosp) + 1;
@@ -557,11 +547,7 @@ public class AdminCommand
             }
             for (int i = page * nosp - nosp;i < list.size() && i < page * nosp;i++) {
                 String format = MessageUtil.getValue("Admin-Command.Market.List.Format").replace("%uid%", String.valueOf(list.get(i).getUID())).replace("%money%", String.valueOf(list.get(i).getShopType().equals(ShopType.BUY) ? list.get(i).getReward() : list.get(i).getPrice())).replace("%owner%", list.get(i).getItemOwner().getName());
-                try {
-                    format = format.replace("%item%", list.get(i).getItem().getItemMeta().hasDisplayName() ? list.get(i).getItem().getItemMeta().getDisplayName() : (String) list.get(i).getItem().getClass().getMethod("getI18NDisplayName").invoke(list.get(i).getItem()));
-                } catch (Exception ex) {
-                    format = format.replace("%item%", list.get(i).getItem().getItemMeta().hasDisplayName() ? list.get(i).getItem().getItemMeta().getDisplayName() : list.get(i).getItem().getType().toString().toLowerCase().replace("_", " "));
-                }
+                format = format.replace("%item%", LangUtilsHook.getItemName(list.get(i).getItem()));
                 formatList.append(format);
             }
             Map<String, String> placeholders = new HashMap();
@@ -618,11 +604,7 @@ public class AdminCommand
                 return;
             }
             Map<String, String> placeholders = new HashMap();
-            try {
-                placeholders.put("%item%", goods.getItem().getItemMeta().hasDisplayName() ? goods.getItem().getItemMeta().getDisplayName() : (String) goods.getItem().getClass().getMethod("getI18NDisplayName").invoke(goods.getItem()));
-            } catch (Exception ex) {
-                placeholders.put("%item%", goods.getItem().getItemMeta().hasDisplayName() ? goods.getItem().getItemMeta().getDisplayName() : (String) goods.getItem().getType().toString().toLowerCase().replace("_", " "));
-            }
+            placeholders.put("%item%", LangUtilsHook.getItemName(goods.getItem()));
             placeholders.put("%uid%", String.valueOf(uid));
             placeholders.put("%money%", String.valueOf(money));
             if (goods.getShopType().equals(ShopType.BUY)) {
@@ -656,11 +638,7 @@ public class AdminCommand
                 return;
             }
             Map<String, String> placeholders = new HashMap();
-            try {
-                placeholders.put("%item%", goods.getItem().getItemMeta().hasDisplayName() ? goods.getItem().getItemMeta().getDisplayName() : (String) goods.getItem().getClass().getMethod("getI18NDisplayName").invoke(goods.getItem()));
-            } catch (Exception ex) {
-                placeholders.put("%item%", goods.getItem().getItemMeta().hasDisplayName() ? goods.getItem().getItemMeta().getDisplayName() : (String) goods.getItem().getType().toString().toLowerCase().replace("_", " "));
-            }
+            placeholders.put("%item%", LangUtilsHook.getItemName(goods.getItem()));
             placeholders.put("%uid%", String.valueOf(uid));
             market.removeGoods(uid);
             MessageUtil.sendMessage(sender, "Admin-Command.Market.Delete.Succeeded", placeholders);
@@ -827,11 +805,7 @@ public class AdminCommand
             StringBuilder formatList = new StringBuilder();
             for (int i = page * nosp - nosp;i < list.size() && i < page * nosp;i++) {
                 String format = MessageUtil.getValue("Admin-Command.Player.List.Format").replace("%uid%", String.valueOf(list.get(i).getUID()));
-                try {
-                    format = format.replace("%item%", list.get(i).getItem().getItemMeta().hasDisplayName() ? list.get(i).getItem().getItemMeta().getDisplayName() : (String) list.get(i).getItem().getClass().getMethod("getI18NDisplayName").invoke(list.get(i).getItem()));
-                } catch (Exception ex) {
-                    format = format.replace("%item%", list.get(i).getItem().getItemMeta().hasDisplayName() ? list.get(i).getItem().getItemMeta().getDisplayName() : list.get(i).getItem().getType().toString().toLowerCase().replace("_", " "));
-                }
+                format = format.replace("%item%", LangUtilsHook.getItemName(list.get(i).getItem()));
                 formatList.append(format);
             }
             int maxpage = ((int) list.size() / nosp) + 1;
@@ -865,11 +839,7 @@ public class AdminCommand
             }
             for (int i = page * nosp - nosp;i < list.size() && i < page * nosp;i++) {
                 String format = MessageUtil.getValue("Admin-Command.Player.List.Format").replace("%uid%", String.valueOf(list.get(i).getUID()));
-                try {
-                    format = format.replace("%item%", list.get(i).getItem().getItemMeta().hasDisplayName() ? list.get(i).getItem().getItemMeta().getDisplayName() : (String) list.get(i).getItem().getClass().getMethod("getI18NDisplayName").invoke(list.get(i).getItem()));
-                } catch (Exception ex) {
-                    format = format.replace("%item%", list.get(i).getItem().getItemMeta().hasDisplayName() ? list.get(i).getItem().getItemMeta().getDisplayName() : list.get(i).getItem().getType().toString().toLowerCase().replace("_", " "));
-                }
+                format = format.replace("%item%", LangUtilsHook.getItemName(list.get(i).getItem()));
                 formatList.append(format);
             }
             Map<String, String> placeholders = new HashMap();
@@ -985,11 +955,7 @@ public class AdminCommand
                 return;
             }
             Map<String, String> placeholders = new HashMap();
-            try {
-                placeholders.put("%item%", mail.getItem().getItemMeta().hasDisplayName() ? mail.getItem().getItemMeta().getDisplayName() : (String) mail.getItem().getClass().getMethod("getI18NDisplayName").invoke(mail.getItem()));
-            } catch (Exception ex) {
-                placeholders.put("%item%", mail.getItem().getItemMeta().hasDisplayName() ? mail.getItem().getItemMeta().getDisplayName() : (String) mail.getItem().getType().toString().toLowerCase().replace("_", " "));
-            }
+            placeholders.put("%item%", LangUtilsHook.getItemName(mail.getItem()));
             placeholders.put("%uid%", String.valueOf(uid));
             placeholders.put("%player%", name);
             playerdata.removeItem(mail);
