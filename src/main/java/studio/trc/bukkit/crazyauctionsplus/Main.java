@@ -51,6 +51,7 @@ public class Main
     @Override
     public void onEnable() {
         LangUtilsHook.initialize();
+        PAPI.initialize();
         long time = System.currentTimeMillis();
         main = this;
         if (lang.equalsIgnoreCase("zh_cn")) {

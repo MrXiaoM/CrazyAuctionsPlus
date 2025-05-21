@@ -11,6 +11,7 @@ description: Plus version of CrazyAuctions plugin, by TRCStudioDean (TRC Studio 
 depend:
   - Vault
 softdepend:
+  - PlaceholderAPI
   - LangUtils
 commands:
     ca:

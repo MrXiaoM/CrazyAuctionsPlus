@@ -10,6 +10,7 @@ repositories {
     mavenCentral()
     maven("https://repo.codemc.io/repository/maven-public/")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+    maven("https://repo.helpch.at/releases/")
     maven("https://jitpack.io/")
 }
 
@@ -17,6 +18,7 @@ repositories {
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.20-R0.1-SNAPSHOT")
     compileOnly("net.milkbowl.vault:VaultAPI:1.7")
+    compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("com.github.MascusJeoraly:LanguageUtils:1.9")
 
     implementation("org.projectlombok:lombok:1.18.20")
