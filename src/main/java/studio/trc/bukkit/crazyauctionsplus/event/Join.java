@@ -1,18 +1,13 @@
 package studio.trc.bukkit.crazyauctionsplus.event;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import studio.trc.bukkit.crazyauctionsplus.util.MessageUtil;
 import studio.trc.bukkit.crazyauctionsplus.util.Category;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.Files;
 import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
-import studio.trc.bukkit.crazyauctionsplus.util.Updater;
 import studio.trc.bukkit.crazyauctionsplus.database.Storage;
 
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.EventHandler;
@@ -43,26 +38,5 @@ public class Join
                 MessageUtil.sendMessage(player, "Email-of-player-owned-items");
             }
         }).start();
-        
-        /**
-         * Written at Jul, 2021
-         */
-        PluginControl.checkUpdate();
-        if (Updater.isFoundANewVersion()) {
-            if (PluginControl.hasPermission(player, "Permissions.Updater", false)) {
-                String nowVersion = Bukkit.getPluginManager().getPlugin("CrazyAuctionsPlus").getDescription().getVersion();
-                Map<String, String> placeholders = new HashMap();
-                    placeholders.put("%nowVersion%", nowVersion);
-                    placeholders.put("%version%", Updater.getNewVersion());
-                    placeholders.put("%link%", Updater.getLink());
-                    placeholders.put("%description%", Updater.getDescription());
-                MessageUtil.sendMessage(player, "Updater.Checked", placeholders);
-                if (!Updater.getExtraMessages().isEmpty()) {
-                    Updater.getExtraMessages().forEach(message -> {
-                        player.sendMessage(PluginControl.color(message));
-                    });
-                }
-            }
-        }
     }
 }

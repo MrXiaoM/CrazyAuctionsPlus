@@ -29,7 +29,6 @@ public class CrazyAuctionsCommand
     
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        PluginControl.checkUpdate();
         if (args.length == 0) {
             if (!PluginControl.hasCommandPermission(sender, "Access", true)) return true;
             Map<String, String> placeholders = new HashMap();

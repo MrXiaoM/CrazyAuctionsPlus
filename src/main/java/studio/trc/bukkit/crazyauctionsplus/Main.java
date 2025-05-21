@@ -1,7 +1,6 @@
 package studio.trc.bukkit.crazyauctionsplus;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -18,7 +17,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import studio.trc.bukkit.crazyauctionsplus.command.CrazyAuctionsCommand;
 import studio.trc.bukkit.crazyauctionsplus.command.CrazyAuctionsSubCommandType;
-import studio.trc.bukkit.crazyauctionsplus.metrics.Metrics;
 import studio.trc.bukkit.crazyauctionsplus.currency.Vault;
 import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
 import studio.trc.bukkit.crazyauctionsplus.database.engine.MySQLEngine;
@@ -43,7 +41,6 @@ public class Main
     
     public static Main main;
     public static Properties language = new Properties();
-    public static Metrics metrics;
     
     private static final String lang = Locale.getDefault().toString();
     
@@ -88,13 +85,11 @@ public class Main
         pm.registerEvents(new AuctionEvents(), this);
         registerCommandExecutor();
         startCheck();
-        metrics = new Metrics(this, 12254);
         if (language.get("PluginEnabledSuccessfully") != null) getServer().getConsoleSender().sendMessage(language.getProperty("PluginEnabledSuccessfully").replace("{time}", String.valueOf(System.currentTimeMillis() - time)).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
         new BukkitRunnable() {
             @Override
             public void run() {
                 Vault.setupEconomy();
-                Updater.checkUpdate();
             }
         }.runTask(this);
     }

@@ -309,15 +309,7 @@ public class PluginControl
         }
         return false;
     }
-    
-    public static void checkUpdate() {
-        String now = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
-        String checkUpdateTime = new SimpleDateFormat("yyyy-MM-dd").format(Updater.getTimeOfLastCheckUpdate());
-        if (!now.equals(checkUpdateTime)) {
-            Updater.checkUpdate();
-        }
-    }
-    
+
     public static boolean isOnline(UUID uuid) {
         return Bukkit.getPlayer(uuid) != null;
     }
