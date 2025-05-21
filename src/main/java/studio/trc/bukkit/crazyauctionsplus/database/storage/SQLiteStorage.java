@@ -9,12 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -30,13 +29,13 @@ public class SQLiteStorage
     extends SQLiteEngine
     implements Storage
 {
-    public static volatile Map<UUID, SQLiteStorage> cache = new HashMap();
+    public static volatile Map<UUID, SQLiteStorage> cache = new HashMap<>();
     
     private static long lastUpdateTime = System.currentTimeMillis();
     
     private final UUID uuid;
     private final YamlConfiguration yamlData = new YamlConfiguration();
-    private final List<ItemMail> mailBox = new ArrayList();
+    private final List<ItemMail> mailBox = new ArrayList<>();
     
     public SQLiteStorage(UUID uuid) {
         this.uuid = uuid;
@@ -44,8 +43,7 @@ public class SQLiteStorage
         try {
             ResultSet rs = super.executeQuery(super.getConnection().prepareStatement("SELECT * FROM " + getItemMailTable() + " WHERE UUID = '" + uuid + "'"));
             if (rs.next()) {
-                String yamldata = rs.getString("YamlData");
-                yamlData.loadFromString(yamldata);
+                yamlData.loadFromString(rs.getString("YamlData"));
             } else {
                 register(uuid);
             }
@@ -60,7 +58,16 @@ public class SQLiteStorage
             }
             PluginControl.printStackTrace(ex);
         } catch (InvalidConfigurationException | NullPointerException ex) {
-            if (Main.language.get("PlayerDataFailedToLoad") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("PlayerDataFailedToLoad").replace("{player}", Bukkit.getPlayer(uuid) != null ? Bukkit.getPlayer(uuid).getName() : "null").replace("{error}", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null").replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
+            if (Main.language.get("PlayerDataFailedToLoad") != null) {
+                Player player = Bukkit.getPlayer(uuid);
+                String localizedMessage = ex.getLocalizedMessage();
+                String message = Main.language.getProperty("PlayerDataFailedToLoad")
+                        .replace("{player}", player != null ? player.getName() : "null")
+                        .replace("{error}", localizedMessage != null ? localizedMessage : "null")
+                        .replace("{prefix}", PluginControl.getPrefix())
+                        .replace("&", "§");
+                Main.getInstance().getServer().getConsoleSender().sendMessage(message);
+            }
             PluginControl.printStackTrace(ex);
         }
         
@@ -68,30 +75,30 @@ public class SQLiteStorage
     }
     
     private void loadData() {
-        if (yamlData.get("Name") == null || !yamlData.getString("Name").equals(Bukkit.getOfflinePlayer(uuid).getName())) {
+        String name = yamlData.getString("Name");
+        if (name == null || !name.equals(Bukkit.getOfflinePlayer(uuid).getName())) {
             yamlData.set("Name", Bukkit.getOfflinePlayer(uuid).getName());
             saveData();
         }
-        
-        if (yamlData.get("Items") != null) {
-            for (String path : yamlData.getConfigurationSection("Items").getKeys(false)) {
-                if (yamlData.get("Items." + path) != null) {
-                    ItemMail im;
-                    try {
-                        im = new ItemMail(
-                            yamlData.get("Items." + path + ".UID") != null ? yamlData.getLong("Items." + path + ".UID") : Long.valueOf(path),
+
+        ConfigurationSection section = yamlData.getConfigurationSection("Items");
+        if (section != null) for (String path : section.getKeys(false)) {
+            if (yamlData.get("Items." + path) != null) {
+                ItemMail im;
+                try {
+                    im = new ItemMail(
+                            yamlData.get("Items." + path + ".UID") != null ? yamlData.getLong("Items." + path + ".UID") : Long.parseLong(path),
                             uuid,
                             yamlData.get("Items." + path + ".Item") != null ? yamlData.getItemStack("Items." + path + ".Item") : new ItemStack(Material.AIR),
                             yamlData.getLong("Items." + path + ".Full-Time"),
                             yamlData.get("Items." + path + ".Added-Time") != null ? yamlData.getLong("Items." + path + ".Added-Time") : -1,
                             yamlData.getBoolean("Items." + path + ".Never-Expire")
-                        );
-                    } catch (Exception ex) {
-                        PluginControl.printStackTrace(ex);
-                        continue;
-                    }
-                    mailBox.add(im);
+                    );
+                } catch (Exception ex) {
+                    PluginControl.printStackTrace(ex);
+                    continue;
                 }
+                mailBox.add(im);
             }
         }
     }

@@ -22,8 +22,6 @@ Settings:
     Max-Beginning-Buy-Reward: 1000000
     Minimum-Bid-Price: 1
     Max-Beginning-Bid-Price: 1000000
-    #检测插件新资讯
-    Updater: true
     #数据库下载文件相关设置
     Download:
         Market: 'plugins/CrazyAuctionsPlus/Download/全球市场-%date%.yml'
@@ -580,10 +578,6 @@ Settings:
                 Name: '&c你未拥有这个物品！'
     #权限编辑
     Permissions:
-        #查看更新资讯
-        Updater:
-            Permission: crazyauctionsplus.updater
-            Default: false
         Market:
             #绕过出售物品数量上限
             Sell-Bypass: 

@@ -33,14 +33,11 @@ public class MySQLEngine
     
     /**
      * Whether the returned data is empty.
-     * @param sql
-     * @return 
      * @deprecated
      */
     @Deprecated
     protected boolean isEmpty(String sql) {
-        ResultSet rs = executeQuery(sql);
-        try {
+        try (ResultSet rs = executeQuery(sql)) {
             return rs.next();
         } catch (SQLException ex) {
             PluginControl.printStackTrace(ex);
@@ -50,8 +47,6 @@ public class MySQLEngine
     
     /**
      * Whether the returned data is empty.
-     * @param statement
-     * @return
      * @deprecated
      */
     @Deprecated
@@ -67,8 +62,6 @@ public class MySQLEngine
     
     /**
      * Whether the returned data is empty.
-     * @param rs
-     * @return
      */
     protected boolean isEmpty(ResultSet rs) {
         try {
@@ -81,9 +74,8 @@ public class MySQLEngine
     
     /**
      * Whether the database connection is MySQL-Reconnecting.
-     * @return 
      */
-    protected boolean isdatabaseReloading() {
+    protected boolean isDatabaseReloading() {
         return databaseReloading;
     }
     
@@ -205,7 +197,7 @@ public class MySQLEngine
     public void executeUpdate(PreparedStatement statement) {
         while (databaseReloading) {}
         try {
-            while (!databaseExist()) {}
+            while (isDatabaseNotExists()) {}
             statement.executeUpdate();
         }  catch (SQLException ex) {
             if (Main.language.get("MySQL-DataSavingError") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("MySQL-DataSavingError").replace("{error}", ex.getLocalizedMessage()).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
@@ -223,7 +215,7 @@ public class MySQLEngine
     public void executeUpdate(String sql) {
         while (databaseReloading) {}
         try {
-            while (!databaseExist()) {}
+            while (isDatabaseNotExists()) {}
             connection.createStatement().executeUpdate(sql);
         } catch (SQLException ex) {
             if (Main.language.get("MySQL-DataSavingError") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("MySQL-DataSavingError").replace("{error}", ex.getLocalizedMessage()).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
@@ -240,7 +232,7 @@ public class MySQLEngine
     public ResultSet executeQuery(PreparedStatement statement) {
         while (databaseReloading) {}
         try {
-            while (!databaseExist()) {}
+            while (isDatabaseNotExists()) {}
             return statement.executeQuery();
         } catch (SQLException ex) {
             if (Main.language.get("MySQL-DataReadingError") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("MySQL-DataReadingError").replace("{error}", ex.getLocalizedMessage()).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
@@ -259,7 +251,7 @@ public class MySQLEngine
     public ResultSet executeQuery(String sql) {
         while (databaseReloading) {}
         try {
-            while (!databaseExist()) {}
+            while (isDatabaseNotExists()) {}
             return connection.createStatement().executeQuery(sql);
         } catch (SQLException ex) {
             if (Main.language.get("MySQL-DataReadingError") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("MySQL-DataReadingError").replace("{error}", ex.getLocalizedMessage()).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
@@ -291,11 +283,11 @@ public class MySQLEngine
     
     private static boolean databaseExist = false;
     
-    private boolean databaseExist() throws SQLException {
-        if (databaseExist) return true;
+    private boolean isDatabaseNotExists() throws SQLException {
+        if (databaseExist) return false;
         ResultSet rs = connection.prepareStatement("SHOW DATABASES LIKE '" + database + "'").executeQuery();
         databaseExist = rs.next();
-        return databaseExist;
+        return !databaseExist;
     }
     
     public static String getDatabaseName() {
@@ -324,8 +316,7 @@ public class MySQLEngine
     
     /**
      * Back up all player data.
-     * @param sqlConnection SQLite connection for backup files
-     * @throws SQLException 
+     * @param sqlConnection SQLite 's connection for backup files
      */
     public static void backupPlayerData(Connection sqlConnection) throws SQLException {
         ResultSet rs = instance.executeQuery(connection.prepareStatement("SELECT * FROM " + getDatabaseName() + "." + getItemMailTable()));

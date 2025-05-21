@@ -13,6 +13,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -28,13 +29,13 @@ public class MySQLStorage
     extends MySQLEngine
     implements Storage
 {
-    public static volatile Map<UUID, MySQLStorage> cache = new HashMap();
+    public static volatile Map<UUID, MySQLStorage> cache = new HashMap<>();
     
     private static long lastUpdateTime = System.currentTimeMillis();
     
     private final UUID uuid;
     private final YamlConfiguration yamlData = new YamlConfiguration();
-    private final List<ItemMail> mailBox = new ArrayList();
+    private final List<ItemMail> mailBox = new ArrayList<>();
     
     public MySQLStorage(UUID uuid) {
         this.uuid = uuid;
@@ -42,8 +43,7 @@ public class MySQLStorage
         try {
             ResultSet rs = super.executeQuery(super.getConnection().prepareStatement("SELECT * FROM " + getDatabaseName() + "." + getItemMailTable() + " WHERE UUID = '" + uuid + "'"));
             if (rs.next()) {
-                String yamldata = rs.getString("YamlData");
-                yamlData.loadFromString(yamldata);
+                yamlData.loadFromString(rs.getString("YamlData"));
             } else {
                 register(uuid);
             }
@@ -58,7 +58,16 @@ public class MySQLStorage
             }
             PluginControl.printStackTrace(ex);
         } catch (InvalidConfigurationException | NullPointerException ex) {
-            if (Main.language.get("PlayerDataFailedToLoad") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("PlayerDataFailedToLoad").replace("{player}", Bukkit.getPlayer(uuid) != null ? Bukkit.getPlayer(uuid).getName() : "null").replace("{error}", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null").replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
+            if (Main.language.get("PlayerDataFailedToLoad") != null) {
+                Player player = Bukkit.getPlayer(uuid);
+                String localizedMessage = ex.getLocalizedMessage();
+                String message = Main.language.getProperty("PlayerDataFailedToLoad")
+                        .replace("{player}", player != null ? player.getName() : "null")
+                        .replace("{error}", localizedMessage != null ? localizedMessage : "null")
+                        .replace("{prefix}", PluginControl.getPrefix())
+                        .replace("&", "§");
+                Main.getInstance().getServer().getConsoleSender().sendMessage(message);
+            }
             PluginControl.printStackTrace(ex);
         }
         
@@ -66,18 +75,19 @@ public class MySQLStorage
     }
     
     private void loadData() {
-        if (yamlData.get("Name") == null || !yamlData.getString("Name").equals(Bukkit.getOfflinePlayer(uuid).getName())) {
+        if (yamlData.get("Name") == null || !yamlData.getString("Name", "").equals(Bukkit.getOfflinePlayer(uuid).getName())) {
             yamlData.set("Name", Bukkit.getOfflinePlayer(uuid).getName());
             saveData();
         }
         
         if (yamlData.get("Items") != null) {
-            for (String path : yamlData.getConfigurationSection("Items").getKeys(false)) {
+            ConfigurationSection section = yamlData.getConfigurationSection("Items");
+            if (section != null) for (String path : section.getKeys(false)) {
                 if (yamlData.get("Items." + path) != null) {
                     ItemMail im;
                     try {
                         im = new ItemMail(
-                            yamlData.get("Items." + path + ".UID") != null ? yamlData.getLong("Items." + path + ".UID") : Long.valueOf(path),
+                            yamlData.get("Items." + path + ".UID") != null ? yamlData.getLong("Items." + path + ".UID") : Long.parseLong(path),
                             uuid,
                             yamlData.get("Items." + path + ".Item") != null ? yamlData.getItemStack("Items." + path + ".Item") : new ItemStack(Material.AIR),
                             yamlData.getLong("Items." + path + ".Full-Time"),
@@ -204,7 +214,8 @@ public class MySQLStorage
     }
     
     private void register(UUID uuid) throws SQLException {
-        String name = Bukkit.getOfflinePlayer(uuid) != null ? Bukkit.getOfflinePlayer(uuid).getName() : null;
+        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
+        String name = player != null ? player.getName() : null;
         if (name == null) {
             name = "Null";
         }

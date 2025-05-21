@@ -53,8 +53,8 @@ public class SellCommand
             ItemStack item = PluginControl.getItemInHand(player);
             int amount = item.getAmount();
             if (args.length >= 3) {
-                if (!PluginControl.isInt(args[2])) {
-                    Map<String, String> placeholders = new HashMap();
+                if (PluginControl.isNotInt(args[2])) {
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%arg%", args[2]);
                     MessageUtil.sendMessage(player, "Not-A-Valid-Number", placeholders);
                     return;
@@ -68,12 +68,12 @@ public class SellCommand
                 return;
             }
             if (!PluginControl.isNumber(args[1])) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%arg%", args[1]);
                 MessageUtil.sendMessage(player, "Not-A-Valid-Number", placeholders);
                 return;
             }
-            double price = Double.valueOf(args[1]);
+            double price = Double.parseDouble(args[1]);
             double tax = 0;
             if (!CrazyAuctionsCommand.getCrazyAuctions().isSellingEnabled()) {
                 MessageUtil.sendMessage(player, "Selling-Disable");
@@ -84,32 +84,32 @@ public class SellCommand
                 return;
             }
             if (price < FileManager.Files.CONFIG.getFile().getDouble("Settings.Minimum-Sell-Price")) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%price%", String.valueOf(FileManager.Files.CONFIG.getFile().getDouble("Settings.Minimum-Sell-Price")));
                 MessageUtil.sendMessage(player, "Sell-Price-To-Low", placeholders);
                 return;
             }
             if (price > FileManager.Files.CONFIG.getFile().getDouble("Settings.Max-Beginning-Sell-Price")) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%price%", String.valueOf(FileManager.Files.CONFIG.getFile().getDouble("Settings.Max-Beginning-Sell-Price")));
                 MessageUtil.sendMessage(player, "Sell-Price-To-High", placeholders);
                 return;
             }
-            if (!PluginControl.bypassLimit(player, ShopType.SELL)) {
+            if (PluginControl.notBypassLimit(player, ShopType.SELL)) {
                 int limit = PluginControl.getLimit(player, ShopType.SELL);
                 if (limit > -1) {
                     if (CrazyAuctionsCommand.getCrazyAuctions().getNumberOfPlayerItems(player, ShopType.SELL) >= limit) {
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%number%", String.valueOf(limit));
                         MessageUtil.sendMessage(player, "Max-Selling-Items", placeholders);
                         return;
                     }
                 }
             }
-            if (!PluginControl.bypassTaxRate(player, ShopType.SELL)) {
+            if (PluginControl.notBypassTaxRate(player, ShopType.SELL)) {
                 tax = price * PluginControl.getTaxRate(player, ShopType.SELL);
                 if (CurrencyManager.getMoney(player) < tax) { 
-                    HashMap<String, String> placeholders = new HashMap();
+                    HashMap<String, String> placeholders = new HashMap<>();
                     placeholders.put("%Money_Needed%", String.valueOf(tax - CurrencyManager.getMoney(player)));
                     placeholders.put("%money_needed%", String.valueOf(tax - CurrencyManager.getMoney(player)));
                     MessageUtil.sendMessage(player, "Need-More-Money", placeholders);
@@ -152,7 +152,7 @@ public class SellCommand
             market.addGoods(goods);
             Bukkit.getPluginManager().callEvent(new AuctionListEvent(player, type, is, price, tax));
             CurrencyManager.removeMoney(player, tax);
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%Price%", String.valueOf(price));
             placeholders.put("%price%", String.valueOf(price));
             placeholders.put("%tax%", String.valueOf(tax));
@@ -174,7 +174,7 @@ public class SellCommand
 
     @Override
     public List<String> tabComplete(CommandSender sender, String subCommand, String... args) {
-        return new ArrayList();
+        return new ArrayList<>();
     }
 
     @Override
@@ -183,7 +183,7 @@ public class SellCommand
     }
     
     private ArrayList<Material> getDamageableItems() {
-        ArrayList<Material> ma = new ArrayList();
+        ArrayList<Material> ma = new ArrayList<>();
         if (Version.getCurrentVersion().isNewer(Version.v1_12_R1)) {
             ma.add(Material.matchMaterial("GOLDEN_HELMET"));
             ma.add(Material.matchMaterial("GOLDEN_CHESTPLATE"));

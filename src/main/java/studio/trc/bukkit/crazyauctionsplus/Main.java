@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -57,11 +58,11 @@ public class Main
         if (lang.equalsIgnoreCase("zh_cn")) {
             try {
                 language.load(getClass().getResourceAsStream("/Languages/Chinese.properties"));
-            } catch (IOException ex) {}
+            } catch (IOException ignored) {}
         } else {
             try {
                 language.load(getClass().getResourceAsStream("/Languages/English.properties"));
-            } catch (IOException ex) {}
+            } catch (IOException ignored) {}
         }
         if (language.get("LanguageLoaded") != null) getServer().getConsoleSender().sendMessage(language.getProperty("LanguageLoaded").replace("&", "§"));
         
@@ -99,16 +100,12 @@ public class Main
     public void onDisable() {
         int file = 0;
         Bukkit.getScheduler().cancelTask(file);
-        Bukkit.getOnlinePlayers().forEach((p) -> {
-            p.closeInventory();
-        });
+        Bukkit.getOnlinePlayers().forEach(HumanEntity::closeInventory);
         GlobalMarket.getMarket().saveData();
         if (PluginControl.useMySQLStorage()) {
             try {
                 if (MySQLEngine.getInstance().getConnection() != null && !MySQLEngine.getInstance().getConnection().isClosed()) {
-                    MySQLStorage.cache.values().forEach((storage) -> {
-                        storage.saveData();
-                    });
+                    MySQLStorage.cache.values().forEach(MySQLStorage::saveData);
                     if (language.get("MySQL-DataSave") != null) getServer().getConsoleSender().sendMessage(language.getProperty("MySQL-DataSave").replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
                 }
             } catch (Exception ex) {
@@ -118,9 +115,7 @@ public class Main
         if (PluginControl.useSQLiteStorage()) {
             try {
                 if (SQLiteEngine.getInstance().getConnection() != null && !SQLiteEngine.getInstance().getConnection().isClosed()) {
-                    SQLiteStorage.cache.values().forEach((storage) -> {
-                        storage.saveData();
-                    });
+                    SQLiteStorage.cache.values().forEach(SQLiteStorage::saveData);
                     if (language.get("SQLite-DataSave") != null) getServer().getConsoleSender().sendMessage(language.getProperty("SQLite-DataSave").replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
                 }
             } catch (Exception ex) {
@@ -169,17 +164,17 @@ public class Main
                 DataUpdateThread.start();
                 RepricingTimeoutCheckThread = new Thread(() -> {
                     while (asyncRun) {
-                        GUIAction.repricing.keySet().stream().filter((value) -> (System.currentTimeMillis() >= Long.valueOf(GUIAction.repricing.get(value)[1].toString()))).forEachOrdered((value) -> {
+                        GUIAction.repricing.keySet().stream().filter((value) -> (System.currentTimeMillis() >= Long.parseLong(GUIAction.repricing.get(value)[1].toString()))).forEachOrdered((value) -> {
                             try {
                                 MarketGoods mg  = (MarketGoods) GUIAction.repricing.get(value)[0];
                                 Player p = Bukkit.getPlayer(value);
                                 if (p != null) {
-                                    Map<String, String> placeholders = new HashMap();
+                                    Map<String, String> placeholders = new HashMap<>();
                                     placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                     MessageUtil.sendMessage(p, "Repricing-Undo", placeholders);
                                 }
-                                GUIAction.repricing.remove(p.getUniqueId());
-                            } catch (ClassCastException ex) {}
+                                GUIAction.repricing.remove(value);
+                            } catch (ClassCastException ignored) {}
                         });
                         try {
                             Thread.sleep(1000);
@@ -195,9 +190,11 @@ public class Main
     
     private void registerCommandExecutor() {
         PluginCommand command = getCommand("ca");
-        CrazyAuctionsCommand commandExecutor = new CrazyAuctionsCommand();
-        command.setExecutor(commandExecutor);
-        command.setTabCompleter(commandExecutor);
+        if (command != null) {
+            CrazyAuctionsCommand impl = new CrazyAuctionsCommand();
+            command.setExecutor(impl);
+            command.setTabCompleter(impl);
+        }
         for (CrazyAuctionsSubCommandType subCommandType : CrazyAuctionsSubCommandType.values()) {
             CrazyAuctionsCommand.getSubCommands().put(subCommandType.getSubCommandName(), subCommandType.getSubCommand());
         }

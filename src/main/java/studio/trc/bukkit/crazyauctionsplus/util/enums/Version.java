@@ -3,10 +3,8 @@ package studio.trc.bukkit.crazyauctionsplus.util.enums;
 import org.bukkit.Bukkit;
 
 /**
- * In the Plus version, a better method has been used for Version-related operations, this class is deprecated.
- * @deprecated
+ * In the Plus version, a better method has been used for Version-related operations.
  */
-@Deprecated
 public enum Version {
     
     TOO_OLD(-1),
@@ -24,7 +22,7 @@ public enum Version {
     private static Version latest;
     private final Integer versionInteger;
     
-    private Version(int versionInteger) {
+    Version(int versionInteger) {
         this.versionInteger = versionInteger;
     }
     
@@ -84,17 +82,15 @@ public enum Version {
      * @return -1 if older, 0 if the same, and 1 if newer.
      */
     public Integer comparedTo(Version version) {
-        int resault = -1;
+        int result = -1;
         int current = this.getVersionInteger();
         int check = version.getVersionInteger();
         if (current > check || check == -2) {// check is newer then current
-            resault = 1;
+            result = 1;
         } else if (current == check) {// check is the same as current
-            resault = 0;
-        } else if (current < check || check == -1) {// check is older then current
-            resault = -1;
+            result = 0;
         }
-        return resault;
+        return result;
     }
     
     /**
@@ -116,9 +112,9 @@ public enum Version {
     }
     
     /**
-     * Checks to see if the current version is older then the checked version.
+     * Checks to see if the current version is older than the checked version.
      * @param version The version you are checking.
-     * @return True if older then the checked version and false if the same or newer.
+     * @return True if older than the checked version and false if the same or newer.
      */
     public Boolean isOlder(Version version) {
         return this.versionInteger < version.versionInteger || this.versionInteger == -1;

@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+import org.jetbrains.annotations.NotNull;
 import studio.trc.bukkit.crazyauctionsplus.util.MarketGoods;
 
 /**
@@ -17,9 +18,6 @@ public class AuctionNewBidEvent extends Event {
     private final MarketGoods mg;
     
     /**
-     * @param player
-     * @param mg
-     * @param price
      */
     public AuctionNewBidEvent(Player player, MarketGoods mg, double price) {
         this.player = player;
@@ -32,7 +30,7 @@ public class AuctionNewBidEvent extends Event {
     }
     
     @Override
-    public HandlerList getHandlers() {
+    public @NotNull HandlerList getHandlers() {
         return handlers;
     }
     

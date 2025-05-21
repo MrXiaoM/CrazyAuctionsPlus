@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -22,7 +23,7 @@ public class SQLiteMarket
     extends SQLiteEngine
     implements GlobalMarket
 {
-    private static volatile List<MarketGoods> marketgoods = new ArrayList();
+    private static final List<MarketGoods> marketGoods = new ArrayList<>();
     
     private static SQLiteMarket instance;
     private static long lastUpdateTime = System.currentTimeMillis();
@@ -35,8 +36,7 @@ public class SQLiteMarket
     
     public static SQLiteMarket getInstance() {
         if (instance == null) {
-            SQLiteMarket market = new SQLiteMarket();
-            return market;
+            return new SQLiteMarket();
         }
         return instance;
     }
@@ -49,7 +49,7 @@ public class SQLiteMarket
             reloadData();
             lastUpdateTime = System.currentTimeMillis();
         }
-        return marketgoods;
+        return marketGoods;
     }
     
     @Override
@@ -60,7 +60,7 @@ public class SQLiteMarket
             reloadData();
             lastUpdateTime = System.currentTimeMillis();
         }
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             if (mg.getUID() == uid) {
                 return mg;
             }
@@ -80,7 +80,7 @@ public class SQLiteMarket
                 reloadData();
                 lastUpdateTime = System.currentTimeMillis();
             }
-            for (MarketGoods mgs : marketgoods) {
+            for (MarketGoods mgs : marketGoods) {
                 if (mgs.getUID() == id) {
                     b = true;
                     break;
@@ -94,7 +94,7 @@ public class SQLiteMarket
 
     @Override
     public void addGoods(MarketGoods goods) {
-        marketgoods.add(goods);
+        marketGoods.add(goods);
         saveData();
     }
 
@@ -106,9 +106,9 @@ public class SQLiteMarket
             reloadData();
             lastUpdateTime = System.currentTimeMillis();
         }
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             if (mg.equals(goods)) {
-                marketgoods.remove(mg);
+                marketGoods.remove(mg);
                 break;
             }
         }
@@ -123,9 +123,9 @@ public class SQLiteMarket
             reloadData();
             lastUpdateTime = System.currentTimeMillis();
         }
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             if (mg.getUID() == uid) {
-                marketgoods.remove(mg);
+                marketGoods.remove(mg);
                 break;
             }
         }
@@ -134,7 +134,7 @@ public class SQLiteMarket
     
     @Override
     public void clearGlobalMarket() {
-        marketgoods.clear();
+        marketGoods.clear();
         saveData();
     }
 
@@ -142,9 +142,9 @@ public class SQLiteMarket
     public void saveData() {
         try {
             yamlMarket.set("Items", null);
-            for (MarketGoods mg : marketgoods) {
+            for (MarketGoods mg : marketGoods) {
                 long num = 1;
-                for (;yamlMarket.contains("Items." + num);num++) {}
+                while (yamlMarket.contains("Items." + num)) num++;
                 yamlMarket.set("Items." + num + ".Owner", mg.getItemOwner().toString());
                 switch (mg.getShopType()) {
                     case SELL: {
@@ -197,7 +197,7 @@ public class SQLiteMarket
         try {
             PreparedStatement statement = getConnection().prepareStatement("SELECT * FROM " + getMarketTable());
             ResultSet rs = executeQuery(statement);
-            marketgoods.clear();
+            marketGoods.clear();
             if (rs != null && rs.next()) {
                 String stringYaml = rs.getString("YamlMarket");
                 if (stringYaml.isEmpty()) {
@@ -205,10 +205,11 @@ public class SQLiteMarket
                 } else {
                     yamlMarket.loadFromString(stringYaml);
                 }
-                if (yamlMarket.get("Items") == null) return;
-                for (String path : yamlMarket.getConfigurationSection("Items").getKeys(false)) {
-                    String[] owner = yamlMarket.getString("Items." + path + ".Owner").split(":");
-                    ShopType shoptype = ShopType.valueOf(yamlMarket.getString("Items." + path + ".ShopType").toUpperCase());
+                ConfigurationSection section = yamlMarket.getConfigurationSection("Items");
+                if (section == null) return;
+                for (String path : section.getKeys(false)) {
+                    String[] owner = yamlMarket.getString("Items." + path + ".Owner", "").split(":");
+                    ShopType shoptype = ShopType.valueOf(yamlMarket.getString("Items." + path + ".ShopType", "").toUpperCase());
                     MarketGoods goods;
                     switch (shoptype) {
                         case SELL: {
@@ -255,7 +256,7 @@ public class SQLiteMarket
                             continue;
                         }
                     }
-                    marketgoods.add(goods);
+                    marketGoods.add(goods);
                 }
             } else {
                 PreparedStatement createMarket = getConnection().prepareStatement("INSERT INTO " + getMarketTable() + " (YamlMarket) VALUES(?)");

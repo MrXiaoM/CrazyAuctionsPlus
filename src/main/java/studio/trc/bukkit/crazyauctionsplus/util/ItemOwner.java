@@ -17,9 +17,9 @@ public class ItemOwner
         this.uuid = uuid;
     }
     
-    public ItemOwner(UUID uuid, String playername) {
+    public ItemOwner(UUID uuid, String playerName) {
         this.uuid = uuid;
-        name = playername;
+        name = playerName;
     }
     
     public ItemOwner(UUID uuid, Player player) {

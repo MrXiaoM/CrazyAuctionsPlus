@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -19,44 +20,43 @@ import studio.trc.bukkit.crazyauctionsplus.database.Storage;
 import studio.trc.bukkit.crazyauctionsplus.event.GUIAction;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.ProtectedConfiguration;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
-import studio.trc.bukkit.crazyauctionsplus.util.enums.Version;
 
 public class GUI
 {
     /**
      * Unknown... from old CrazyAuctions plug-in.
      */
-    protected final static Map<UUID, Integer> bidding = new HashMap();
+    protected final static Map<UUID, Integer> bidding = new HashMap<>();
     
     /**
      * Record the UID of each player's last selected auction item.
      */
-    protected final static Map<UUID, Long> biddingID = new HashMap();
+    protected final static Map<UUID, Long> biddingID = new HashMap<>();
     
     /**
      * Keep track of the categories each player is using. (Shop type)
      */
-    protected final static Map<UUID, ShopType> shopType = new HashMap(); 
+    protected final static Map<UUID, ShopType> shopType = new HashMap<>();
     
     /**
      * Keep track of the categories each player is using. (Item categories)
      */
-    protected final static Map<UUID, Category> shopCategory = new HashMap();
+    protected final static Map<UUID, Category> shopCategory = new HashMap<>();
     
     /**
      * "List< Long >": UID of this item in the global market.
      */
-    protected final static Map<UUID, List<Long>> itemUID = new HashMap();
+    protected final static Map<UUID, List<Long>> itemUID = new HashMap<>();
     
     /**
      * "List< Long >": UID of this item in the item mail.
      */
-    protected final static Map<UUID, List<Long>> mailUID = new HashMap(); 
+    protected final static Map<UUID, List<Long>> mailUID = new HashMap<>();
     
     /**
      * Unknown... from old CrazyAuctions plug-in.
      */
-    protected final static Map<UUID, Long> IDs = new HashMap();
+    protected final static Map<UUID, Long> IDs = new HashMap<>();
     
     /**
      * Record the owner of the mailbox opened by the player. 
@@ -64,12 +64,12 @@ public class GUI
      * @since 1.1.4-SNAPSHOT-2
      * It may be removed in a future version. (Custom GUI may be supported in the future)
      */
-    public final static Map<UUID, UUID> openingMail = new HashMap();
+    public final static Map<UUID, UUID> openingMail = new HashMap<>();
     
     /**
      * Record the type of GUI window opened by the player.
      */
-    public final static Map<UUID, GUIType> openingGUI = new HashMap();
+    public final static Map<UUID, GUIType> openingGUI = new HashMap<>();
     
     public static void openShop(Player player, ShopType type, Category cat, int page) {
         if (FileManager.isBackingUp() || FileManager.isRollingBack() || PluginControl.isWorldDisabled(player)) {
@@ -78,8 +78,8 @@ public class GUI
         }
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
-        List<ItemStack> items = new ArrayList();
-        List<Long> ID = new ArrayList();
+        List<ItemStack> items = new ArrayList<>();
+        List<Long> ID = new ArrayList<>();
         GlobalMarket market = GlobalMarket.getMarket();
         if (cat != null) {
             shopCategory.put(player.getUniqueId(), cat);
@@ -87,16 +87,26 @@ public class GUI
             shopCategory.put(player.getUniqueId(), Category.getDefaultCategory());
         }
         for (MarketGoods mg : market.getItems()) {
-            List<String> lore = new ArrayList();
-            if ((cat.isWhitelist() ? cat.getAllItemMeta().contains(mg.getItem().getItemMeta()) : !cat.getAllItemMeta().contains(mg.getItem().getItemMeta())) || cat.getItems().contains(mg.getItem().getType()) || cat.equals(Category.getDefaultCategory())) {
+            List<String> lore = new ArrayList<>();
+            if ((cat.isWhitelist() == cat.getAllItemMeta().contains(mg.getItem().getItemMeta()))
+                    || cat.getItems().contains(mg.getItem().getType())
+                    || cat.equals(Category.getDefaultCategory())) {
                 switch (type) {
                     case BID: {
                         if (mg.getShopType().equals(ShopType.BID)) {
                             String owner = mg.getItemOwner().getName();
-                            String topbidder = mg.getTopBidder().split(":")[0];
-                            MessageUtil.getValueList("BiddingItemLore").stream().forEach(l -> {
-                                lore.add(l.replace("%topbid%", String.valueOf(mg.getPrice())).replace("%owner%", owner).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%topbidder%", topbidder).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
-                            });
+                            String topBidder = mg.getTopBidder().split(":")[0];
+                            for (String l : MessageUtil.getValueList("BiddingItemLore")) {
+                                String price = String.valueOf(mg.getPrice());
+                                String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+                                String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
+                                lore.add(l.replace("%topbid%", price)
+                                        .replace("%owner%", owner)
+                                        .replace("%addedtime%", addedTime)
+                                        .replace("%topbidder%", topBidder)
+                                        .replace("%time%", time));
+                            }
+
                             if (mg.getItem() == null) continue;
                             items.add(PluginControl.addLore(mg.getItem().clone(), lore));
                             ID.add(mg.getUID());
@@ -105,14 +115,16 @@ public class GUI
                     }
                     case BUY: {
                         if (mg.getShopType().equals(ShopType.BUY)) {
-                            MessageUtil.getValueList("BuyingItemLore").stream().forEach(l -> {
+                            for (String l : MessageUtil.getValueList("BuyingItemLore")) {
                                 String reward = String.valueOf(mg.getReward());
                                 String owner = mg.getItemOwner().getName();
+                                String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+                                String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
                                 lore.add(l.replace("%reward%", reward)
                                         .replace("%owner%", owner)
-                                        .replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime())))
-                                        .replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
-                            });
+                                        .replace("%addedtime%", addedTime)
+                                        .replace("%time%", time));
+                            }
                             items.add(PluginControl.addLore(mg.getItem().clone(), lore));
                             ID.add(mg.getUID());
                         }
@@ -120,9 +132,17 @@ public class GUI
                     }
                     case SELL: {
                         if (mg.getShopType().equals(ShopType.SELL)) {
-                            MessageUtil.getValueList("SellingItemLore").stream().forEach(l -> {
-                                lore.add(l.replace("%price%", String.valueOf(mg.getPrice())).replace("%Owner%", mg.getItemOwner().getName()).replace("%owner%", mg.getItemOwner().getName()).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
-                            });
+                            for (String l : MessageUtil.getValueList("SellingItemLore")) {
+                                String price = String.valueOf(mg.getPrice());
+                                String owner = mg.getItemOwner().getName();
+                                String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+                                String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
+                                lore.add(l.replace("%price%", price)
+                                         .replace("%Owner%", owner)
+                                         .replace("%owner%", owner)
+                                         .replace("%addedtime%", addedTime)
+                                         .replace("%time%", time));
+                            }
                             if (mg.getItem() == null) continue;
                             items.add(PluginControl.addLore(mg.getItem().clone(), lore));
                             ID.add(mg.getUID());
@@ -134,33 +154,48 @@ public class GUI
                             case BID: {
                                 String owner = mg.getItemOwner().getName();
                                 String topbidder = mg.getTopBidder().split(":")[0];
-                                MessageUtil.getValueList("BiddingItemLore").stream().forEach(l -> {
-                                    lore.add(l.replace("%topbid%", String.valueOf(mg.getPrice()))
-                                            .replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime())))
-                                            .replace("%owner%", owner).replace("%topbidder%", topbidder).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
-                                });
+                                for (String l : MessageUtil.getValueList("BiddingItemLore")) {
+                                    String price = String.valueOf(mg.getPrice());
+                                    String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+                                    String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
+                                    lore.add(l.replace("%topbid%", price)
+                                            .replace("%addedtime%", addedTime)
+                                            .replace("%owner%", owner)
+                                            .replace("%topbidder%", topbidder)
+                                            .replace("%time%", time));
+                                }
                                 if (mg.getItem() == null) continue;
                                 items.add(PluginControl.addLore(mg.getItem().clone(), lore));
                                 ID.add(mg.getUID());
                                 break;
                             }
                             case BUY: {
-                                MessageUtil.getValueList("BuyingItemLore").stream().forEach(l -> {
+                                for (String l : MessageUtil.getValueList("BuyingItemLore")) {
                                     String reward = String.valueOf(mg.getReward());
                                     String owner = mg.getItemOwner().getName();
+                                    String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+                                    String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
                                     lore.add(l.replace("%reward%", reward)
-                                            .replace("%Owner%", owner) .replace("%owner%", owner)
-                                            .replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime())))
-                                            .replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
-                                });
+                                            .replace("%Owner%", owner)
+                                            .replace("%owner%", owner)
+                                            .replace("%addedtime%", addedTime)
+                                            .replace("%time%", time));
+                                }
                                 items.add(PluginControl.addLore(mg.getItem().clone(), lore));
                                 ID.add(mg.getUID());
                                 break;
                             }
                             case SELL: {
-                                MessageUtil.getValueList("SellingItemLore").stream().forEach(l -> {
-                                    lore.add(l.replace("%price%", String.valueOf(mg.getPrice())).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%owner%", mg.getItemOwner().getName()).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
-                                });
+                                for (String l : MessageUtil.getValueList("SellingItemLore")) {
+                                    String price = String.valueOf(mg.getPrice());
+                                    String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+                                    String owner = mg.getItemOwner().getName();
+                                    String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
+                                    lore.add(l.replace("%price%", price)
+                                            .replace("%addedtime%", addedTime)
+                                            .replace("%owner%", owner)
+                                            .replace("%time%", time));
+                                }
                                 if (mg.getItem() == null) continue;
                                 items.add(PluginControl.addLore(mg.getItem().clone(), lore));
                                 ID.add(mg.getUID());
@@ -172,7 +207,7 @@ public class GUI
             }
         }
         int maxPage = PluginControl.getMaxPage(items);
-        for (; page > maxPage; page--) {}
+        while (page > maxPage) page--;
         Inventory inv;
         GUIType guiType;
         if (type == null) {
@@ -203,7 +238,7 @@ public class GUI
                 throw new NullPointerException("ShopType is null");
             }
         }
-        List<String> options = new ArrayList();
+        List<String> options = new ArrayList<>();
         options.add("Commoditys");
         options.add("Items-Mail");
         options.add("PreviousPage");
@@ -251,7 +286,7 @@ public class GUI
             }
             String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
             String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
-            List<String> lore = new ArrayList();
+            List<String> lore = new ArrayList<>();
             int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
                 for (String l : config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
@@ -266,7 +301,7 @@ public class GUI
             int slot = inv.firstEmpty();
             inv.setItem(slot, item);
         }
-        List<Long> Id = new ArrayList(PluginControl.getMarketPageUIDs(ID, page));
+        List<Long> Id = new ArrayList<>(PluginControl.getMarketPageUIDs(ID, page));
         itemUID.put(player.getUniqueId(), Id);
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), guiType);
@@ -284,7 +319,7 @@ public class GUI
             size = 54;
         }
         Inventory inv = Bukkit.createInventory(null, size, PluginControl.color(config.getString("Settings.Categories")));
-        List<String> options = new ArrayList();
+        List<String> options = new ArrayList<>();
         options.add("OtherSettings.Categories-Back");
         options.add("OtherSettings.WhatIsThis.Categories");
         for (String option : config.getConfigurationSection("Settings.GUISettings.Category-Settings.Custom-Category").getKeys(false)) {
@@ -321,11 +356,11 @@ public class GUI
         }
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
-        List<ItemStack> items = new ArrayList();
-        List<Long> ID = new ArrayList();
+        List<ItemStack> items = new ArrayList<>();
+        List<Long> ID = new ArrayList<>();
         GlobalMarket market = GlobalMarket.getMarket();
         Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Player-Items-List")));
-        List<String> options = new ArrayList();
+        List<String> options = new ArrayList<>();
         options.add("Player-Items-List-Back");
         options.add("WhatIsThis.CurrentItems");
         for (String o : options) {
@@ -345,7 +380,7 @@ public class GUI
         }
         for (MarketGoods mg : market.getItems()) {
             if (mg.getItemOwner().getUUID().equals(player.getUniqueId())) {
-                List<String> lore = new ArrayList();
+                List<String> lore = new ArrayList<>();
                 if (mg.getShopType().equals(ShopType.BID) || mg.getShopType().equals(ShopType.ANY)) {
                     String owner = mg.getItemOwner().getName();
                     String topbidder = mg.getTopBidder().split(":")[0];
@@ -382,7 +417,7 @@ public class GUI
             int slot = inv.firstEmpty();
             inv.setItem(slot, item);
         }
-        List<Long> Id = new ArrayList(PluginControl.getMarketPageUIDs(ID, page));
+        List<Long> Id = new ArrayList<>(PluginControl.getMarketPageUIDs(ID, page));
         itemUID.put(player.getUniqueId(), Id);
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_LIST);
@@ -395,13 +430,13 @@ public class GUI
         }
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
-        List<ItemStack> items = new ArrayList();
-        List<Long> ID = new ArrayList();
-        Storage playerdata = Storage.getPlayer(player);
-        if (!playerdata.getMailBox().isEmpty()) {
-            for (ItemMail im : playerdata.getMailBox()) {
+        List<ItemStack> items = new ArrayList<>();
+        List<Long> ID = new ArrayList<>();
+        Storage playerData = Storage.getPlayer(player);
+        if (!playerData.getMailBox().isEmpty()) {
+            for (ItemMail im : playerData.getMailBox()) {
                 if (im.getItem() == null) continue;
-                List<String> lore = new ArrayList();
+                List<String> lore = new ArrayList<>();
                 for (String l : MessageUtil.getValueList("Item-Mail-Lore")) {
                     lore.add(l.replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(im.getAddedTime()))).replace("%time%", PluginControl.convertToTime(im.getFullTime(), im.isNeverExpire())));
                 }
@@ -410,9 +445,9 @@ public class GUI
             }
         }
         int maxPage = PluginControl.getMaxPage(items);
-        for (; page > maxPage; page--) {}
+        while (page > maxPage) page--;
         Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Player-Items-Mail") + " #" + page));
-        List<String> options = new ArrayList();
+        List<String> options = new ArrayList<>();
         options.add("Player-Items-Mail-Back");
         options.add("PreviousPage");
         options.add("Return");
@@ -437,7 +472,7 @@ public class GUI
             int slot = inv.firstEmpty();
             inv.setItem(slot, item);
         }
-        List<Long> Id = new ArrayList(PluginControl.getMailPageUIDs(ID, page));
+        List<Long> Id = new ArrayList<>(PluginControl.getMailPageUIDs(ID, page));
         mailUID.put(player.getUniqueId(), Id);
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_MAIL);
@@ -451,13 +486,13 @@ public class GUI
         }
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
-        List<ItemStack> items = new ArrayList();
-        List<Long> ID = new ArrayList();
-        Storage playerdata = Storage.getPlayer(uuid);
-        if (!playerdata.getMailBox().isEmpty()) {
-            for (ItemMail im : playerdata.getMailBox()) {
+        List<ItemStack> items = new ArrayList<>();
+        List<Long> ID = new ArrayList<>();
+        Storage playerData = Storage.getPlayer(uuid);
+        if (!playerData.getMailBox().isEmpty()) {
+            for (ItemMail im : playerData.getMailBox()) {
                 if (im.getItem() == null) continue;
-                List<String> lore = new ArrayList();
+                List<String> lore = new ArrayList<>();
                 for (String l : MessageUtil.getValueList("Item-Mail-Lore")) {
                     lore.add(l.replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(im.getAddedTime()))).replace("%time%", PluginControl.convertToTime(im.getFullTime(), im.isNeverExpire())));
                 }
@@ -466,9 +501,9 @@ public class GUI
             }
         }
         int maxPage = PluginControl.getMaxPage(items);
-        for (; page > maxPage; page--) {}
+        while (page > maxPage) page--;
         Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Player-Items-Mail") + " #" + page));
-        List<String> options = new ArrayList();
+        List<String> options = new ArrayList<>();
         options.add("Player-Items-Mail-Back");
         options.add("PreviousPage");
         options.add("Return");
@@ -493,7 +528,7 @@ public class GUI
             int slot = inv.firstEmpty();
             inv.setItem(slot, item);
         }
-        List<Long> Id = new ArrayList(PluginControl.getMailPageUIDs(ID, page));
+        List<Long> Id = new ArrayList<>(PluginControl.getMailPageUIDs(ID, page));
         mailUID.put(player.getUniqueId(), Id);
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_MAIL);
@@ -514,7 +549,7 @@ public class GUI
             return;
         }
         Inventory inv = Bukkit.createInventory(null, 9, PluginControl.color(config.getString("Settings.Buying-Item")));
-        List<String> options = new ArrayList();
+        List<String> options = new ArrayList<>();
         options.add("Confirm");
         options.add("Cancel");
         for (String o : options) {
@@ -541,7 +576,7 @@ public class GUI
         }
         MarketGoods mg = market.getMarketGoods(uid);
         ItemStack item = market.getMarketGoods(uid).getItem();
-        List<String> lore = new ArrayList();
+        List<String> lore = new ArrayList<>();
         for (String l : MessageUtil.getValueList("SellingItemLore")) {
             lore.add(l.replace("%price%", String.valueOf(mg.getPrice())).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%owner%", mg.getItemOwner().getName()).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
         }
@@ -565,7 +600,7 @@ public class GUI
             return;
         }
         Inventory inv = Bukkit.createInventory(null, 9, PluginControl.color(config.getString("Settings.Selling-Item")));
-        List<String> options = new ArrayList();
+        List<String> options = new ArrayList<>();
         options.add("Confirm");
         options.add("Cancel");
         for (String o : options) {
@@ -592,7 +627,7 @@ public class GUI
         }
         MarketGoods mg = market.getMarketGoods(uid);
         ItemStack item = market.getMarketGoods(uid).getItem();
-        List<String> lore = new ArrayList();
+        List<String> lore = new ArrayList<>();
         for (String l : MessageUtil.getValueList("BuyingItemLore")) {
             String owner = mg.getItemOwner().getName();
             lore.add(l.replace("%reward%", String.valueOf(mg.getReward())).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%reward%", String.valueOf(mg.getReward())).replace("%owner%", owner).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
@@ -620,9 +655,13 @@ public class GUI
         bidding.put(player.getUniqueId(), (int) mg.getPrice());
         Inventory inv = Bukkit.createInventory(null, 27, PluginControl.color(config.getString("Settings.Bidding-On-Item")));
         if (!bidding.containsKey(player.getUniqueId())) bidding.put(player.getUniqueId(), 0);
-        config.getConfig().getConfigurationSection("Settings.GUISettings.Auction-Settings.Bidding-Buttons").getKeys(false).stream().forEach(price -> {
-            inv.setItem(config.getConfig().getInt("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Slot"), PluginControl.makeItem(config.getConfig().getString("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Item"), 1, config.getConfig().getString("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Name")));
-        });
+        ConfigurationSection section = config.getConfig().getConfigurationSection("Settings.GUISettings.Auction-Settings.Bidding-Buttons");
+        if (section != null) for (String price : section.getKeys(false)) {
+            int slot = config.getConfig().getInt("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Slot");
+            String item = config.getConfig().getString("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Item", "PAPER");
+            String name = config.getConfig().getString("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Name");
+            inv.setItem(slot, PluginControl.makeItem(item, 1, name));
+        }
         inv.setItem(13, getBiddingGlass(player, uid));
         inv.setItem(22, PluginControl.makeItem(config.getString("Settings.GUISettings.Auction-Settings.Bid.Item"), 1, config.getString("Settings.GUISettings.Auction-Settings.Bid.Name"), config.getStringList("Settings.GUISettings.Auction-Settings.Bid.Lore")));
         
@@ -640,37 +679,53 @@ public class GUI
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
         GlobalMarket market = GlobalMarket.getMarket();
-        List<ItemStack> items = new ArrayList();
-        List<Long> ID = new ArrayList();
+        List<ItemStack> items = new ArrayList<>();
+        List<Long> ID = new ArrayList<>();
         for (MarketGoods mg : market.getItems()) {
             if (mg.getItemOwner().getUUID().equals(uuid)) {
-                List<String> lore = new ArrayList();
+                List<String> lore = new ArrayList<>();
                 if (mg.getShopType().equals(ShopType.BID) || mg.getShopType().equals(ShopType.ANY)) {
                     String owner = mg.getItemOwner().getName();
                     String topbidder = mg.getTopBidder().split(":")[0];
-                    MessageUtil.getValueList("BiddingItemLore").stream().forEach(l -> {
-                        lore.add(l.replace("%topbid%", String.valueOf(mg.getPrice())).replace("%owner%", owner).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%topbidder%", topbidder).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
-                    });
+                    for (String l : MessageUtil.getValueList("BiddingItemLore")) {
+                        String price = String.valueOf(mg.getPrice());
+                        String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+                        String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
+                        lore.add(l.replace("%topbid%", price)
+                                .replace("%owner%", owner)
+                                .replace("%addedtime%", addedTime)
+                                .replace("%topbidder%", topbidder)
+                                .replace("%time%", time));
+                    }
                     if (mg.getItem() == null) continue;
                     items.add(PluginControl.addLore(mg.getItem().clone(), lore));
                     ID.add(mg.getUID());
                 }
                 if (mg.getShopType().equals(ShopType.BUY) || mg.getShopType().equals(ShopType.ANY)) {
-                    MessageUtil.getValueList("BuyingItemLore").stream().forEach(l -> {
+                    for (String l : MessageUtil.getValueList("BuyingItemLore")) {
                         String reward = String.valueOf(mg.getReward());
                         String owner = mg.getItemOwner().getName();
+                        String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+                        String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
                         lore.add(l.replace("%reward%", reward)
                                 .replace("%owner%", owner)
-                                .replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime())))
-                                .replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
-                    });
+                                .replace("%addedtime%", addedTime)
+                                .replace("%time%", time));
+                    }
                     items.add(PluginControl.addLore(mg.getItem().clone(), lore));
                     ID.add(mg.getUID());
                 }
                 if (mg.getShopType().equals(ShopType.SELL) || mg.getShopType().equals(ShopType.ANY)) {
-                    MessageUtil.getValueList("SellingItemLore").stream().forEach(l -> {
-                        lore.add(l.replace("%price%", String.valueOf(mg.getPrice())).replace("%owner%", mg.getItemOwner().getName()).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
-                    });
+                    for (String l : MessageUtil.getValueList("SellingItemLore")) {
+                        String price = String.valueOf(mg.getPrice());
+                        String owner = mg.getItemOwner().getName();
+                        String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+                        String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
+                        lore.add(l.replace("%price%", price)
+                                .replace("%owner%", owner)
+                                .replace("%addedtime%", addedTime)
+                                .replace("%time%", time));
+                    }
                     if (mg.getItem() == null) continue;
                     items.add(PluginControl.addLore(mg.getItem().clone(), lore));
                     ID.add(mg.getUID());
@@ -678,9 +733,9 @@ public class GUI
             }
         }
         int maxPage = PluginControl.getMaxPage(items);
-        for (; page > maxPage; page--) {}
+        while (page > maxPage) page--;
         Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Player-Viewer-GUIName") + " #" + page));
-        List<String> options = new ArrayList();
+        List<String> options = new ArrayList<>();
         options.add("WhatIsThis.Viewing");
         for (String o : options) {
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Toggle")) {
@@ -701,7 +756,7 @@ public class GUI
             int slot = inv.firstEmpty();
             inv.setItem(slot, item);
         }
-        itemUID.put(player.getUniqueId(), new ArrayList(PluginControl.getMarketPageUIDs(ID, page)));
+        itemUID.put(player.getUniqueId(), new ArrayList<>(PluginControl.getMarketPageUIDs(ID, page)));
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_VIEWER);
     }
@@ -714,10 +769,12 @@ public class GUI
         ItemStack item;
         int bid = bidding.get(player.getUniqueId());
         if (config.contains("Settings.GUISettings.Auction-Settings.Bidding.Lore")) {
-            List<String> lore = new ArrayList();
-            config.getStringList("Settings.GUISettings.Auction-Settings.Bidding.Lore").stream().forEach(l -> {
-                lore.add(l.replace("%bid%", String.valueOf(bid)).replace("%topbid%", String.valueOf(mg.getPrice())));
-            });
+            List<String> lore = new ArrayList<>();
+            for (String l : config.getStringList("Settings.GUISettings.Auction-Settings.Bidding.Lore")) {
+                String price = String.valueOf(mg.getPrice());
+                lore.add(l.replace("%bid%", String.valueOf(bid))
+                        .replace("%topbid%", price));
+            }
             item = PluginControl.makeItem(id, 1, name, lore);
         } else {
             item = PluginControl.makeItem(id, 1, name);
@@ -731,7 +788,7 @@ public class GUI
         String owner = mg.getItemOwner().getName(); 
         String topbidder = mg.getTopBidder().split(":")[0];
         ItemStack item = mg.getItem();
-        List<String> lore = new ArrayList();
+        List<String> lore = new ArrayList<>();
         String price = String.valueOf(mg.getPrice());
         String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
         for (String l : MessageUtil.getValueList("BiddingItemLore")) {
@@ -774,7 +831,7 @@ public class GUI
         return openingGUI.get(player.getUniqueId());
     }
     
-    public static enum GUIType {
+    public enum GUIType {
         
         /**
          * Global Market: Main GUI.

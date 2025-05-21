@@ -15,20 +15,20 @@ public enum CurrencyManager {
     private final String pluginName, name;
     
     /**
-     * @param pluginname
+     * @param pluginName
      *            name of the Plugin.
      * @param name
      *            name of the Currency.
      */
-    private CurrencyManager(String pluginname, String name) {
-        this.pluginName = pluginname;
+    CurrencyManager(String pluginName, String name) {
+        this.pluginName = pluginName;
         this.name = name;
     }
     
     /**
      * @param name
      *            name of the Type you want.
-     * @return Returns the Currency as a Enum.
+     * @return Returns the Currency as an Enum.
      */
     public static CurrencyManager getFromName(String name) {
         for (CurrencyManager type : CurrencyManager.values()) {

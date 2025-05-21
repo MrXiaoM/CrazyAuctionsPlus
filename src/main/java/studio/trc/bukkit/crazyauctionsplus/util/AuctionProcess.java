@@ -1,6 +1,5 @@
 package studio.trc.bukkit.crazyauctionsplus.util;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +7,7 @@ import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import studio.trc.bukkit.crazyauctionsplus.Main;
@@ -41,17 +41,22 @@ public class AuctionProcess
                 if (mg.getShopType().equals(ShopType.BID)) {
                     if (mg.expired()) {
                         if (mg.getTopBidder().equalsIgnoreCase("None")) {
-                            Storage playerdata = Storage.getPlayer(mg.getItemOwner().getUUID());
-                            Map<String, String> placeholders = new HashMap();
+                            Storage playerData = Storage.getPlayer(mg.getItemOwner().getUUID());
+                            Map<String, String> placeholders = new HashMap<>();
                             String item;
-                            try {
-                                item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem());
-                            } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
+                            ItemMeta meta = mg.getItem().getItemMeta();
+                            if (meta == null) {
+                                item = mg.getItem().getType().toString().toLowerCase().replace("_", " ");
+                            } else {
+                                try {
+                                    item = meta.hasDisplayName() ? meta.getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem());
+                                } catch (ReflectiveOperationException ex) {
+                                    item = meta.hasDisplayName() ? meta.getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
+                                }
                             }
                             placeholders.put("%item%", item);
-                            ItemMail im = new ItemMail(playerdata.makeUID(), mg.getItemOwner().getUUID(), mg.getItem(), PluginControl.convertToMill(FileManager.Files.CONFIG.getFile().getString("Settings.Full-Expire-Time")), mg.getAddedTime(), false);
-                            playerdata.addItem(im);
+                            ItemMail im = new ItemMail(playerData.makeUID(), mg.getItemOwner().getUUID(), mg.getItem(), PluginControl.convertToMill(FileManager.Files.CONFIG.getFile().getString("Settings.Full-Expire-Time")), mg.getAddedTime(), false);
+                            playerData.addItem(im);
                             market.removeGoods(mg.getUID());
                             if (mg.getItemOwner().getPlayer() != null) {
                                 MessageUtil.sendMessage(mg.getItemOwner().getPlayer(), "Item-Has-Expired", placeholders);
@@ -60,12 +65,12 @@ public class AuctionProcess
                             UUID buyer = UUID.fromString(mg.getTopBidder().split(":")[1]);
                             UUID seller = mg.getItemOwner().getUUID();
                             CurrencyManager.addMoney(Bukkit.getOfflinePlayer(seller), mg.getPrice());
-                            Storage playerdata = Storage.getPlayer(buyer);
-                            ItemMail im = new ItemMail(playerdata.makeUID(), PluginControl.getOfflinePlayer(buyer), mg.getItem(), PluginControl.convertToMill(FileManager.Files.CONFIG.getFile().getString("Settings.Full-Expire-Time")), mg.getAddedTime(), false);
-                            playerdata.addItem(im);
+                            Storage playerData = Storage.getPlayer(buyer);
+                            ItemMail im = new ItemMail(playerData.makeUID(), PluginControl.getOfflinePlayer(buyer), mg.getItem(), PluginControl.convertToMill(FileManager.Files.CONFIG.getFile().getString("Settings.Full-Expire-Time")), mg.getAddedTime(), false);
+                            playerData.addItem(im);
                             market.removeGoods(mg.getUID());
                             double price = mg.getPrice();
-                            Map<String, String> placeholders = new HashMap();
+                            Map<String, String> placeholders = new HashMap<>();
                             placeholders.put("%price%", String.valueOf(mg.getPrice()));
                             placeholders.put("%player%", PluginControl.getOfflinePlayer(buyer).getName());
                             if (PluginControl.isOnline(buyer) && PluginControl.getPlayer(buyer) != null) {

@@ -265,13 +265,6 @@ English:
                 Successfully: '{prefix}&aItem &r%item% &ahas been given to player &c%player%'
                 Player-Offline: '{prefix}&cPlayer &e%player% &cis offline and cannot give items.'
                 Item-Not-Exist: '{prefix}&cItem &e%item% &cdoes not exist, please use &3/Ca Admin ItemCollection List &cto list all items.'
-    Updater:
-        Checked: 
-        - '{prefix}&aA new version has been released: &bv%version%'
-        - '&6- &3Now version: &6v%nowVersion%'
-        - '&6- &3Download link: &d%link%'
-        - '&6- &3Update log: %description%'
-        Error: '{prefix}&cUnable to check new version, please check whether network is normal!'
     SellingItemLore: #The lore on items that are being sold.
         - '&7▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
         - '&b&lItems for sale'
@@ -613,13 +606,6 @@ Chinese:
                 Successfully: '{prefix}&a已将物品 &r%item% &a给予玩家 &c%player%'
                 Player-Offline: '{prefix}&c玩家 &e%player% &c离线， 无法给予物品。'
                 Item-Not-Exist: '{prefix}&c物品 &e%item% &c不存在， 请使用&3/Ca Admin ItemCollection List&c列出所有物品。'
-    Updater:
-        Checked: 
-        - '{prefix}&a发现插件存在最新版本: &bv%version%'
-        - '&6- &3服务器运行版本: &6v%nowVersion%'
-        - '&6- &3下载地址: &d%link%'
-        - '&6- &3更新日志: %description%'
-        Error: '{prefix}&c无法获取插件最新版本, 请检查你的网络是否正常! '
     SellingItemLore:
         - '&7▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
         - '&b&l商品出售'

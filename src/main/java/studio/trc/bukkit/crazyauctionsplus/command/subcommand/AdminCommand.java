@@ -1,12 +1,11 @@
 package studio.trc.bukkit.crazyauctionsplus.command.subcommand;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
@@ -25,6 +24,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 
 import studio.trc.bukkit.crazyauctionsplus.command.CrazyAuctionsSubCommand;
@@ -41,8 +41,8 @@ import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 public class AdminCommand
     implements CrazyAuctionsSubCommand
 {
-    private final static Map<CommandSender, String> marketConfirm = new HashMap();
-    private final static Map<CommandSender, String> itemMailConfirm = new HashMap();
+    private final static Map<CommandSender, String> marketConfirm = new HashMap<>();
+    private final static Map<CommandSender, String> itemMailConfirm = new HashMap<>();
     
     @Override
     public void execute(CommandSender sender, String subCommand, String... args) {
@@ -93,7 +93,7 @@ public class AdminCommand
             }
             if (args[1].equalsIgnoreCase("player") && PluginControl.hasCommandPermission(sender, "Admin.SubCommands.Player", false)) {
                 if (args.length == 3) {
-                    List<String> list = Bukkit.getOnlinePlayers().stream().map(player -> player.getName()).collect(Collectors.toList());
+                    List<String> list = Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
                     if (PluginControl.hasCommandPermission(sender, "Admin.SubCommands.Player.SubCommands.Confirm", false)) list.add("confirm");
                     return getTabElements(args, 3, list);
                 }
@@ -112,11 +112,11 @@ public class AdminCommand
                 }
                 if (args.length == 4) {
                     if (args[2].equalsIgnoreCase("delete")) {
-                        return getTabElements(args, 4, ItemCollection.getCollection().stream().map(item -> item.getDisplayName()).collect(Collectors.toList()));
+                        return getTabElements(args, 4, ItemCollection.getCollection().stream().map(ItemCollection::getDisplayName).collect(Collectors.toList()));
                     }
                     if (args[2].equalsIgnoreCase("give")) {
                         if (args.length == 4) {
-                            return getTabElements(args, 4, ItemCollection.getCollection().stream().map(item -> item.getDisplayName()).collect(Collectors.toList()));
+                            return getTabElements(args, 4, ItemCollection.getCollection().stream().map(ItemCollection::getDisplayName).collect(Collectors.toList()));
                         }
                         if (args.length >= 5) {
                             return getTabPlayersName(args, args.length);
@@ -125,7 +125,7 @@ public class AdminCommand
                 }
             }
         }
-        return new ArrayList();
+        return new ArrayList<>();
     }
 
     @Override
@@ -140,9 +140,7 @@ public class AdminCommand
             return;
         }
         MessageUtil.sendMessage(sender, "Admin-Command.Backup.Starting");
-        Bukkit.getOnlinePlayers().stream().filter(player -> GUI.openingGUI.containsKey(player.getUniqueId())).forEach(player -> {
-            player.closeInventory();
-        });
+        Bukkit.getOnlinePlayers().stream().filter(player -> GUI.openingGUI.containsKey(player.getUniqueId())).forEach(HumanEntity::closeInventory);
         FileManager.backup(sender);
     }
 
@@ -158,12 +156,10 @@ public class AdminCommand
             File backupFile = new File("plugins/CrazyAuctionsPlus/Backup/" + args[2]);
             if (backupFile.exists()) {
                 MessageUtil.sendMessage(sender, "Admin-Command.RollBack.Starting");
-                Bukkit.getOnlinePlayers().stream().filter(player -> GUI.openingGUI.containsKey(player.getUniqueId())).forEach(player -> {
-                    player.closeInventory();
-                });
+                Bukkit.getOnlinePlayers().stream().filter(player -> GUI.openingGUI.containsKey(player.getUniqueId())).forEach(HumanEntity::closeInventory);
                 FileManager.rollBack(backupFile, sender);
             } else {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%file%", args[2]);
                 MessageUtil.sendMessage(sender, "Admin-Command.RollBack.Backup-Not-Exist", placeholders);
             }
@@ -204,14 +200,14 @@ public class AdminCommand
                         database = new File("plugins/CrazyAuctionsPlus/Players/" + offlineplayer.getUniqueId() + ".yml").getPath();
                     }
                     items = GlobalMarket.getMarket().getItems().stream().filter(mg -> mg.getItemOwner().getUUID().equals(offlineplayer.getUniqueId())).map(item -> 1).reduce(items, Integer::sum);
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%player%", offlineplayer.getName());
                     placeholders.put("%group%", MessageUtil.getValue("Admin-Command.Info.Unknown"));
                     placeholders.put("%items%", String.valueOf(items));
                     placeholders.put("%database%", database);
                     MessageUtil.sendMessage(sender, "Admin-Command.Info.Info-Messages", placeholders);
                 } else {
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%player%", args[2]);
                     MessageUtil.sendMessage(sender, "Admin-Command.Info.Unknown-Player", placeholders);
                 }
@@ -242,7 +238,7 @@ public class AdminCommand
                     database = new File("plugins/CrazyAuctionsPlus/Players/" + player.getUniqueId() + ".yml").getPath();
                 }
                 items = GlobalMarket.getMarket().getItems().stream().filter(mg -> mg.getItemOwner().getUUID().equals(player.getUniqueId())).map(item -> 1).reduce(items, Integer::sum);
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%player%", player.getName());
                 placeholders.put("%group%", group);
                 placeholders.put("%items%", String.valueOf(items));
@@ -346,7 +342,7 @@ public class AdminCommand
                             return;
                         }
                         if (ItemCollection.addItem(player.getItemInHand(), args[3])) {
-                            Map<String, String> placeholders = new HashMap();
+                            Map<String, String> placeholders = new HashMap<>();
                             placeholders.put("%item%", args[3]);
                             MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Add.Successfully", placeholders);
                         } else {
@@ -362,31 +358,31 @@ public class AdminCommand
                     MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Delete.Help");
                 } else {
                     try {
-                        long uid = Long.valueOf(args[3]);
+                        long uid = Long.parseLong(args[3]);
                         for (ItemCollection ic : ItemCollection.getCollection()) {
                             if (ic.getUID() == uid) {
-                                Map<String, String> placeholders = new HashMap();
+                                Map<String, String> placeholders = new HashMap<>();
                                 placeholders.put("%item%", ic.getDisplayName());
                                 ItemCollection.deleteItem(uid);
                                 MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Delete.Successfully", placeholders);
                                 return;
                             }
                         }
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%item%", args[3]);
                         MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Delete.Item-Not-Exist", placeholders);
                     } catch (NumberFormatException ex) {
                         String displayName = args[3];
                         for (ItemCollection ic : ItemCollection.getCollection()) {
                             if (ic.getDisplayName().equalsIgnoreCase(displayName)) {
-                                Map<String, String> placeholders = new HashMap();
+                                Map<String, String> placeholders = new HashMap<>();
                                 placeholders.put("%item%", ic.getDisplayName());
                                 ItemCollection.deleteItem(displayName);
                                 MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Delete.Successfully", placeholders);
                                 return;
                             }
                         }
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%item%", args[3]);
                         MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Delete.Item-Not-Exist", placeholders);
                     }
@@ -398,7 +394,7 @@ public class AdminCommand
                 } else {
                     String format = MessageUtil.getValue("Admin-Command.ItemCollection.List.List-Format");
                     List<String> list = ItemCollection.getCollection().stream().map(collection -> format.replace("%uid%", String.valueOf(collection.getUID())).replace("%item%", collection.getDisplayName())).collect(Collectors.toList());
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%list%", list.toString().substring(1, list.toString().length() - 1));
                     MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.List.Messages", placeholders);
                 }
@@ -410,10 +406,10 @@ public class AdminCommand
                     if (sender instanceof Player) {
                         Player player = (Player) sender;
                         try {
-                            long uid = Long.valueOf(args[3]);
+                            long uid = Long.parseLong(args[3]);
                             for (ItemCollection ic : ItemCollection.getCollection()) {
                                 if (ic.getUID() == uid) {
-                                    Map<String, String> placeholders = new HashMap();
+                                    Map<String, String> placeholders = new HashMap<>();
                                     placeholders.put("%item%", ic.getDisplayName());
                                     placeholders.put("%player%", player.getName());
                                     player.getInventory().addItem(ic.getItem());
@@ -421,14 +417,14 @@ public class AdminCommand
                                     return;
                                 }
                             }
-                            Map<String, String> placeholders = new HashMap();
+                            Map<String, String> placeholders = new HashMap<>();
                             placeholders.put("%item%", args[3]);
                             MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Give.Item-Not-Exist", placeholders);
                         } catch (NumberFormatException ex) {
                             String displayName = args[3];
                             for (ItemCollection ic : ItemCollection.getCollection()) {
                                 if (ic.getDisplayName().equalsIgnoreCase(displayName)) {
-                                    Map<String, String> placeholders = new HashMap();
+                                    Map<String, String> placeholders = new HashMap<>();
                                     placeholders.put("%item%", ic.getDisplayName());
                                     placeholders.put("%player%", player.getName());
                                     player.getInventory().addItem(ic.getItem());
@@ -436,7 +432,7 @@ public class AdminCommand
                                     return;
                                 }
                             }
-                            Map<String, String> placeholders = new HashMap();
+                            Map<String, String> placeholders = new HashMap<>();
                             placeholders.put("%item%", args[3]);
                             MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Give.Item-Not-Exist", placeholders);
                         }
@@ -446,15 +442,15 @@ public class AdminCommand
                 } else if (args.length >= 5) {
                     Player player = Bukkit.getPlayer(args[4]);
                     if (player == null) {
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%player%", args[4]);
                         MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Give.Player-Offline", placeholders);
                     } else {
                         try {
-                            long uid = Long.valueOf(args[3]);
+                            long uid = Long.parseLong(args[3]);
                             for (ItemCollection ic : ItemCollection.getCollection()) {
                                 if (ic.getUID() == uid) {
-                                    Map<String, String> placeholders = new HashMap();
+                                    Map<String, String> placeholders = new HashMap<>();
                                     placeholders.put("%item%", ic.getDisplayName());
                                     placeholders.put("%player%", player.getName());
                                     player.getInventory().addItem(ic.getItem());
@@ -462,14 +458,14 @@ public class AdminCommand
                                     return;
                                 }
                             }
-                            Map<String, String> placeholders = new HashMap();
+                            Map<String, String> placeholders = new HashMap<>();
                             placeholders.put("%item%", args[3]);
                             MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Give.Item-Not-Exist", placeholders);
                         } catch (NumberFormatException ex) {
                             String displayName = args[3];
                             for (ItemCollection ic : ItemCollection.getCollection()) {
                                 if (ic.getDisplayName().equalsIgnoreCase(displayName)) {
-                                    Map<String, String> placeholders = new HashMap();
+                                    Map<String, String> placeholders = new HashMap<>();
                                     placeholders.put("%item%", ic.getDisplayName());
                                     placeholders.put("%player%", player.getName());
                                     player.getInventory().addItem(ic.getItem());
@@ -477,7 +473,7 @@ public class AdminCommand
                                     return;
                                 }
                             }
-                            Map<String, String> placeholders = new HashMap();
+                            Map<String, String> placeholders = new HashMap<>();
                             placeholders.put("%item%", args[3]);
                             MessageUtil.sendMessage(sender, "Admin-Command.ItemCollection.Give.Item-Not-Exist", placeholders);
                         }
@@ -509,21 +505,21 @@ public class AdminCommand
             int page = 1;
             int nosp = 9;
             try {
-                nosp = Integer.valueOf(MessageUtil.getValue("Admin-Command.Market.List.Number-Of-Single-Page"));
-            } catch (NumberFormatException ex) {}
+                nosp = Integer.parseInt(MessageUtil.getValue("Admin-Command.Market.List.Number-Of-Single-Page"));
+            } catch (NumberFormatException ignored) {}
             StringBuilder formatList = new StringBuilder();
             for (int i = page * nosp - nosp;i < list.size() && i < page * nosp;i++) {
                 String format = MessageUtil.getValue("Admin-Command.Market.List.Format").replace("%uid%", String.valueOf(list.get(i).getUID())).replace("%money%", String.valueOf(list.get(i).getShopType().equals(ShopType.BUY) ? list.get(i).getReward() : list.get(i).getPrice())).replace("%owner%", list.get(i).getItemOwner().getName());
                 format = format.replace("%item%", LangUtilsHook.getItemName(list.get(i).getItem()));
                 formatList.append(format);
             }
-            int maxpage = ((int) list.size() / nosp) + 1;
-            Map<String, String> placeholders = new HashMap();
+            int maxpage = (list.size() / nosp) + 1;
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%format%", formatList.toString());
             placeholders.put("%page%", String.valueOf(page));
             placeholders.put("%maxpage%", String.valueOf(maxpage));
             placeholders.put("%nextpage%", String.valueOf(page + 1));
-            Map<String, Boolean> visible = new HashMap();
+            Map<String, Boolean> visible = new HashMap<>();
             visible.put("{hasnext}", maxpage > page);
             MessageUtil.sendMessage(sender, "Admin-Command.Market.List.Messages", placeholders, visible);
         } else if (args.length >= 4) {
@@ -534,14 +530,14 @@ public class AdminCommand
             }
             int page = 1;
             try {
-                page = Integer.valueOf(args[3]);
-            } catch (NumberFormatException ex) {}
+                page = Integer.parseInt(args[3]);
+            } catch (NumberFormatException ignored) {}
             int nosp = 9;
             try {
-                nosp = Integer.valueOf(MessageUtil.getValue("Admin-Command.Market.List.Number-Of-Single-Page"));
-            } catch (NumberFormatException ex) {}
+                nosp = Integer.parseInt(MessageUtil.getValue("Admin-Command.Market.List.Number-Of-Single-Page"));
+            } catch (NumberFormatException ignored) {}
             StringBuilder formatList = new StringBuilder();
-            int maxpage = ((int) list.size() / nosp) + 1;
+            int maxpage = (list.size() / nosp) + 1;
             if (maxpage < page) {
                 page = maxpage;
             }
@@ -550,12 +546,12 @@ public class AdminCommand
                 format = format.replace("%item%", LangUtilsHook.getItemName(list.get(i).getItem()));
                 formatList.append(format);
             }
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%format%", formatList.toString());
             placeholders.put("%page%", String.valueOf(page));
             placeholders.put("%maxpage%", String.valueOf(maxpage));
             placeholders.put("%nextpage%", String.valueOf(page + 1));
-            Map<String, Boolean> visible = new HashMap();
+            Map<String, Boolean> visible = new HashMap<>();
             visible.put("{hasnext}", maxpage > page);
             MessageUtil.sendMessage(sender, "Admin-Command.Market.List.Messages", placeholders, visible);
         }
@@ -581,37 +577,33 @@ public class AdminCommand
             long uid;
             double money;
             try {
-                uid = Long.valueOf(args[3]);
+                uid = Long.parseLong(args[3]);
             } catch (NumberFormatException ex) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%arg%", args[3]);
                 MessageUtil.sendMessage(sender, "Admin-Command.Market.Repricing.Not-A-Valid-Number", placeholders);
                 return;
             }
             try {
-                money = Double.valueOf(args[4]);
+                money = Double.parseDouble(args[4]);
             } catch (NumberFormatException ex) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%arg%", args[4]);
                 MessageUtil.sendMessage(sender, "Admin-Command.Market.Repricing.Not-A-Valid-Number", placeholders);
                 return;
             }
             MarketGoods goods = market.getMarketGoods(uid);
             if (goods == null) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%uid%", String.valueOf(uid));
                 MessageUtil.sendMessage(sender, "Admin-Command.Market.Repricing.Not-Exist", placeholders);
                 return;
             }
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%item%", LangUtilsHook.getItemName(goods.getItem()));
             placeholders.put("%uid%", String.valueOf(uid));
             placeholders.put("%money%", String.valueOf(money));
-            if (goods.getShopType().equals(ShopType.BUY)) {
-                goods.setPrice(money);
-            } else {
-                goods.setPrice(money);
-            }
+            goods.setPrice(money);
             MessageUtil.sendMessage(sender, "Admin-Command.Market.Repricing.Succeeded", placeholders);
         }
     }
@@ -623,21 +615,21 @@ public class AdminCommand
         } else if (args.length >= 4) {
             long uid;
             try {
-                uid = Long.valueOf(args[3]);
+                uid = Long.parseLong(args[3]);
             } catch (NumberFormatException ex) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%arg%", args[3]);
                 MessageUtil.sendMessage(sender, "Admin-Command.Market.Delete.Not-A-Valid-Number", placeholders);
                 return;
             }
             MarketGoods goods = market.getMarketGoods(uid);
             if (goods == null) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%uid%", String.valueOf(uid));
                 MessageUtil.sendMessage(sender, "Admin-Command.Market.Delete.Not-Exist", placeholders);
                 return;
             }
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%item%", LangUtilsHook.getItemName(goods.getItem()));
             placeholders.put("%uid%", String.valueOf(uid));
             market.removeGoods(uid);
@@ -664,17 +656,17 @@ public class AdminCommand
                     PluginControl.printStackTrace(ex);
                 }
             }
-            try (OutputStream out = new FileOutputStream(file)) {
+            try (OutputStream out = java.nio.file.Files.newOutputStream(file.toPath())) {
                 out.write(market.getYamlData().saveToString().getBytes());
             } catch (IOException ex) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                 MessageUtil.sendMessage(sender, "Admin-Command.Market.Download.Failed", placeholders);
                 marketConfirm.remove(sender);
                 PluginControl.printStackTrace(ex);
                 return;
             }
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%path%", fileName);
             MessageUtil.sendMessage(sender, "Admin-Command.Market.Download.Succeeded", placeholders);
             marketConfirm.remove(sender);
@@ -694,17 +686,17 @@ public class AdminCommand
             String fileName = Files.CONFIG.getFile().getString("Settings.Upload.Market").replace("%date%", new SimpleDateFormat("yyyy-MM-hh-HH-mm-ss").format(new Date()));
             File file = new File(fileName);
             if (!file.exists()) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%file%", fileName);
                 MessageUtil.sendMessage(sender, "Admin-Command.Market.Upload.File-Not-Exist", placeholders);
                 marketConfirm.remove(sender);
                 return;
             }
             FileConfiguration config = new YamlConfiguration();
-            try (Reader reader = new InputStreamReader(new FileInputStream(file), "UTF-8")) {
+            try (Reader reader = new InputStreamReader(java.nio.file.Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
                 config.load(reader);
             } catch (IOException | InvalidConfigurationException ex) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                 MessageUtil.sendMessage(sender, "Admin-Command.Market.Upload.Failed", placeholders);
                 marketConfirm.remove(sender);
@@ -714,13 +706,13 @@ public class AdminCommand
             switch (PluginControl.getMarketStorageMethod()) {
                 case MySQL: {
                     MySQLEngine engine = MySQLEngine.getInstance();
-                    try {
-                        PreparedStatement statement = engine.getConnection().prepareStatement("UPDATE " + MySQLEngine.getDatabaseName() + "." + MySQLEngine.getMarketTable() + " SET "
-                                + "YamlMarket = ?");
+                    try (PreparedStatement statement = engine.getConnection().prepareStatement(
+                            "UPDATE " + MySQLEngine.getDatabaseName() + "." + MySQLEngine.getMarketTable() + " SET YamlMarket = ?"
+                    )){
                         statement.setString(1, config.saveToString());
                         statement.executeUpdate();
                     } catch (SQLException ex) {
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                         MessageUtil.sendMessage(sender, "Admin-Command.Market.Upload.Failed", placeholders);
                         marketConfirm.remove(sender);
@@ -731,13 +723,13 @@ public class AdminCommand
                 }
                 case SQLite: {
                     SQLiteEngine engine = SQLiteEngine.getInstance();
-                    try {
-                        PreparedStatement statement = engine.getConnection().prepareStatement("UPDATE " + SQLiteEngine.getMarketTable() + " SET "
-                                + "YamlMarket = ?");
+                    try (PreparedStatement statement = engine.getConnection().prepareStatement(
+                            "UPDATE " + SQLiteEngine.getMarketTable() + " SET YamlMarket = ?"
+                    )){
                         statement.setString(1, config.saveToString());
                         statement.executeUpdate();
                     } catch (SQLException ex) {
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                         MessageUtil.sendMessage(sender, "Admin-Command.Market.Upload.Failed", placeholders);
                         marketConfirm.remove(sender);
@@ -747,7 +739,7 @@ public class AdminCommand
                     break;
                 }
             }
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%file%", fileName);
             MessageUtil.sendMessage(sender, "Admin-Command.Market.Upload.Succeeded", placeholders);
             marketConfirm.remove(sender);
@@ -779,7 +771,7 @@ public class AdminCommand
             uuid = player.getUniqueId();
             name = player.getName();
         } else {
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%player%", args[2]);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.List.Please-Wait", placeholders);
             OfflinePlayer offlineplayer = Bukkit.getOfflinePlayer(args[2]);
@@ -800,22 +792,22 @@ public class AdminCommand
             int page = 1;
             int nosp = 9;
             try {
-                nosp = Integer.valueOf(MessageUtil.getValue("Admin-Command.Player.List.Number-Of-Single-Page"));
-            } catch (NumberFormatException ex) {}
+                nosp = Integer.parseInt(MessageUtil.getValue("Admin-Command.Player.List.Number-Of-Single-Page"));
+            } catch (NumberFormatException ignored) {}
             StringBuilder formatList = new StringBuilder();
             for (int i = page * nosp - nosp;i < list.size() && i < page * nosp;i++) {
                 String format = MessageUtil.getValue("Admin-Command.Player.List.Format").replace("%uid%", String.valueOf(list.get(i).getUID()));
                 format = format.replace("%item%", LangUtilsHook.getItemName(list.get(i).getItem()));
                 formatList.append(format);
             }
-            int maxpage = ((int) list.size() / nosp) + 1;
-            Map<String, String> placeholders = new HashMap();
+            int maxpage = (list.size() / nosp) + 1;
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%player%", name);
             placeholders.put("%format%", formatList.toString());
             placeholders.put("%page%", String.valueOf(page));
             placeholders.put("%maxpage%", String.valueOf(maxpage));
             placeholders.put("%nextpage%", String.valueOf(page + 1));
-            Map<String, Boolean> visible = new HashMap();
+            Map<String, Boolean> visible = new HashMap<>();
             visible.put("{hasnext}", maxpage > page);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.List.Messages", placeholders, visible);
         } else if (args.length >= 5) {
@@ -826,14 +818,14 @@ public class AdminCommand
             }
             int page = 1;
             try {
-                page = Integer.valueOf(args[4]);
-            } catch (NumberFormatException ex) {}
+                page = Integer.parseInt(args[4]);
+            } catch (NumberFormatException ignored) {}
             int nosp = 9;
             try {
-                nosp = Integer.valueOf(MessageUtil.getValue("Admin-Command.Player.List.Number-Of-Single-Page"));
-            } catch (NumberFormatException ex) {}
+                nosp = Integer.parseInt(MessageUtil.getValue("Admin-Command.Player.List.Number-Of-Single-Page"));
+            } catch (NumberFormatException ignored) {}
             StringBuilder formatList = new StringBuilder();
-            int maxpage = ((int) list.size() / nosp) + 1;
+            int maxpage = (list.size() / nosp) + 1;
             if (maxpage < page) {
                 page = maxpage;
             }
@@ -842,13 +834,13 @@ public class AdminCommand
                 format = format.replace("%item%", LangUtilsHook.getItemName(list.get(i).getItem()));
                 formatList.append(format);
             }
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%player%", name);
             placeholders.put("%format%", formatList.toString());
             placeholders.put("%page%", String.valueOf(page));
             placeholders.put("%maxpage%", String.valueOf(maxpage));
             placeholders.put("%nextpage%", String.valueOf(page + 1));
-            Map<String, Boolean> visible = new HashMap();
+            Map<String, Boolean> visible = new HashMap<>();
             visible.put("{hasnext}", maxpage > page);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.List.Messages", placeholders, visible);
         }
@@ -867,7 +859,7 @@ public class AdminCommand
             uuid = player.getUniqueId();
             name = player.getName();
         } else {
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%player%", args[2]);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.Clear.Please-Wait", placeholders);
             OfflinePlayer offlineplayer = Bukkit.getOfflinePlayer(args[2]);
@@ -890,7 +882,7 @@ public class AdminCommand
                 }
                 market.saveData();
                 itemMailConfirm.remove(sender);
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%player%", name);
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Clear.Market", placeholders);
             } else {
@@ -901,7 +893,7 @@ public class AdminCommand
             if (itemMailConfirm.containsKey(sender) && itemMailConfirm.get(sender).equalsIgnoreCase("ca admin player " + name + " clear mail")) {
                 Storage.getPlayer(uuid).clearMailBox();
                 itemMailConfirm.remove(sender);
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%player%", name);
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Clear.ItemMail", placeholders);
             } else {
@@ -925,7 +917,7 @@ public class AdminCommand
                 uuid = player.getUniqueId();
                 name = player.getName();
             } else {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%player%", args[2]);
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Delete.Please-Wait", placeholders);
                 OfflinePlayer offlineplayer = Bukkit.getOfflinePlayer(args[2]);
@@ -937,28 +929,28 @@ public class AdminCommand
                     return;
                 }
             }
-            Storage playerdata = Storage.getPlayer(uuid);
+            Storage playerData = Storage.getPlayer(uuid);
             long uid;
             try {
-                uid = Long.valueOf(args[4]);
+                uid = Long.parseLong(args[4]);
             } catch (NumberFormatException ex) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%arg%", args[4]);
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Delete.Not-A-Valid-Number", placeholders);
                 return;
             }
-            ItemMail mail = playerdata.getMail(uid);
+            ItemMail mail = playerData.getMail(uid);
             if (mail == null) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%uid%", String.valueOf(uid));
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Delete.Not-Exist", placeholders);
                 return;
             }
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%item%", LangUtilsHook.getItemName(mail.getItem()));
             placeholders.put("%uid%", String.valueOf(uid));
             placeholders.put("%player%", name);
-            playerdata.removeItem(mail);
+            playerData.removeItem(mail);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.Delete.Succeeded", placeholders);
         }
     }
@@ -976,7 +968,7 @@ public class AdminCommand
             uuid = player.getUniqueId();
             name = player.getName();
         } else {
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%player%", args[2]);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.View.Please-Wait", placeholders);
             OfflinePlayer offlineplayer = Bukkit.getOfflinePlayer(args[2]);
@@ -989,7 +981,7 @@ public class AdminCommand
             }
         }
         GUI.openPlayersMail((Player) sender, 1, uuid);
-        Map<String, String> placeholders = new HashMap();
+        Map<String, String> placeholders = new HashMap<>();
         placeholders.put("%player%", name);
         MessageUtil.sendMessage(sender, "Admin-Command.Player.View.Succeeded", placeholders);
     }
@@ -1003,13 +995,14 @@ public class AdminCommand
             uuid = player.getUniqueId();
             name = player.getName();
         } else {
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%player%", args[2]);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.Download.Please-Wait", placeholders);
             OfflinePlayer offlineplayer = Bukkit.getOfflinePlayer(args[2]);
             if (offlineplayer != null) {
                 uuid = offlineplayer.getUniqueId();
                 name = offlineplayer.getName();
+                name = name == null ? "null" : name;
             } else {
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Download.Player-Not-Exist", placeholders);
                 return;
@@ -1032,17 +1025,17 @@ public class AdminCommand
                     PluginControl.printStackTrace(ex);
                 }
             }
-            try (OutputStream out = new FileOutputStream(file)) {
+            try (OutputStream out = java.nio.file.Files.newOutputStream(file.toPath())) {
                 out.write(Storage.getPlayer(uuid).getYamlData().saveToString().getBytes());
             } catch (IOException ex) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Download.Failed", placeholders);
                 itemMailConfirm.remove(sender);
                 PluginControl.printStackTrace(ex);
                 return;
             }
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%path%", fileName);
             placeholders.put("%player%", name);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.Download.Succeeded", placeholders);
@@ -1062,13 +1055,14 @@ public class AdminCommand
             uuid = player.getUniqueId();
             name = player.getName();
         } else {
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%player%", args[2]);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.Upload.Please-Wait", placeholders);
             OfflinePlayer offlineplayer = Bukkit.getOfflinePlayer(args[2]);
             if (offlineplayer != null) {
                 uuid = offlineplayer.getUniqueId();
                 name = offlineplayer.getName();
+                if (name == null) name = "null";
             } else {
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Upload.Player-Not-Exist", placeholders);
                 return;
@@ -1082,17 +1076,17 @@ public class AdminCommand
             String fileName = Files.CONFIG.getFile().getString("Settings.Upload.PlayerData").replace("%player%", name).replace("%uuid%", uuid.toString()).replace("%date%", new SimpleDateFormat("yyyy-MM-hh-HH-mm-ss").format(new Date()));
             File file = new File(fileName);
             if (!file.exists()) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%file%", fileName);
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Upload.File-Not-Exist", placeholders);
                 itemMailConfirm.remove(sender);
                 return;
             }
             FileConfiguration config = new YamlConfiguration();
-            try (Reader reader = new InputStreamReader(new FileInputStream(file), "UTF-8")) {
+            try (Reader reader = new InputStreamReader(java.nio.file.Files.newInputStream(file.toPath()), StandardCharsets.UTF_8)) {
                 config.load(reader);
             } catch (IOException | InvalidConfigurationException ex) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                 MessageUtil.sendMessage(sender, "Admin-Command.Player.Upload.Failed", placeholders);
                 itemMailConfirm.remove(sender);
@@ -1102,14 +1096,14 @@ public class AdminCommand
             switch (PluginControl.getMarketStorageMethod()) {
                 case MySQL: {
                     MySQLEngine engine = MySQLEngine.getInstance();
-                    try {
-                        PreparedStatement statement = engine.getConnection().prepareStatement("UPDATE " + MySQLEngine.getDatabaseName() + "." + MySQLEngine.getItemMailTable() + " SET "
-                                + "YamlData = ? WHERE UUID = ?");
+                    try (PreparedStatement statement = engine.getConnection().prepareStatement(
+                            "UPDATE " + MySQLEngine.getDatabaseName() + "." + MySQLEngine.getItemMailTable() + " SET YamlData = ? WHERE UUID = ?"
+                    )) {
                         statement.setString(1, config.saveToString());
                         statement.setString(2, uuid.toString());
                         statement.executeUpdate();
                     } catch (SQLException ex) {
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                         MessageUtil.sendMessage(sender, "Admin-Command.Player.Upload.Failed", placeholders);
                         itemMailConfirm.remove(sender);
@@ -1120,14 +1114,14 @@ public class AdminCommand
                 }
                 case SQLite: {
                     SQLiteEngine engine = SQLiteEngine.getInstance();
-                    try {
-                        PreparedStatement statement = engine.getConnection().prepareStatement("UPDATE " + SQLiteEngine.getItemMailTable() + " SET "
-                                + "YamlMarket = ? WHERE UUID = ?");
+                    try (PreparedStatement statement = engine.getConnection().prepareStatement(
+                            "UPDATE " + SQLiteEngine.getItemMailTable() + " SET YamlMarket = ? WHERE UUID = ?"
+                    )) {
                         statement.setString(1, config.saveToString());
                         statement.setString(2, uuid.toString());
                         statement.executeUpdate();
                     } catch (SQLException ex) {
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                         MessageUtil.sendMessage(sender, "Admin-Command.Player.Upload.Failed", placeholders);
                         itemMailConfirm.remove(sender);
@@ -1137,7 +1131,7 @@ public class AdminCommand
                     break;
                 }
             }
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%file%", fileName);
             placeholders.put("%player%", name);
             MessageUtil.sendMessage(sender, "Admin-Command.Player.Upload.Succeeded", placeholders);

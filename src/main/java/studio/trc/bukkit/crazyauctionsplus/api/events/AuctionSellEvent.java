@@ -4,6 +4,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
+import org.jetbrains.annotations.NotNull;
 import studio.trc.bukkit.crazyauctionsplus.util.MarketGoods;
 
 /**
@@ -27,7 +28,7 @@ public class AuctionSellEvent extends Event {
     }
     
     @Override
-    public HandlerList getHandlers() {
+    public @NotNull HandlerList getHandlers() {
         return handlers;
     }
     

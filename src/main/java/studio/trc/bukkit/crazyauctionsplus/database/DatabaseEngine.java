@@ -12,57 +12,50 @@ public interface DatabaseEngine
 {
     /**
      * Get a connection to the database.
-     * @return 
      */
-    public Connection getConnection();
+    Connection getConnection();
     
     /**
      * Reload connection parameters.
      */
-    public void reloadConnectionParameters();
+    void reloadConnectionParameters();
     
     /**
      * Connection to the database.
      */
-    public void connectToTheDatabase();
+    void connectToTheDatabase();
     
     /**
      * Repair the connection to the database.
      * This method does not work when the connection is valid.
      */
-    public void repairConnection();
+    void repairConnection();
     
     /**
      * Send SQL statement for update.
-     * @param statement 
      */
-    public void executeUpdate(PreparedStatement statement);
+    void executeUpdate(PreparedStatement statement);
     
     /**
      * Send SQL statement for update.
-     * @param sql
      * @deprecated
      */
     @Deprecated
-    public void executeUpdate(String sql);
+    void executeUpdate(String sql);
     
     /**
      * Send SQL statements to get data.
-     * @param statement
-     * @return 
      */
-    public ResultSet executeQuery(PreparedStatement statement);
+    ResultSet executeQuery(PreparedStatement statement);
     
     /**
      * Send SQL statements to get data.
-     * @param sql
-     * @return
      * @deprecated
      */
     @Deprecated
-    public ResultSet executeQuery(String sql);
+    ResultSet executeQuery(String sql);
     
-    public static DatabaseEngine getDatabase() {
+    static DatabaseEngine getDatabase() {
         if (PluginControl.useMySQLStorage()) {
             return MySQLEngine.getInstance();
         } else if (PluginControl.useSQLiteStorage()) {

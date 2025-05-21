@@ -1,10 +1,10 @@
 package studio.trc.bukkit.crazyauctionsplus.database.market;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -22,7 +22,7 @@ import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 public class YamlMarket
     implements GlobalMarket
 {
-    private static volatile List<MarketGoods> marketgoods = new ArrayList();
+    private static final List<MarketGoods> marketGoods = new ArrayList<>();
     
     private static YamlMarket instance;
     
@@ -41,12 +41,12 @@ public class YamlMarket
 
     @Override
     public List<MarketGoods> getItems() {
-        return marketgoods;
+        return marketGoods;
     }
     
     @Override
     public MarketGoods getMarketGoods(long uid) {
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             if (mg.getUID() == uid) {
                 return mg;
             }
@@ -60,7 +60,7 @@ public class YamlMarket
         while (true) {
             id++;
             boolean b = false;
-            for (MarketGoods mgs : marketgoods) {
+            for (MarketGoods mgs : marketGoods) {
                 if (mgs.getUID() == id) {
                     b = true;
                     break;
@@ -74,15 +74,15 @@ public class YamlMarket
 
     @Override
     public void addGoods(MarketGoods goods) {
-        marketgoods.add(goods);
+        marketGoods.add(goods);
         saveData();
     }
 
     @Override
     public void removeGoods(MarketGoods goods) {
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             if (mg.equals(goods)) {
-                marketgoods.remove(mg);
+                marketGoods.remove(mg);
                 break;
             }
         }
@@ -91,9 +91,9 @@ public class YamlMarket
     
     @Override
     public void removeGoods(long uid) {
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             if (mg.getUID() == uid) {
-                marketgoods.remove(mg);
+                marketGoods.remove(mg);
                 break;
             }
         }
@@ -102,7 +102,7 @@ public class YamlMarket
     
     @Override
     public void clearGlobalMarket() {
-        marketgoods.clear();
+        marketGoods.clear();
         saveData();
     }
 
@@ -110,7 +110,7 @@ public class YamlMarket
     public void saveData() {
         ProtectedConfiguration data = Files.DATABASE.getFile();
         data.set("Items", null);
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             long num = 1;
             for (;data.contains("Items." + num);num++) {}
             data.set("Items." + num + ".Owner", mg.getItemOwner().toString());
@@ -151,7 +151,7 @@ public class YamlMarket
     @Override
     public void reloadData() {
         ProtectedConfiguration data = Files.DATABASE.getFile();
-        marketgoods.clear();
+        marketGoods.clear();
         if (data.get("Items") != null) {
             for (String path : data.getConfigurationSection("Items").getKeys(false)) {
                 String[] owner = data.getString("Items." + path + ".Owner").split(":");
@@ -202,7 +202,7 @@ public class YamlMarket
                         continue;
                     }
                 }
-                marketgoods.add(goods);
+                marketGoods.add(goods);
             }
         }
     }
@@ -210,7 +210,7 @@ public class YamlMarket
     @Override
     public YamlConfiguration getYamlData() {
         YamlConfiguration config = new YamlConfiguration();
-        try (Reader reader = new InputStreamReader(new FileInputStream(new File("plugins/CrazyAuctionsPlus/Database.yml")), "UTF-8")) {
+        try (Reader reader = new InputStreamReader(java.nio.file.Files.newInputStream(new File("plugins/CrazyAuctionsPlus/Database.yml").toPath()), StandardCharsets.UTF_8)) {
             config.load(reader);
         } catch (IOException | InvalidConfigurationException ex) {
             PluginControl.printStackTrace(ex);

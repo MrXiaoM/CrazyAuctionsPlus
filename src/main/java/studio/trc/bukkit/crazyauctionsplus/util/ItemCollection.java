@@ -2,9 +2,11 @@ package studio.trc.bukkit.crazyauctionsplus.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.bukkit.inventory.ItemStack;
 
+import org.bukkit.inventory.meta.ItemMeta;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.Files;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.ProtectedConfiguration;
 
@@ -38,7 +40,8 @@ public class ItemCollection
         if (ic.get("ItemCollection") != null) {
             for (String items : ic.getConfigurationSection("ItemCollection").getKeys(false)) {
                 if (ic.get("ItemCollection." + items + ".UID") != null && ic.get("ItemCollection." + items + ".Item") != null) {
-                    if (item.getItemMeta().equals(ic.getItemStack("ItemCollection." + items + ".Item").getItemMeta())) {
+                    ItemMeta meta = ic.getItemStack("ItemCollection." + items + ".Item").getItemMeta();
+                    if (Objects.equals(item.getItemMeta(), meta)) {
                         return false;
                     }
                 }
@@ -60,52 +63,30 @@ public class ItemCollection
         }
     }
     
-    public static boolean deleteItem(ItemStack item) {
-        ProtectedConfiguration ic = Files.ITEMCOLLECTION.getFile();
-        if (ic.get("ItemCollection") != null) {
-            for (String items : ic.getConfigurationSection("ItemCollection").getKeys(false)) {
-                if (ic.get("ItemCollection." + items + ".UID") != null && ic.getItemStack("ItemCollection." + items + ".Item").getItemMeta().equals(item.getItemMeta())) {
-                    ic.set("ItemCollection." + items, null);
-                    Files.ITEMCOLLECTION.saveFile();
-                    return true;
-                }
-            }
-            return false;
-        } else {
-            return false;
-        }
-    }
-    
-    public static boolean deleteItem(long uid) {
+    public static void deleteItem(long uid) {
         ProtectedConfiguration ic = Files.ITEMCOLLECTION.getFile();
         if (ic.get("ItemCollection") != null) {
             for (String items : ic.getConfigurationSection("ItemCollection").getKeys(false)) {
                 if (ic.get("ItemCollection." + items + ".UID") != null && ic.getLong("ItemCollection." + items + ".UID") == uid) {
                     ic.set("ItemCollection." + items, null);
                     Files.ITEMCOLLECTION.saveFile();
-                    return true;
+                    return;
                 }
             }
-            return false;
-        } else {
-            return false;
         }
     }
     
-    public static boolean deleteItem(String displayName) {
-        if (displayName == null) return false;
+    public static void deleteItem(String displayName) {
+        if (displayName == null) return;
         ProtectedConfiguration ic = Files.ITEMCOLLECTION.getFile();
         if (ic.get("ItemCollection") != null) {
             for (String items : ic.getConfigurationSection("ItemCollection").getKeys(false)) {
                 if (items.equalsIgnoreCase(displayName)) {
                     ic.set("ItemCollection." + items, null);
                     Files.ITEMCOLLECTION.saveFile();
-                    return true;
+                    return;
                 }
             }
-            return false;
-        } else {
-            return false;
         }
     }
     

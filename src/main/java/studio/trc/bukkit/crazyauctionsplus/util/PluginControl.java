@@ -1,10 +1,8 @@
 package studio.trc.bukkit.crazyauctionsplus.util;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -17,6 +15,7 @@ import java.util.regex.Pattern;
 
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -47,7 +46,7 @@ import studio.trc.bukkit.crazyauctionsplus.util.FileManager.*;
 
 public class PluginControl
 {
-    public static Map<CommandSender, Boolean> stackTraceVisible = new HashMap();
+    public static Map<CommandSender, Boolean> stackTraceVisible = new HashMap<>();
     public static String nmsVersion = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
     private static final Pattern hexColorPattern = Pattern.compile("#[a-fA-F0-9]{6}");
     
@@ -61,7 +60,7 @@ public class PluginControl
                     text = text.replace(color, net.md_5.bungee.api.ChatColor.of(color).toString());
                     matcher = hexColorPattern.matcher(text);
                 }
-            } catch (Throwable t) {}
+            } catch (Throwable ignored) {}
         }
         return ChatColor.translateAlternateColorCodes('&', text);
     }
@@ -79,6 +78,38 @@ public class PluginControl
     public static String removeColor(String msg) {
         return ChatColor.stripColor(msg);
     }
+
+    @SuppressWarnings({"deprecation"})
+    public static ItemStack legacyItem(Material material, int amount, Integer ty) {
+        if (material == null) {
+            return new ItemStack(Material.PAPER, amount);
+        }
+        if (ty.equals(0)) {
+            return new ItemStack(material, amount);
+        } else {
+            return new ItemStack(material, amount, ty.shortValue());
+        }
+    }
+
+    public static ItemStack defaultItem() {
+        if (Version.getCurrentVersion().isNewer(Version.v1_12_R1)) {
+            return new ItemStack(Material.RED_TERRACOTTA, 1);
+        } else {
+            Material material = Material.matchMaterial("STAINED_CLAY");
+            return legacyItem(material, 1, 14);
+        }
+    }
+
+    public static ItemStack makeItem(Material m, int amount, int ty) {
+        ItemStack item;
+        try {
+            item = legacyItem(m, amount, ty);
+        } catch (Exception e) {
+            item = defaultItem();
+            PluginControl.printStackTrace(e);
+        }
+        return item;
+    }
     
     public static ItemStack makeItem(String type, int amount) {
         int ty = 0;
@@ -88,19 +119,7 @@ public class PluginControl
             ty = Integer.parseInt(b[1]);
         }
         Material m = Material.matchMaterial(type);
-        ItemStack item;
-        try {
-            item = new ItemStack(m, amount, (short) ty);
-        } catch (Exception e) {
-            if (Version.getCurrentVersion().isNewer(Version.v1_12_R1)) {
-                item = new ItemStack(Material.matchMaterial("RED_TERRACOTTA"), 1);
-                
-            } else {
-                item = new ItemStack(Material.matchMaterial("STAINED_CLAY"), 1, (short) 14);
-            }
-            PluginControl.printStackTrace(e);
-        }
-        return item;
+        return makeItem(m, amount, ty);
     }
     
     public static ItemStack makeItem(String type, int amount, String name) {
@@ -111,25 +130,17 @@ public class PluginControl
             ty = Integer.parseInt(b[1]);
         }
         Material m = Material.matchMaterial(type);
-        ItemStack item;
-        try {
-            item = new ItemStack(m, amount, (short) ty);
-        } catch (Exception e) {
-            if (Version.getCurrentVersion().isNewer(Version.v1_12_R1)) {
-                item = new ItemStack(Material.matchMaterial("RED_TERRACOTTA"), 1);
-            } else {
-                item = new ItemStack(Material.matchMaterial("STAINED_CLAY"), 1, (short) 14);
-            }
-            PluginControl.printStackTrace(e);
-        }
+        ItemStack item = makeItem(m, amount, ty);
         ItemMeta me = item.getItemMeta();
-        me.setDisplayName(color(name));
-        item.setItemMeta(me);
+        if (me != null) {
+            me.setDisplayName(color(name));
+            item.setItemMeta(me);
+        }
         return item;
     }
     
     public static ItemStack makeItem(String type, int amount, String name, List<String> lore) {
-        ArrayList<String> l = new ArrayList();
+        ArrayList<String> l = new ArrayList<>();
         int ty = 0;
         if (type.contains(":")) {
             String[] b = type.split(":");
@@ -137,63 +148,61 @@ public class PluginControl
             ty = Integer.parseInt(b[1]);
         }
         Material m = Material.matchMaterial(type);
-        ItemStack item;
-        try {
-            item = new ItemStack(m, amount, (short) ty);
-        } catch (Exception e) {
-            if (Version.getCurrentVersion().isNewer(Version.v1_12_R1)) {
-                item = new ItemStack(Material.matchMaterial("RED_TERRACOTTA"), 1);
-                
-            } else {
-                item = new ItemStack(Material.matchMaterial("STAINED_CLAY"), 1, (short) 14);
-            }
-            PluginControl.printStackTrace(e);
-        }
+        ItemStack item = makeItem(m, amount, ty);
         ItemMeta me = item.getItemMeta();
-        me.setDisplayName(color(name));
-        for (String L : lore)
-            l.add(color(L));
-        me.setLore(l);
-        item.setItemMeta(me);
+        if (me != null) {
+            me.setDisplayName(color(name));
+            for (String L : lore)
+                l.add(color(L));
+            me.setLore(l);
+            item.setItemMeta(me);
+        }
         return item;
     }
     
     public static ItemStack makeItem(Material material, int amount, int type, String name) {
-        ItemStack item = new ItemStack(material, amount, (short) type);
+        ItemStack item = makeItem(material, amount, type);
         ItemMeta m = item.getItemMeta();
-        m.setDisplayName(color(name));
-        item.setItemMeta(m);
+        if (m != null) {
+            m.setDisplayName(color(name));
+            item.setItemMeta(m);
+        }
         return item;
     }
     
     public static ItemStack makeItem(Material material, int amount, int type, String name, List<String> lore) {
-        ArrayList<String> l = new ArrayList();
-        ItemStack item = new ItemStack(material, amount, (short) type);
+        ArrayList<String> l = new ArrayList<>();
+        ItemStack item = makeItem(material, amount, type);
         ItemMeta m = item.getItemMeta();
-        m.setDisplayName(color(name));
-        for (String L : lore)
-            l.add(color(L));
-        m.setLore(l);
-        item.setItemMeta(m);
+        if (m != null) {
+            m.setDisplayName(color(name));
+            for (String L : lore)
+                l.add(color(L));
+            m.setLore(l);
+            item.setItemMeta(m);
+        }
         return item;
     }
     
     public static ItemStack makeItem(Material material, int amount, int type, String name, List<String> lore, Map<Enchantment, Integer> enchants) {
-        ItemStack item = new ItemStack(material, amount, (short) type);
+        ItemStack item = makeItem(material, amount, type);
         ItemMeta m = item.getItemMeta();
-        m.setDisplayName(name);
-        m.setLore(lore);
-        item.setItemMeta(m);
+        if (m != null) {
+            m.setDisplayName(name);
+            m.setLore(lore);
+            item.setItemMeta(m);
+        }
         item.addUnsafeEnchantments(enchants);
         return item;
     }
     
     public static ItemStack addLore(ItemStack item, String i) {
-        List<String> lore = new ArrayList();
+        List<String> lore = new ArrayList<>();
         ItemMeta m = item.getItemMeta();
         if (m == null) return item;
-        if (item.getItemMeta().hasLore()) {
-            lore.addAll(item.getItemMeta().getLore());
+        List<String> oldLore = m.hasLore() ? m.getLore() : null;
+        if (oldLore != null) {
+            lore.addAll(oldLore);
         }
         lore.add(i);
         m.setLore(lore);
@@ -202,13 +211,12 @@ public class PluginControl
     }
     
     public static ItemStack addLore(ItemStack item, List<String> list) {
-        List<String> lore = new ArrayList();
+        List<String> lore = new ArrayList<>();
         ItemMeta m = item.getItemMeta();
-        if (m == null) {
-            return item;
-        }
-        if (item.getItemMeta().hasLore()) {
-            lore.addAll(item.getItemMeta().getLore());
+        if (m == null) return item;
+        List<String> oldLore = m.hasLore() ? m.getLore() : null;
+        if (oldLore != null) {
+            lore.addAll(oldLore);
         }
         for (String i : list)
             lore.add(color(i));
@@ -223,8 +231,8 @@ public class PluginControl
         ver = ver.replace("_", "").replace("R", "").replace("v", "");
         return Integer.parseInt(ver);
     }
-    
-    @Deprecated
+
+    @SuppressWarnings({"deprecation"})
     public static ItemStack getItemInHand(Player player) {
         if (getVersion() >= 191) {
             return player.getInventory().getItemInMainHand();
@@ -232,8 +240,8 @@ public class PluginControl
             return player.getItemInHand();
         }
     }
-    
-    @Deprecated
+
+    @SuppressWarnings({"deprecation"})
     public static void setItemInHand(Player player, ItemStack item) {
         if (getVersion() >= 191) {
             player.getInventory().setItemInMainHand(item);
@@ -252,21 +260,16 @@ public class PluginControl
             return false;
         }
     }
-    
-    @Deprecated
-    public static boolean isInt(String value) {
+
+    public static boolean isNotInt(String value) {
         try {
             Integer.parseInt(value);
-            return true;
-        } catch (NumberFormatException ex) {
             return false;
+        } catch (NumberFormatException ex) {
+            return true;
         }
     }
-    
-    public static boolean enableUpdater() {
-        return Files.CONFIG.getFile().getBoolean("Settings.Updater");
-    }
-    
+
     public static Player getPlayer(String name) {
         try {
             return Bukkit.getServer().getPlayer(name);
@@ -351,44 +354,44 @@ public class PluginControl
         return true;
     }
     
-    public static boolean bypassLimit(Player player, ShopType type) {
+    public static boolean notBypassLimit(Player player, ShopType type) {
         ProtectedConfiguration config = Files.CONFIG.getFile();
         switch (type) {
             case SELL: {
-                if (config.getBoolean("Settings.Permissions.Market.Sell-Bypass.Default")) return true;
-                return player.hasPermission(config.getString("Settings.Permissions.Market.Sell-Bypass.Permission"));
+                if (config.getBoolean("Settings.Permissions.Market.Sell-Bypass.Default")) return false;
+                return !player.hasPermission(config.getString("Settings.Permissions.Market.Sell-Bypass.Permission"));
             }
             case BUY: {
-                if (config.getBoolean("Settings.Permissions.Market.Buy-Bypass.Default")) return true;
-                return player.hasPermission(config.getString("Settings.Permissions.Market.Buy-Bypass.Permission"));
+                if (config.getBoolean("Settings.Permissions.Market.Buy-Bypass.Default")) return false;
+                return !player.hasPermission(config.getString("Settings.Permissions.Market.Buy-Bypass.Permission"));
             }
             case BID: {
-                if (config.getBoolean("Settings.Permissions.Market.Bid-Bypass.Default")) return true;
-                return player.hasPermission(config.getString("Settings.Permissions.Market.Bid-Bypass.Permission"));
+                if (config.getBoolean("Settings.Permissions.Market.Bid-Bypass.Default")) return false;
+                return !player.hasPermission(config.getString("Settings.Permissions.Market.Bid-Bypass.Permission"));
             }
             default: {
-                return false;
+                return true;
             }
         }
     }
     
-    public static boolean bypassTaxRate(Player player, ShopType type) {
+    public static boolean notBypassTaxRate(Player player, ShopType type) {
         ProtectedConfiguration config = Files.CONFIG.getFile();
         switch (type) {
             case SELL: {
-                if (config.getBoolean("Settings.Permissions.Market.Sell-Tax-Rate-Bypass.Default")) return true;
-                return player.hasPermission(config.getString("Settings.Permissions.Market.Sell-Tax-Rate-Bypass.Permission"));
+                if (config.getBoolean("Settings.Permissions.Market.Sell-Tax-Rate-Bypass.Default")) return false;
+                return !player.hasPermission(config.getString("Settings.Permissions.Market.Sell-Tax-Rate-Bypass.Permission"));
             }
             case BUY: {
-                if (config.getBoolean("Settings.Permissions.Market.Buy-Tax-Rate-Bypass.Default")) return true;
-                return player.hasPermission(config.getString("Settings.Permissions.Market.Buy-Tax-Rate-Bypass.Permission"));
+                if (config.getBoolean("Settings.Permissions.Market.Buy-Tax-Rate-Bypass.Default")) return false;
+                return !player.hasPermission(config.getString("Settings.Permissions.Market.Buy-Tax-Rate-Bypass.Permission"));
             }
             case BID: {
-                if (config.getBoolean("Settings.Permissions.Market.Bid-Tax-Rate-Bypass.Default")) return true;
-                return player.hasPermission(config.getString("Settings.Permissions.Market.Bid-Tax-Rate-Bypass.Permission"));
+                if (config.getBoolean("Settings.Permissions.Market.Bid-Tax-Rate-Bypass.Default")) return false;
+                return !player.hasPermission(config.getString("Settings.Permissions.Market.Bid-Tax-Rate-Bypass.Permission"));
             }
             default: {
-                return false;
+                return true;
             }
         }
     }
@@ -435,17 +438,19 @@ public class PluginControl
     
     public static MarketGroup getMarketGroup(Player player) {
         ProtectedConfiguration config = Files.CONFIG.getFile();
-        for (String groups : config.getConfigurationSection("Settings.Permissions.Market.Permission-Groups").getKeys(false)) {
-            if (config.getBoolean("Settings.Permissions.Market.Permission-Groups." + groups + ".Default")) return new MarketGroup(groups);
-            if (player.hasPermission(config.getString("Settings.Permissions.Market.Permission-Groups." + groups + ".Permission"))) {
+        ConfigurationSection section = config.getConfigurationSection("Settings.Permissions.Market.Permission-Groups");
+        if (section != null) for (String groups : section.getKeys(false)) {
+            if (section.getBoolean(groups + ".Default")) return new MarketGroup(groups);
+            String permission = section.getString(groups + ".Permission");
+            if (permission != null && player.hasPermission(permission)) {
                 return new MarketGroup(groups);
             }
         }
-        return null;
+        throw new IllegalStateException("插件配置错误，无法读取玩家 " + player.getName() + " 的权限组");
     }
     
     public static List<ItemStack> getPage(List<ItemStack> list, Integer page) {
-        List<ItemStack> items = new ArrayList();
+        List<ItemStack> items = new ArrayList<>();
         if (page <= 0) page = 1;
         int max = 45;
         int index = page * max - max;
@@ -465,7 +470,7 @@ public class PluginControl
     }
     
     public static List<Long> getMarketPageUIDs(List<Long> list, Integer page) {
-        List<Long> items = new ArrayList();
+        List<Long> items = new ArrayList<>();
         if (page <= 0) page = 1;
         int max = 45;
         int index = page * max - max;
@@ -485,7 +490,7 @@ public class PluginControl
     }
     
     public static List<Long> getMailPageUIDs(List<Long> list, Integer page) {
-        List<Long> items = new ArrayList();
+        List<Long> items = new ArrayList<>();
         if (page <= 0) page = 1;
         int max = 45;
         int index = page * max - max;
@@ -507,7 +512,10 @@ public class PluginControl
     public static int getMaxPage(List<ItemStack> list) {
         int maxPage = 1;
         int amount = list.size();
-        for (; amount > 45; amount -= 45, maxPage++) {}
+        while (amount > 45) {
+            amount -= 45;
+            maxPage++;
+        }
         return maxPage;
     }
     
@@ -517,7 +525,7 @@ public class PluginControl
             int amount = 0;
             for (ItemStack targetItem : player.getInventory().getContents()) {
                 if (targetItem == null) continue;
-                if (targetItem.getType().equals(material) && targetItem.getItemMeta().equals(meta)) {
+                if (targetItem.getType().equals(material) && meta.equals(targetItem.getItemMeta())) {
                     amount += targetItem.getAmount();
                 }
             }
@@ -542,13 +550,16 @@ public class PluginControl
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(time);
         int total = ((int) (cal.getTimeInMillis() / 1000) - (int) (C.getTimeInMillis() / 1000));
-        int D = 0;
-        int H = 0;
-        int M = 0;
-        int S = 0;
-        for (; total > 86400; total -= 86400, D++) {}
-        for (; total > 3600; total -= 3600, H++) {}
-        for (; total > 60; total -= 60, M++) {}
+        int D = 0, H = 0, M = 0, S = 0;
+        while (total > 86400) {
+            total -= 86400; D++;
+        }
+        while (total > 3600) {
+            total -= 3600; H++;
+        }
+        while (total > 60) {
+            total -= 60; M++;
+        }
         S += total;
         StringBuilder sb = new StringBuilder();
         if (D > 0) {
@@ -612,8 +623,8 @@ public class PluginControl
         return false;
     }
 
-    public static boolean hasMaterial(Player player, ItemStack item) {
-        return hasMaterial(player, item.getType(), item.getItemMeta(), item.getAmount());
+    public static boolean hasNoMaterial(Player player, ItemStack item) {
+        return !hasMaterial(player, item.getType(), item.getItemMeta(), item.getAmount());
     }
     
     public static boolean hasMaterial(Player player, Material material, ItemMeta meta, int amountRequired) {
@@ -634,7 +645,7 @@ public class PluginControl
             for (int sort = 0; sort < contents.length;sort++) {
                 ItemStack targetItem = contents[sort];
                 if (targetItem == null) continue;
-                if (targetItem.getType().equals(material) && targetItem.getItemMeta().equals(meta)) {
+                if (targetItem.getType().equals(material) && meta.equals(targetItem.getItemMeta())) {
                     if (amountRequired > targetItem.getAmount()) {
                         amountRequired -= targetItem.getAmount();
                         player.getInventory().setItem(sort, new ItemStack(Material.AIR));
@@ -684,7 +695,7 @@ public class PluginControl
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (stackTraceVisible.containsKey(player)) {
                 if (stackTraceVisible.get(player)) {
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%stacktrace%", sb.toString());
                     MessageUtil.sendMessage(player, "Admin-Command.PrintStackTrace.Messages", placeholders);
                 }
@@ -692,7 +703,7 @@ public class PluginControl
         }
         if (stackTraceVisible.containsKey(Bukkit.getServer().getConsoleSender())) {
             if (stackTraceVisible.get(Bukkit.getServer().getConsoleSender())) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%stacktrace%", sb.toString());
                 MessageUtil.sendMessage(Bukkit.getServer().getConsoleSender(), "Admin-Command.PrintStackTrace.Messages", placeholders);
             }
@@ -721,7 +732,7 @@ public class PluginControl
                             UUID owner = mg.getItemOwner().getUUID();
                             Player player = getPlayer(owner);
                             if (player != null) {
-                                Map<String, String> placeholders = new HashMap();
+                                Map<String, String> placeholders = new HashMap<>();
                                 placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                 MessageUtil.sendMessage(player, "Item-Has-Expired", placeholders);
                             }
@@ -740,7 +751,7 @@ public class PluginControl
                             UUID owner = mg.getItemOwner().getUUID();
                             Player player = getPlayer(owner);
                             if (player != null) {
-                                Map<String, String> placeholders = new HashMap();
+                                Map<String, String> placeholders = new HashMap<>();
                                 placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
                                 MessageUtil.sendMessage(player, "Item-Has-Expired", placeholders);
                             }
@@ -826,22 +837,22 @@ public class PluginControl
     }
     
     private static long backupFilesAcquisitionTime = 0;
-    private static List<String> backupFiles = new ArrayList();
+    private static List<String> backupFiles = new ArrayList<>();
     
     public static List<String> getBackupFiles() {
-        /**
-         * Since TabComplete is obtained every time you enter it,
-         * in order to prevent a large amount of useless IO performance from being wasted,
-         * the default limit is to obtain it every 5 seconds.
+        /*
+          Since TabComplete is obtained every time you enter it,
+          in order to prevent a large amount of useless IO performance from being wasted,
+          the default limit is to obtain it every 5 seconds.
          */
         if (System.currentTimeMillis() - backupFilesAcquisitionTime <= 5000) {
             return backupFiles;
         }
-        List<String> list = new ArrayList();
+        List<String> list = new ArrayList<>();
         File folder = new File("plugins/CrazyAuctionsPlus/Backup/");
         if (!folder.exists()) return list;
         File[] files = folder.listFiles();
-        for (File f : files) {
+        if (files != null) for (File f : files) {
             list.add(f.getName());
         }
         backupFiles = list;
@@ -901,11 +912,11 @@ public class PluginControl
                         
                         GlobalMarket.getMarket().reloadData();
                     } else if (PluginControl.useMySQLStorage()) {
-                        DatabaseEngine.getDatabase().reloadConnectionParameters();
+                        MySQLEngine.getInstance().reloadConnectionParameters();
                         MySQLStorage.cache.clear();
                         MySQLMarket.getInstance().reloadData();
                     } else if (PluginControl.useSQLiteStorage()) {
-                        DatabaseEngine.getDatabase().reloadConnectionParameters();
+                        SQLiteEngine.getInstance().reloadConnectionParameters();
                         SQLiteStorage.cache.clear();
                         SQLiteMarket.getInstance().reloadData();
                     } else {
@@ -972,11 +983,11 @@ public class PluginControl
                         }
                         
                     } else if (PluginControl.useMySQLStorage()) {
-                        DatabaseEngine.getDatabase().reloadConnectionParameters();
+                        MySQLEngine.getInstance().reloadConnectionParameters();
                         MySQLStorage.cache.clear();
                         MySQLMarket.getInstance().reloadData();
                     } else if (PluginControl.useSQLiteStorage()) {
-                        DatabaseEngine.getDatabase().reloadConnectionParameters();
+                        SQLiteEngine.getInstance().reloadConnectionParameters();
                         SQLiteStorage.cache.clear();
                         SQLiteMarket.getInstance().reloadData();
                     } else {
@@ -1036,11 +1047,11 @@ public class PluginControl
         }
     }
 
-    public static enum ReloadType {
+    public enum ReloadType {
         
-        /**
-         * Config.yml
-         *//**
+        /*
+          Config.yml
+         */ /**
          * Config.yml
          */
         CONFIG,
@@ -1128,34 +1139,12 @@ public class PluginControl
                             SQLiteEngine.backupPlayerData(DBFile);
                             break;
                         }
-                        case YAML: {
-                            File playerFolder = new File("plugins/CrazyAuctionsPlus/Players/");
-                            if (playerFolder.exists()) {
-                                File[] files = playerFolder.listFiles();
-                                for (File f : files) {
-                                    if (f.getName().endsWith(".yml")) {
-                                        YamlConfiguration yaml = new YamlConfiguration();
-                                        try {
-                                            yaml.load(f);
-                                        } catch (IOException | InvalidConfigurationException ex) {
-                                            PluginControl.printStackTrace(ex);
-                                            continue;
-                                        }
-                                        PreparedStatement pstatement = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
-                                        pstatement.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
-                                        pstatement.setString(2, f.getName());
-                                        pstatement.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
-                                        pstatement.executeUpdate();
-                                    }
-                                }
-                            }
-                            break;
-                        }
+                        case YAML:
                         default: {
                             File playerFolder = new File("plugins/CrazyAuctionsPlus/Players/");
                             if (playerFolder.exists()) {
                                 File[] files = playerFolder.listFiles();
-                                for (File f : files) {
+                                if (files != null) for (File f : files) {
                                     if (f.getName().endsWith(".yml")) {
                                         YamlConfiguration yaml = new YamlConfiguration();
                                         try {
@@ -1164,11 +1153,11 @@ public class PluginControl
                                             PluginControl.printStackTrace(ex);
                                             continue;
                                         }
-                                        PreparedStatement pstatement = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
-                                        pstatement.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
-                                        pstatement.setString(2, f.getName());
-                                        pstatement.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
-                                        pstatement.executeUpdate();
+                                        PreparedStatement ps = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
+                                        ps.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
+                                        ps.setString(2, f.getName());
+                                        ps.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
+                                        ps.executeUpdate();
                                     }
                                 }
                             }
@@ -1183,7 +1172,7 @@ public class PluginControl
                     File playerFolder = new File("plugins/CrazyAuctionsPlus/Players/");
                     if (playerFolder.exists()) {
                         File[] files = playerFolder.listFiles();
-                        for (File f : files) {
+                        if (files != null) for (File f : files) {
                             if (f.getName().endsWith(".yml")) {
                                 YamlConfiguration yaml = new YamlConfiguration();
                                 try {
@@ -1192,11 +1181,11 @@ public class PluginControl
                                     PluginControl.printStackTrace(ex);
                                     continue;
                                 }
-                                PreparedStatement pstatement = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
-                                pstatement.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
-                                pstatement.setString(2, f.getName());
-                                pstatement.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
-                                pstatement.executeUpdate();
+                                PreparedStatement ps = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
+                                ps.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
+                                ps.setString(2, f.getName());
+                                ps.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
+                                ps.executeUpdate();
                             }
                         }
                     }
@@ -1243,25 +1232,14 @@ public class PluginControl
                                         GlobalMarket.getMarket().reloadData();
                                         break;
                                     }
-                                    case YAML: {
-                                        String yamlData = marketRS.getString("YamlMarket");
-                                        File databaseFile = new File("plugins/CrazyAuctionsPlus/Database.yml");
-                                        if (!databaseFile.exists()) {
-                                            databaseFile.createNewFile();
-                                        }
-                                        try (OutputStream out = new FileOutputStream(databaseFile)) {
-                                            out.write(yamlData.getBytes());
-                                        }
-                                        fm.reloadDatabaseFile();
-                                        break;
-                                    }
+                                    case YAML:
                                     default: {
                                         String yamlData = marketRS.getString("YamlMarket");
                                         File databaseFile = new File("plugins/CrazyAuctionsPlus/Database.yml");
                                         if (!databaseFile.exists()) {
                                             databaseFile.createNewFile();
                                         }
-                                        try (OutputStream out = new FileOutputStream(databaseFile)) {
+                                        try (OutputStream out = java.nio.file.Files.newOutputStream(databaseFile.toPath())) {
                                             out.write(yamlData.getBytes());
                                         }
                                         fm.reloadDatabaseFile();
@@ -1288,7 +1266,7 @@ public class PluginControl
                                 if (!databaseFile.exists()) {
                                     databaseFile.createNewFile();
                                 }
-                                try (OutputStream out = new FileOutputStream(databaseFile)) {
+                                try (OutputStream out = java.nio.file.Files.newOutputStream(databaseFile.toPath())) {
                                     out.write(yamlData.getBytes());
                                 }
                                 fm.reloadDatabaseFile();
@@ -1331,27 +1309,7 @@ public class PluginControl
                                     SQLiteStorage.cache.clear();
                                     break;
                                 }
-                                case YAML: {
-                                    File path = new File("plugins/CrazyAuctionsPlus/Players/");
-                                    if (!path.exists()) {
-                                        path.mkdir();
-                                    }
-                                    while (itemMailRS.next()) {
-                                        File dataFile = new File(path, itemMailRS.getString("UUID") + ".yml");
-                                        if (dataFile.exists()) {
-                                            try (OutputStream out = new FileOutputStream(dataFile)) {
-                                                out.write(itemMailRS.getString("YamlData").getBytes());
-                                            }
-                                        } else {
-                                            dataFile.createNewFile();
-                                            try (OutputStream out = new FileOutputStream(dataFile)) {
-                                                out.write(itemMailRS.getString("YamlData").getBytes());
-                                            }
-                                        }
-                                    }
-                                    YamlStorage.cache.clear();
-                                    break;
-                                }
+                                case YAML:
                                 default: {
                                     File path = new File("plugins/CrazyAuctionsPlus/Players/");
                                     if (!path.exists()) {
@@ -1360,12 +1318,12 @@ public class PluginControl
                                     while (itemMailRS.next()) {
                                         File dataFile = new File(path, itemMailRS.getString("UUID") + ".yml");
                                         if (dataFile.exists()) {
-                                            try (OutputStream out = new FileOutputStream(dataFile)) {
+                                            try (OutputStream out = java.nio.file.Files.newOutputStream(dataFile.toPath())) {
                                                 out.write(itemMailRS.getString("YamlData").getBytes());
                                             }
                                         } else {
                                             dataFile.createNewFile();
-                                            try (OutputStream out = new FileOutputStream(dataFile)) {
+                                            try (OutputStream out = java.nio.file.Files.newOutputStream(dataFile.toPath())) {
                                                 out.write(itemMailRS.getString("YamlData").getBytes());
                                             }
                                         }
@@ -1410,12 +1368,12 @@ public class PluginControl
                             while (itemMailRS.next()) {
                                 File dataFile = new File(path, itemMailRS.getString("UUID") + ".yml");
                                 if (dataFile.exists()) {
-                                    try (OutputStream out = new FileOutputStream(dataFile)) {
+                                    try (OutputStream out = java.nio.file.Files.newOutputStream(dataFile.toPath())) {
                                         out.write(itemMailRS.getString("YamlData").getBytes());
                                     }
                                 } else {
                                     dataFile.createNewFile();
-                                    try (OutputStream out = new FileOutputStream(dataFile)) {
+                                    try (OutputStream out = java.nio.file.Files.newOutputStream(dataFile.toPath())) {
                                         out.write(itemMailRS.getString("YamlData").getBytes());
                                     }
                                 }
@@ -1426,14 +1384,14 @@ public class PluginControl
                 }
                 for (CommandSender sender : senders) {
                     if (sender != null) {
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%file%", rollBackFile.getName());
                         MessageUtil.sendMessage(sender, "Admin-Command.RollBack.Successfully", placeholders);
                     }
                 }
             } catch (Exception ex) {
                 for (CommandSender sender : senders) {
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                     MessageUtil.sendMessage(sender, "Admin-Command.RollBack.Failed", placeholders);
                 }

@@ -29,7 +29,6 @@ Settings:
     Category-Page-Opens-First: False #If set to true the categories page will open when they do /CA.
     Item-NBT-comparison: true #Does the item match the buyer's and seller's NBT when purchasing the item.
     Automatic-Backup: false #Whether to enable automatic backup, automatically back up the stored data every time the server is shut down.
-    Updater: true #Check the new information of the plug-in
     Download: #Database download file related settings
         Market: 'plugins/CrazyAuctionsPlus/Download/GlobalMarket-%date%.yml'
         PlayerData: 'plugins/CrazyAuctionsPlus/Download/Player/%player%-%uuid%.yml'
@@ -516,10 +515,6 @@ Settings:
                 Name: '&cYou do not own this item!'
     #Permission's settings
     Permissions:
-        #View update information
-        Updater:
-            Permission: crazyauctionsplus.updater
-            Default: false
         Market:
             #Bypass the maximum number of items for sale
             Sell-Bypass: 

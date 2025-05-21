@@ -12,13 +12,12 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -30,7 +29,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import lombok.Getter;
 
 import studio.trc.bukkit.crazyauctionsplus.Main;
 import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
@@ -45,22 +43,22 @@ import studio.trc.bukkit.crazyauctionsplus.util.enums.Version;
 public class FileManager {
     
     private static final FileManager instance = new FileManager();
-    private static boolean backingup = false;
-    private static boolean rollingback = false;
+    private static boolean doingBackup = false;
+    private static boolean doingRollBack = false;
     private static boolean syncing = false;
     private Main main;
     private String prefix = "[CrazyAuctionsPlus] ";
     private Boolean log = false;
-    private final HashMap<Files, File> files = new HashMap();
-    private final ArrayList<String> homeFolders = new ArrayList();
-    private final ArrayList<CustomFile> customFiles = new ArrayList();
-    private final HashMap<String, String> autoGenerateFiles = new HashMap();
-    private final HashMap<Files, FileConfiguration> configurations = new HashMap();
-    
+    private final HashMap<Files, File> files = new HashMap<>();
+    private final ArrayList<String> homeFolders = new ArrayList<>();
+    private final ArrayList<CustomFile> customFiles = new ArrayList<>();
+    private final HashMap<String, String> autoGenerateFiles = new HashMap<>();
+    private final HashMap<Files, FileConfiguration> configurations = new HashMap<>();
+
     public static FileManager getInstance() {
         return instance;
     }
-    
+
     private static CommandSender[] syncSenders = {};
     
     public static Runnable synchronizeThread = () -> {
@@ -78,42 +76,46 @@ public class FileManager {
             for (File file : files) {
                 if (file != null && file.exists()) {
                     YamlConfiguration databaseFile = new YamlConfiguration();
-                    try (Reader reader = new InputStreamReader(new FileInputStream(file), "UTF-8")) {
+                    ConfigurationSection section;
+                    try (InputStream input = java.nio.file.Files.newInputStream(file.toPath());
+                         Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
                         databaseFile.load(reader);
                     }
-                    if (databaseFile.get("Items") != null) {
-                        for (String key : databaseFile.getConfigurationSection("Items").getKeys(false)) {
-                            ShopType type = ShopType.SELL;
-                            if (databaseFile.getBoolean("Items." + key + ".Biddable")) {
-                                type = ShopType.BID;
-                            } else if (databaseFile.getBoolean("Items." + key + ".Buyable")) {
-                                type = ShopType.BUY;
-                            }
-                            ItemOwner owner;
-                            if (databaseFile.get("Items." + key + ".Owner") != null) {
-                                String[] info = databaseFile.getString("Items." + key + ".Owner").split(":");
-                                owner = new ItemOwner(UUID.fromString(info[1]), info[0]);
-                            } else if (databaseFile.get("Items." + key + ".Seller") != null) {
-                                OfflinePlayer op = Bukkit.getOfflinePlayer(databaseFile.getString("Items." + key + ".Seller"));
-                                if (op == null) continue;
-                                owner = new ItemOwner(op.getUniqueId(), op.getName());
-                            } else {
-                                continue;
-                            }
-                            ItemStack is;
-                            if (databaseFile.get("Items." + key + ".Item") != null) {
-                                is = databaseFile.getItemStack("Items." + key + ".Item");
-                            } else {
-                                continue;
-                            }
-                            double money = databaseFile.getDouble("Items." + key + ".Price");
-                            if (type.equals(ShopType.BUY)) {
-                                money = databaseFile.getDouble("Items." + key + ".Reward");
-                            }
-                            MarketGoods mg;
-                            if (type.equals(ShopType.BID)) {
-                                String topBidder = databaseFile.get("Items." + key + ".TopBidder") != null ? databaseFile.getString("Items." + key + ".TopBidder") : "None";
-                                mg = new MarketGoods(
+                    section = databaseFile.getConfigurationSection("Items");
+                    if (section != null) for (String key : section.getKeys(false)) {
+                        ShopType type = ShopType.SELL;
+                        if (databaseFile.getBoolean("Items." + key + ".Biddable")) {
+                            type = ShopType.BID;
+                        } else if (databaseFile.getBoolean("Items." + key + ".Buyable")) {
+                            type = ShopType.BUY;
+                        }
+                        ItemOwner owner;
+                        String itemOwner = databaseFile.getString("Items." + key + ".Owner");
+                        String itemSeller = databaseFile.getString("Items." + key + ".Seller");
+                        if (itemOwner != null) {
+                            String[] info = itemOwner.split(":");
+                            owner = new ItemOwner(UUID.fromString(info[1]), info[0]);
+                        } else if (itemSeller != null) {
+                            OfflinePlayer op = Bukkit.getOfflinePlayer(itemSeller);
+                            if (op == null) continue;
+                            owner = new ItemOwner(op.getUniqueId(), op.getName());
+                        } else {
+                            continue;
+                        }
+                        ItemStack is;
+                        if (databaseFile.get("Items." + key + ".Item") != null) {
+                            is = databaseFile.getItemStack("Items." + key + ".Item");
+                        } else {
+                            continue;
+                        }
+                        double money = databaseFile.getDouble("Items." + key + ".Price");
+                        if (type.equals(ShopType.BUY)) {
+                            money = databaseFile.getDouble("Items." + key + ".Reward");
+                        }
+                        MarketGoods mg;
+                        if (type.equals(ShopType.BID)) {
+                            String topBidder = databaseFile.get("Items." + key + ".TopBidder") != null ? databaseFile.getString("Items." + key + ".TopBidder") : "None";
+                            mg = new MarketGoods(
                                     market.makeUID(),
                                     type,
                                     owner,
@@ -123,9 +125,9 @@ public class FileManager {
                                     databaseFile.get("Items." + key + ".Added-Time") != null ? databaseFile.getLong("Items." + key + ".Added-Time") : -1,
                                     money,
                                     topBidder
-                                );
-                            } else {
-                                mg = new MarketGoods(
+                            );
+                        } else {
+                            mg = new MarketGoods(
                                     market.makeUID(),
                                     type,
                                     owner,
@@ -134,29 +136,29 @@ public class FileManager {
                                     databaseFile.getLong("Items." + key + ".Full-Time"),
                                     databaseFile.get("Items." + key + ".Added-Time") != null ? databaseFile.getLong("Items." + key + ".Added-Time") : -1,
                                     money
-                                );
-                            }
-                            market.addGoods(mg);
+                            );
                         }
+                        market.addGoods(mg);
                     }
 
-                    if (databaseFile.get("OutOfTime/Cancelled") != null) {
-                        for (String key : databaseFile.getConfigurationSection("OutOfTime/Cancelled").getKeys(false)) {
-                            if (databaseFile.get("OutOfTime/Cancelled." + key + ".Item") != null) {
-                                if (databaseFile.get("OutOfTime/Cancelled." + key + ".Owner") != null) {
-                                    OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(databaseFile.getString("OutOfTime/Cancelled." + key + ".Owner").split(":")[1]));
-                                    if (op != null) {
-                                        Storage playerdata = Storage.getPlayer(op);
-                                        ItemMail im = new ItemMail(playerdata.makeUID(), Bukkit.getOfflinePlayer(playerdata.getUUID()), databaseFile.getItemStack("OutOfTime/Cancelled." + key + ".Item"), databaseFile.getLong("OutOfTime/Cancelled." + key + ".Full-Time"), -1, databaseFile.getBoolean("OutOfTime/Cancelled." + key + ".Never-Expire"));
-                                        playerdata.addItem(im);
-                                    }
-                                } else if (databaseFile.get("OutOfTime/Cancelled." + key + ".Seller") != null) {
-                                    OfflinePlayer op = Bukkit.getOfflinePlayer(databaseFile.getString("OutOfTime/Cancelled." + key + ".Seller"));
-                                    if (op != null) {
-                                        Storage playerdata = Storage.getPlayer(op);
-                                        ItemMail im = new ItemMail(playerdata.makeUID(), Bukkit.getOfflinePlayer(playerdata.getUUID()), databaseFile.getItemStack("OutOfTime/Cancelled." + key + ".Item"), databaseFile.getLong("OutOfTime/Cancelled." + key + ".Full-Time"), -1, databaseFile.getBoolean("OutOfTime/Cancelled." + key + ".Never-Expire"));
-                                        playerdata.addItem(im);
-                                    }
+                    section = databaseFile.getConfigurationSection("OutOfTime/Cancelled");
+                    if (section != null) for (String key : section.getKeys(false)) {
+                        if (databaseFile.get("OutOfTime/Cancelled." + key + ".Item") != null) {
+                            String itemOwner = databaseFile.getString("OutOfTime/Cancelled." + key + ".Owner");
+                            String itemSeller = databaseFile.getString("OutOfTime/Cancelled." + key + ".Seller");
+                            if (itemOwner != null) {
+                                OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(itemOwner.split(":")[1]));
+                                if (op != null) {
+                                    Storage playerData = Storage.getPlayer(op);
+                                    ItemMail im = new ItemMail(playerData.makeUID(), Bukkit.getOfflinePlayer(playerData.getUUID()), databaseFile.getItemStack("OutOfTime/Cancelled." + key + ".Item"), databaseFile.getLong("OutOfTime/Cancelled." + key + ".Full-Time"), -1, databaseFile.getBoolean("OutOfTime/Cancelled." + key + ".Never-Expire"));
+                                    playerData.addItem(im);
+                                }
+                            } else if (itemSeller != null) {
+                                OfflinePlayer op = Bukkit.getOfflinePlayer(itemSeller);
+                                if (op != null) {
+                                    Storage playerData = Storage.getPlayer(op);
+                                    ItemMail im = new ItemMail(playerData.makeUID(), Bukkit.getOfflinePlayer(playerData.getUUID()), databaseFile.getItemStack("OutOfTime/Cancelled." + key + ".Item"), databaseFile.getLong("OutOfTime/Cancelled." + key + ".Full-Time"), -1, databaseFile.getBoolean("OutOfTime/Cancelled." + key + ".Never-Expire"));
+                                    playerData.addItem(im);
                                 }
                             }
                         }
@@ -172,7 +174,7 @@ public class FileManager {
         } catch (Exception ex) {
             for (CommandSender sender : FileManager.syncSenders) {
                 if (sender != null) {
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                     MessageUtil.sendMessage(sender, "Admin-Command.Synchronize.Failed", placeholders);
                 }
@@ -186,7 +188,7 @@ public class FileManager {
     
     public static Runnable backupThread = () -> {
         try {
-            backingup = true;
+            doingBackup = true;
             String fileName = MessageUtil.getValue("Admin-Command.Backup.Backup-Name").replace("%date%", new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date())) + ".db";
             GlobalMarket market = GlobalMarket.getMarket();
             File folder = new File("plugins/CrazyAuctionsPlus/Backup");
@@ -222,34 +224,12 @@ public class FileManager {
                             SQLiteEngine.backupPlayerData(DBFile);
                             break;
                         }
-                        case YAML: {
-                            File playerFolder = new File("plugins/CrazyAuctionsPlus/Players/");
-                            if (playerFolder.exists()) {
-                                File[] files = playerFolder.listFiles();
-                                for (File f : files) {
-                                    if (f.getName().endsWith(".yml")) {
-                                        YamlConfiguration yaml = new YamlConfiguration();
-                                        try {
-                                            yaml.load(f);
-                                        } catch (IOException | InvalidConfigurationException ex) {
-                                            PluginControl.printStackTrace(ex);
-                                            continue;
-                                        }
-                                        PreparedStatement pstatement = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
-                                        pstatement.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
-                                        pstatement.setString(2, f.getName());
-                                        pstatement.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
-                                        pstatement.executeUpdate();
-                                    }
-                                }
-                            }
-                            break;
-                        }
+                        case YAML:
                         default: {
                             File playerFolder = new File("plugins/CrazyAuctionsPlus/Players/");
                             if (playerFolder.exists()) {
                                 File[] files = playerFolder.listFiles();
-                                for (File f : files) {
+                                if (files != null) for (File f : files) {
                                     if (f.getName().endsWith(".yml")) {
                                         YamlConfiguration yaml = new YamlConfiguration();
                                         try {
@@ -258,11 +238,11 @@ public class FileManager {
                                             PluginControl.printStackTrace(ex);
                                             continue;
                                         }
-                                        PreparedStatement pstatement = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
-                                        pstatement.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
-                                        pstatement.setString(2, f.getName());
-                                        pstatement.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
-                                        pstatement.executeUpdate();
+                                        PreparedStatement ps = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
+                                        ps.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
+                                        ps.setString(2, f.getName());
+                                        ps.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
+                                        ps.executeUpdate();
                                     }
                                 }
                             }
@@ -277,7 +257,7 @@ public class FileManager {
                     File playerFolder = new File("plugins/CrazyAuctionsPlus/Players/");
                     if (playerFolder.exists()) {
                         File[] files = playerFolder.listFiles();
-                        for (File f : files) {
+                        if (files != null) for (File f : files) {
                             if (f.getName().endsWith(".yml")) {
                                 YamlConfiguration yaml = new YamlConfiguration();
                                 try {
@@ -286,11 +266,11 @@ public class FileManager {
                                     PluginControl.printStackTrace(ex);
                                     continue;
                                 }
-                                PreparedStatement pstatement = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
-                                pstatement.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
-                                pstatement.setString(2, f.getName());
-                                pstatement.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
-                                pstatement.executeUpdate();
+                                PreparedStatement ps = DBFile.prepareStatement("INSERT INTO ItemMail (Name, UUID, YamlData) VALUES(?, ?, ?)");
+                                ps.setString(1, yaml.get("Name") != null ? yaml.getString("Name") : "null");
+                                ps.setString(2, f.getName());
+                                ps.setString(3, yaml.get("Items") != null ? yaml.saveToString() : "{}");
+                                ps.executeUpdate();
                             }
                         }
                     }
@@ -298,28 +278,27 @@ public class FileManager {
             }
             for (CommandSender sender : FileManager.backupSenders) {
                 if (sender != null) {
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%file%",  fileName);
                     MessageUtil.sendMessage(sender, "Admin-Command.Backup.Successfully", placeholders);
                 }
             }
-            backingup = false;
+            doingBackup = false;
         } catch (Exception ex) {
             for (CommandSender sender : FileManager.backupSenders) {
                 if (sender != null) {
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%error%",  ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
                     MessageUtil.sendMessage(sender, "Admin-Command.Backup.Failed", placeholders);
                 }
             }
-            backingup = false;
+            doingBackup = false;
             PluginControl.printStackTrace(ex);
         }
     };
     
     /**
      * Synchronize command.
-     * @param sender 
      */
     public static void synchronize(CommandSender... sender) {
         syncSenders = sender;
@@ -328,7 +307,6 @@ public class FileManager {
     
     /**
      * Backup command.
-     * @param sender 
      */
     public static void backup(CommandSender... sender) {
         backupSenders = sender;
@@ -336,7 +314,7 @@ public class FileManager {
     }
     
     public static boolean isBackingUp() {
-        return backingup;
+        return doingBackup;
     }
     
     public static boolean isSyncing() {
@@ -344,7 +322,7 @@ public class FileManager {
     }
     
     public static boolean isRollingBack() {
-        return rollingback;
+        return doingRollBack;
     }
     
     /**
@@ -353,13 +331,11 @@ public class FileManager {
      * and call a large number of IO read and write performance.
      * To ensure that the data is error-free,
      * it cannot be rolled back asynchronously.
-     * @param backupFile
-     * @param sender 
      */
     public static void rollBack(File backupFile, CommandSender... sender) {
-        rollingback = true;
+        doingRollBack = true;
         new RollBackMethod(backupFile, instance, sender).rollBack(true);
-        rollingback = false;
+        doingRollBack = false;
     }
     
     public void saveResource(Files file) {
@@ -396,7 +372,7 @@ public class FileManager {
         if (!file.exists()) {
             file.createNewFile();
         }
-        try (OutputStream out = new FileOutputStream(file)) {
+        try (OutputStream out = java.nio.file.Files.newOutputStream(file.toPath())) {
             int b;
             while ((b = is.read()) != -1) {
                 out.write((char) b);
@@ -408,7 +384,7 @@ public class FileManager {
         Files file = Files.MESSAGES;
         saveResource(file);
         File newFile = new File(main.getDataFolder(), file.getFileLocation());
-        try (Reader Config = new InputStreamReader(new FileInputStream(newFile), "UTF-8")) {
+        try (Reader Config = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()), StandardCharsets.UTF_8)) {
             FileConfiguration config = new YamlConfiguration();
             config.load(Config);
             configurations.put(file, config);
@@ -422,7 +398,7 @@ public class FileManager {
             newFile.renameTo(oldFile);
             saveResource(file);
             PluginControl.printStackTrace(ex);
-            try (Reader newConfig = new InputStreamReader(new FileInputStream(newFile))) {
+            try (Reader newConfig = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()))) {
                 FileConfiguration config = new YamlConfiguration();
                 config.load(newConfig);
                 configurations.put(file, config);
@@ -441,7 +417,7 @@ public class FileManager {
         }
         saveResource(file);
         File newFile = new File(main.getDataFolder(), file.getFileLocation());
-        try (Reader Config = new InputStreamReader(new FileInputStream(newFile), "UTF-8")) {
+        try (Reader Config = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()), StandardCharsets.UTF_8)) {
             FileConfiguration config = new YamlConfiguration();
             config.load(Config);
             configurations.put(file, config);
@@ -455,7 +431,7 @@ public class FileManager {
             newFile.renameTo(oldFile);
             saveResource(file);
             PluginControl.printStackTrace(ex);
-            try (Reader newConfig = new InputStreamReader(new FileInputStream(newFile))) {
+            try (Reader newConfig = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()))) {
                 FileConfiguration config = new YamlConfiguration();
                 config.load(newConfig);
                 configurations.put(file, config);
@@ -472,7 +448,7 @@ public class FileManager {
         Files file = Files.DATABASE;
         saveResource(file);
         File newFile = new File(main.getDataFolder(), file.getFileLocation());
-        try (Reader Config = new InputStreamReader(new FileInputStream(newFile), "UTF-8")) {
+        try (Reader Config = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()), StandardCharsets.UTF_8)) {
             FileConfiguration config = new YamlConfiguration();
             config.load(Config);
             configurations.put(file, config);
@@ -486,7 +462,7 @@ public class FileManager {
             newFile.renameTo(oldFile);
             saveResource(file);
             PluginControl.printStackTrace(ex);
-            try (Reader newConfig = new InputStreamReader(new FileInputStream(newFile))) {
+            try (Reader newConfig = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()))) {
                 FileConfiguration config = new YamlConfiguration();
                 config.load(newConfig);
                 configurations.put(file, config);
@@ -502,7 +478,7 @@ public class FileManager {
         Files file = Files.CATEGORY;
         saveResource(file);
         File newFile = new File(main.getDataFolder(), file.getFileLocation());
-        try (Reader Config = new InputStreamReader(new FileInputStream(newFile), "UTF-8")) {
+        try (Reader Config = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()), StandardCharsets.UTF_8)) {
             FileConfiguration config = new YamlConfiguration();
             config.load(Config);
             configurations.put(file, config);
@@ -516,7 +492,7 @@ public class FileManager {
             newFile.renameTo(oldFile);
             saveResource(file);
             PluginControl.printStackTrace(ex);
-            try (Reader newConfig = new InputStreamReader(new FileInputStream(newFile))) {
+            try (Reader newConfig = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()))) {
                 FileConfiguration config = new YamlConfiguration();
                 config.load(newConfig);
                 configurations.put(file, config);
@@ -532,7 +508,7 @@ public class FileManager {
         Files file = Files.ITEMCOLLECTION;
         saveResource(file);
         File newFile = new File(main.getDataFolder(), file.getFileLocation());
-        try (Reader Config = new InputStreamReader(new FileInputStream(newFile), "UTF-8")) {
+        try (Reader Config = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()), StandardCharsets.UTF_8)) {
             FileConfiguration config = new YamlConfiguration();
             config.load(Config);
             configurations.put(file, config);
@@ -546,7 +522,7 @@ public class FileManager {
             newFile.renameTo(oldFile);
             saveResource(file);
             PluginControl.printStackTrace(ex);
-            try (Reader newConfig = new InputStreamReader(new FileInputStream(newFile))) {
+            try (Reader newConfig = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()))) {
                 FileConfiguration config = new YamlConfiguration();
                 config.load(newConfig);
                 configurations.put(file, config);
@@ -604,7 +580,7 @@ public class FileManager {
             }
             saveResource(file);
             File newFile = new File(main.getDataFolder(), file.getFileLocation());
-            try (Reader Config = new InputStreamReader(new FileInputStream(newFile), "UTF-8")) {
+            try (Reader Config = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()), StandardCharsets.UTF_8)) {
                 FileConfiguration config = new YamlConfiguration();
                 config.load(Config);
                 configurations.put(file, config);
@@ -618,7 +594,7 @@ public class FileManager {
                 newFile.renameTo(oldFile);
                 saveResource(file);
                 PluginControl.printStackTrace(ex);
-                try (Reader newConfig = new InputStreamReader(new FileInputStream(newFile))) {
+                try (Reader newConfig = new InputStreamReader(java.nio.file.Files.newInputStream(newFile.toPath()))) {
                     FileConfiguration config = new YamlConfiguration();
                     config.load(newConfig);
                     configurations.put(file, config);
@@ -629,7 +605,7 @@ public class FileManager {
             }
         }
         //Starts to load all the custom files.
-        if (homeFolders.size() > 0) {
+        if (!homeFolders.isEmpty()) {
             if (log) System.out.println(prefix + "Loading custom files.");
             for (String homeFolder : homeFolders) {
                 File homeFile = new File(main.getDataFolder(), "/" + homeFolder);
@@ -677,7 +653,6 @@ public class FileManager {
     /**
      * Turn on the logger system for the FileManager.
      * @param log True to turn it on and false for it to be off.
-     * @return 
      */
     public FileManager logInfo(Boolean log) {
         this.log = log;
@@ -695,7 +670,6 @@ public class FileManager {
     /**
      * Register a folder that has custom files in it. Make sure to have a "/" in front of the folder name.
      * @param homeFolder The folder that has custom files in it.
-     * @return 
      */
     public FileManager registerCustomFilesFolder(String homeFolder) {
         homeFolders.add(homeFolder);
@@ -705,7 +679,6 @@ public class FileManager {
     /**
      * Unregister a folder that has custom files in it. Make sure to have a "/" in front of the folder name.
      * @param homeFolder The folder with custom files in it.
-     * @return 
      */
     public FileManager unregisterCustomFilesFolder(String homeFolder) {
         homeFolders.remove(homeFolder);
@@ -716,7 +689,6 @@ public class FileManager {
      * Register a file that needs to be generated when it's home folder doesn't exist. Make sure to have a "/" in front of the home folder's name.
      * @param fileName The name of the file you want to auto-generate when the folder doesn't exist.
      * @param homeFolder The folder that has custom files in it.
-     * @return 
      */
     public FileManager registerDefaultGenerateFiles(String fileName, String homeFolder) {
         autoGenerateFiles.put(fileName, homeFolder);
@@ -726,7 +698,6 @@ public class FileManager {
     /**
      * Unregister a file that doesn't need to be generated when it's home folder doesn't exist. Make sure to have a "/" in front of the home folder's name.
      * @param fileName The file that you want to remove from auto-generating.
-     * @return 
      */
     public FileManager unregisterDefaultGenerateFiles(String fileName) {
         autoGenerateFiles.remove(fileName);
@@ -735,7 +706,6 @@ public class FileManager {
     
     /**
      * Gets the file from the system.
-     * @param file
      * @return The file from the system.
      */
     public FileConfiguration getFile(Files file) {
@@ -750,7 +720,7 @@ public class FileManager {
      */
     public CustomFile getFile(String name) {
         for (CustomFile file : customFiles) {
-            if (file.getName().toLowerCase().equalsIgnoreCase(name.toLowerCase())) {
+            if (file.getName().equalsIgnoreCase(name)) {
                 return file;
             }
         }
@@ -759,14 +729,12 @@ public class FileManager {
     
     /**
      * Saves the file from the loaded state to the file system.
-     * @param file
      */
     public void saveFile(Files file) {
         try {
             configurations.get(file).save(files.get(file));
         } catch (IOException e) {
             System.out.println(prefix + "Could not save " + file.getFileName() + "!");
-            e.printStackTrace();
             PluginControl.printStackTrace(e);
         }
     }
@@ -801,7 +769,6 @@ public class FileManager {
     
     /**
      * Overrides the loaded state file and loads the file systems file.
-     * @param file
      */
     public void reloadFile(Files file) {
         configurations.put(file, YamlConfiguration.loadConfiguration(files.get(file)));
@@ -809,7 +776,6 @@ public class FileManager {
     
     /**
      * Overrides the loaded state file and loads the file systems file.
-     * @param name
      */
     @Deprecated
     public void reloadFile(String name) {
@@ -829,7 +795,6 @@ public class FileManager {
     
     /**
      * Overrides the loaded state file and loads the filesystems file.
-     * @param file
      * @return True if it reloaded correct and false if the file wasn't found.
      */
     public Boolean reloadFile(CustomFile file) {
@@ -853,7 +818,7 @@ public class FileManager {
          * @param fileName The file name that will be in the plugin's folder.
          * @param fileLocation The location the file is in while in the Jar.
          */
-        private Files(String fileName, String fileLocation) {
+        Files(String fileName, String fileLocation) {
             this.fileName = fileName;
             this.fileLocation = fileLocation;
         }
@@ -894,17 +859,20 @@ public class FileManager {
     }
     
     public static class ProtectedConfiguration {
-        @Getter
         private final FileConfiguration config;
         private final Files file;
         
-        private static final Map<Files, FileConfiguration> defaultConfig = new HashMap();
+        private static final Map<Files, FileConfiguration> defaultConfig = new HashMap<>();
         
         private ProtectedConfiguration(Files file) {
             this.file = file;
             config = getInstance().getFile(file);
         }
-        
+
+        public FileConfiguration getConfig() {
+            return config;
+        }
+
         public Object get(String path) {
             return config.get(path);
         }
@@ -1022,12 +990,17 @@ public class FileManager {
                     fileName = "Config1.13-Up.yml";
                 }
             }
-            try (Reader Config = new InputStreamReader(Main.getInstance().getClass().getResource("/Languages/" + jarPath + "/" + fileName).openStream(), "UTF-8")) {
-                FileConfiguration configFile = new YamlConfiguration();
-                configFile.load(Config);
-                defaultConfig.put(file, configFile);
-            } catch (IOException | InvalidConfigurationException ex) {
-                PluginControl.printStackTrace(ex);
+            InputStream resource = Main.getInstance().getResource("Languages/" + jarPath + "/" + fileName);
+            if (resource != null) {
+                try (InputStream input = resource;
+                     Reader Config = new InputStreamReader(input, StandardCharsets.UTF_8)
+                ) {
+                    FileConfiguration configFile = new YamlConfiguration();
+                    configFile.load(Config);
+                    defaultConfig.put(file, configFile);
+                } catch (IOException | InvalidConfigurationException ex) {
+                    PluginControl.printStackTrace(ex);
+                }
             }
         }
     }

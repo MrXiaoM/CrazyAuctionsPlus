@@ -31,14 +31,11 @@ public class SQLiteEngine
     
     /**
      * Whether the returned data is empty.
-     * @param sql
-     * @return 
      * @deprecated
      */
     @Deprecated
     protected boolean isEmpty(String sql) {
-        ResultSet rs = executeQuery(sql);
-        try {
+        try (ResultSet rs = executeQuery(sql)) {
             return rs.next();
         } catch (SQLException ex) {
             PluginControl.printStackTrace(ex);
@@ -48,8 +45,6 @@ public class SQLiteEngine
     
     /**
      * Whether the returned data is empty.
-     * @param statement
-     * @return
      * @deprecated
      */
     @Deprecated
@@ -65,8 +60,6 @@ public class SQLiteEngine
     
     /**
      * Whether the returned data is empty.
-     * @param rs
-     * @return
      */
     protected boolean isEmpty(ResultSet rs) {
         try {
@@ -79,9 +72,8 @@ public class SQLiteEngine
     
     /**
      * Whether the database connection is SQLite-Reconnecting.
-     * @return 
      */
-    protected boolean isdatabaseReloading() {
+    protected boolean isDatabaseReloading() {
         return databaseReloading;
     }
     
@@ -313,8 +305,7 @@ public class SQLiteEngine
     
     /**
      * Back up all player data.
-     * @param sqlConnection SQLite connection for backup files
-     * @throws SQLException 
+     * @param sqlConnection SQLite 's connection for backup files
      */
     public static void backupPlayerData(Connection sqlConnection) throws SQLException {
         ResultSet rs = instance.executeQuery(connection.prepareStatement("SELECT * FROM " + getItemMailTable()));

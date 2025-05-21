@@ -12,7 +12,7 @@ import studio.trc.bukkit.crazyauctionsplus.util.FileManager.*;
 
 public class Category {
     
-    public static final List<Category> collection = new ArrayList();
+    public static final List<Category> collection = new ArrayList<>();
     
     private final String name;
     private final List<Material> items;
@@ -26,7 +26,7 @@ public class Category {
     private Category(String name, List<Material> items) {
         this.name = name;
         this.items = items;
-        itemMeta = new ArrayList();
+        itemMeta = new ArrayList<>();
         displayName = Files.CATEGORY.getFile().getString("Category." + name + ".Display-Name");
         whitelist = Files.CATEGORY.getFile().getBoolean("Category." + name + ".Whitelist");
     }
@@ -42,12 +42,11 @@ public class Category {
     /**
      * Get Category's instance.
      * @param moduleName Module name in Category.yml.
-     * @return 
      */
     public static Category getModule(String moduleName) {
         if (moduleName == null) return null;
-        List<Material> materialList = new ArrayList();
-        List<ItemMeta> metaList = new ArrayList();
+        List<Material> materialList = new ArrayList<>();
+        List<ItemMeta> metaList = new ArrayList<>();
         ProtectedConfiguration cat = Files.CATEGORY.getFile();
         if (cat.get("Category") != null) {
             if (cat.get("Category." + moduleName) == null) {
@@ -64,16 +63,16 @@ public class Category {
                 }
             }
             if (cat.get("Category." + moduleName + ".Modules") != null) {
-                for (String modulesname : cat.getStringList("Category." + moduleName + ".Modules")) {
-                    if (getModule(modulesname) == null) continue;
-                    Category category = getModule(modulesname);
+                for (String modulesName : cat.getStringList("Category." + moduleName + ".Modules")) {
+                    if (getModule(modulesName) == null) continue;
+                    Category category = getModule(modulesName);
                     materialList.addAll(category.getItems());
                 }
             }
             if (cat.get("Category." + moduleName + ".Item-Collection") != null) {
                 for (String items : cat.getStringList("Category." + moduleName + ".Item-Collection")) {
                     try {
-                        long uid = Long.valueOf(items);
+                        long uid = Long.parseLong(items);
                         ItemCollection ic = ItemCollection.getItemCollection(uid);
                         if (ic != null) metaList.add(ic.getItem().getItemMeta());
                     } catch (NumberFormatException ex) {
@@ -106,7 +105,7 @@ public class Category {
             if (cat.getBoolean("Category." + moduleName + ".Whitelist")) {
                 return new Category(moduleName, materialList, metaList);
             } else {
-                List<Material> newList = new ArrayList();
+                List<Material> newList = new ArrayList<>();
                 for (Material m : Material.values()) {
                     if (!materialList.contains(m)) {
                         newList.add(m);
@@ -120,12 +119,10 @@ public class Category {
     }
     
     public static List<String> getModuleNameList() {
-        List<String> list = new ArrayList();
+        List<String> list = new ArrayList<>();
         ProtectedConfiguration cat = Files.CATEGORY.getFile();
         if (cat.get("Category") != null) {
-            for (String name : cat.getConfigurationSection("Category").getKeys(false)) {
-                list.add(name);
-            }
+            list.addAll(cat.getConfigurationSection("Category").getKeys(false));
             return list;
         } else {
             return list;
@@ -141,7 +138,7 @@ public class Category {
     }
     
     public static List<Category> getCategoryModules() {
-        List<Category> list = new ArrayList();
+        List<Category> list = new ArrayList<>();
         for (String name : getModuleNameList()) {
             Category module = getModule(name);
             if (module != null) {

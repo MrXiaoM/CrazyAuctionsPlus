@@ -14,62 +14,54 @@ public interface GlobalMarket
 {
     /**
      * Get data for all products in the market
-     * @return 
      */
-    public List<MarketGoods> getItems();
+    List<MarketGoods> getItems();
     
     /**
      * Get goods with uid.
-     * @param uid
-     * @return 
      */
-    public MarketGoods getMarketGoods(long uid);
+    MarketGoods getMarketGoods(long uid);
     
     /**
      * Adding new products to the market
-     * @param goods 
      */
-    public void addGoods(MarketGoods goods);
+    void addGoods(MarketGoods goods);
     
     /**
      * Remove specified items from the market
-     * @param goods 
      */
-    public void removeGoods(MarketGoods goods);
+    void removeGoods(MarketGoods goods);
     
     /**
      * Remove item with specified UID
-     * @param uid 
      */
-    public void removeGoods(long uid);
+    void removeGoods(long uid);
     
     /**
      * Clear global market.
      */
-    public void clearGlobalMarket();
+    void clearGlobalMarket();
     
     /**
      * Save market data
      */
-    public void saveData();
+    void saveData();
     
     /**
      * Reload market data from the database
      */
-    public void reloadData();
+    void reloadData();
     
     /**
      * Make a new UID.
-     * @return 
      */
-    public long makeUID();
+    long makeUID();
     
     /**
-     * @return 
      */
-    public YamlConfiguration getYamlData();
+    YamlConfiguration getYamlData();
     
-    public static GlobalMarket getMarket() {
+    static GlobalMarket getMarket() {
         if (PluginControl.useSplitDatabase()) {
             switch (PluginControl.getMarketStorageMethod()) {
                 case MySQL: {
@@ -94,9 +86,7 @@ public interface GlobalMarket
             return MySQLMarket.getInstance();
         } else if (PluginControl.useSQLiteStorage()) {
             return SQLiteMarket.getInstance();
-        } else {
-            return YamlMarket.getInstance();
         }
-        return null;
+        return YamlMarket.getInstance();
     }
 }

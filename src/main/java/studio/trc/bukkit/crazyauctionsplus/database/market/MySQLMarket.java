@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -22,7 +23,7 @@ public class MySQLMarket
     extends MySQLEngine
     implements GlobalMarket
 {
-    private static volatile List<MarketGoods> marketgoods = new ArrayList();
+    private static final List<MarketGoods> marketGoods = new ArrayList<>();
     
     private static MySQLMarket instance;
     private static long lastUpdateTime = System.currentTimeMillis();
@@ -35,8 +36,7 @@ public class MySQLMarket
     
     public static MySQLMarket getInstance() {
         if (instance == null) {
-            MySQLMarket market = new MySQLMarket();
-            return market;
+            return new MySQLMarket();
         }
         return instance;
     }
@@ -49,7 +49,7 @@ public class MySQLMarket
             reloadData();
             lastUpdateTime = System.currentTimeMillis();
         }
-        return marketgoods;
+        return marketGoods;
     }
     
     @Override
@@ -60,7 +60,7 @@ public class MySQLMarket
             reloadData();
             lastUpdateTime = System.currentTimeMillis();
         }
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             if (mg.getUID() == uid) {
                 return mg;
             }
@@ -80,7 +80,7 @@ public class MySQLMarket
                 reloadData();
                 lastUpdateTime = System.currentTimeMillis();
             }
-            for (MarketGoods mgs : marketgoods) {
+            for (MarketGoods mgs : marketGoods) {
                 if (mgs.getUID() == id) {
                     b = true;
                     break;
@@ -94,7 +94,7 @@ public class MySQLMarket
 
     @Override
     public void addGoods(MarketGoods goods) {
-        marketgoods.add(goods);
+        marketGoods.add(goods);
         saveData();
     }
 
@@ -106,9 +106,9 @@ public class MySQLMarket
             reloadData();
             lastUpdateTime = System.currentTimeMillis();
         }
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             if (mg.equals(goods)) {
-                marketgoods.remove(mg);
+                marketGoods.remove(mg);
                 break;
             }
         }
@@ -123,9 +123,9 @@ public class MySQLMarket
             reloadData();
             lastUpdateTime = System.currentTimeMillis();
         }
-        for (MarketGoods mg : marketgoods) {
+        for (MarketGoods mg : marketGoods) {
             if (mg.getUID() == uid) {
-                marketgoods.remove(mg);
+                marketGoods.remove(mg);
                 break;
             }
         }
@@ -134,7 +134,7 @@ public class MySQLMarket
     
     @Override
     public void clearGlobalMarket() {
-        marketgoods.clear();
+        marketGoods.clear();
         saveData();
     }
 
@@ -142,9 +142,9 @@ public class MySQLMarket
     public void saveData() {
         try {
             yamlMarket.set("Items", null);
-            for (MarketGoods mg : marketgoods) {
+            for (MarketGoods mg : marketGoods) {
                 long num = 1;
-                for (;yamlMarket.contains("Items." + num);num++) {}
+                while (yamlMarket.contains("Items." + num)) num++;
                 yamlMarket.set("Items." + num + ".Owner", mg.getItemOwner().toString());
                 switch (mg.getShopType()) {
                     case SELL: {
@@ -197,7 +197,7 @@ public class MySQLMarket
         try {
             PreparedStatement statement = getConnection().prepareStatement("SELECT * FROM " + getDatabaseName() + "." + getMarketTable());
             ResultSet rs = executeQuery(statement);
-            marketgoods.clear();
+            marketGoods.clear();
             if (rs != null && rs.next()) {
                 String stringYaml = rs.getString("YamlMarket");
                 if (stringYaml.isEmpty()) {
@@ -206,9 +206,10 @@ public class MySQLMarket
                     yamlMarket.loadFromString(stringYaml);
                 }
                 if (yamlMarket.get("Items") == null) return;
-                for (String path : yamlMarket.getConfigurationSection("Items").getKeys(false)) {
-                    String[] owner = yamlMarket.getString("Items." + path + ".Owner").split(":");
-                    ShopType shoptype = ShopType.valueOf(yamlMarket.getString("Items." + path + ".ShopType").toUpperCase());
+                ConfigurationSection section = yamlMarket.getConfigurationSection("Items");
+                if (section != null) for (String path : section.getKeys(false)) {
+                    String[] owner = yamlMarket.getString("Items." + path + ".Owner", "").split(":");
+                    ShopType shoptype = ShopType.valueOf(yamlMarket.getString("Items." + path + ".ShopType", "").toUpperCase());
                     MarketGoods goods;
                     switch (shoptype) {
                         case SELL: {
@@ -255,7 +256,7 @@ public class MySQLMarket
                             continue;
                         }
                     }
-                    marketgoods.add(goods);
+                    marketGoods.add(goods);
                 }
             } else {
                 PreparedStatement createMarket = getConnection().prepareStatement("INSERT INTO " + getDatabaseName() + "." + getMarketTable() + " (YamlMarket) VALUES(?)");
@@ -283,88 +284,4 @@ public class MySQLMarket
     public YamlConfiguration getYamlData() {
         return yamlMarket;
     }
-    
-    /**
-     *  Here is the obsolete storage method:
-     *
-     *  Data table construction:
-     * "("
-     * + "UID BIGINT NOT NULL PRIMARY KEY,"
-     * + "Owner VARCHAR(60) NOT NULL,"
-     * + "FullTime BIGINT NOT NULL,"
-     * + "TimeTillExpire BIGINT NOT NULL,"
-     * + "ShopType VARCHAR(3) NOT NULL,"
-     * + "Price DOUBLE DEFAULT 0,"
-     * + "Reward DOUBLE DEFAULT 0"
-     * + "TopBidder VARCHAR(16) DEFAULT 'None',"
-     * + "Item LONGTEXT NOT NULL" +
-     * ")"
-     *
-     *  I originally planned to store the data of each market commodity
-     *  into the database one by one, but found a problem during the test.
-     *  If I clear the database and upload a new complete data package,
-     *  the connection is unexpectedly disconnected (such as MySQL Is an external server),
-     *  which may cause data loss in the entire market.
-     *  Therefore, after discussing with my friends,
-     *  I finally adopted the method of loading the entire Yaml into MySQL, which is safer.
-     * 
-     *  Do you have a better idea? Please tell me by private message! (IMPORTANT!)
-     * 
-     *  Method: (public void reloadData())
-     *  while (rs.next()) {
-     *      try {
-     *          String[] owner = rs.getString("Owner").split(":");
-     *          ShopType shoptype = ShopType.valueOf(rs.getString("ShopType"));
-     *          MarketGoods goods;
-     *          switch (shoptype) {
-     *              case SELL: {
-     *                  goods = new MarketGoods(
-     *                      rs.getLong("UID"),
-     *                      shoptype,
-     *                      new ItemOwner(UUID.fromString(owner[1]), owner[0]),
-     *                      ItemStack.deserialize(rs.getObject("Item", Map.class)),
-     *                      rs.getLong("TimeTillExpire"),
-     *                      rs.getLong("FullTime"),
-     *                      rs.getDouble("Price")
-     *                  );
-     *                  break;
-     *              }
-     *              case BUY: {
-     *                  goods = new MarketGoods(
-     *                      rs.getLong("UID"),
-     *                      shoptype,
-     *                      new ItemOwner(UUID.fromString(owner[1]), owner[0]),
-     *                      ItemStack.deserialize(rs.getObject("Item", Map.class)),
-     *                      rs.getLong("TimeTillExpire"),
-     *                      rs.getLong("FullTime"),
-     *                      rs.getDouble("Reward")
-     *                  );
-     *                  break;
-     *              }
-     *              case BID: {
-     *                  goods = new MarketGoods(
-     *                      rs.getLong("UID"),
-     *                      shoptype,
-     *                      new ItemOwner(UUID.fromString(owner[1]), owner[0]),
-     *                      ItemStack.deserialize(rs.getObject("Item", Map.class)),
-     *                      rs.getLong("TimeTillExpire"),
-     *                      rs.getLong("FullTime"),
-     *                      rs.getDouble("Price"),
-     *                      rs.getString("TopBidder")
-     *                  );
-     *                  break;
-     *              }
-     *              default: {
-     *                  continue;
-     *              }
-     *          }
-     *          marketgoods.add(goods);
-     *      } catch (Exception ex) {
-     *          if (Main.language.get("MySQL-DataReadingError") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("MySQL-DataReadingError").replace("{prefix}", PluginControl.getPrefix().replace("&", "§"));
-     *          try {
-     *              if (getConnection().isClosed()) repairConnection();
-     *          } catch (SQLException ex1) {}
-     *      }
-     *  }
-     */
 }

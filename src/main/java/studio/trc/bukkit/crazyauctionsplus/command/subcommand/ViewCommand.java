@@ -39,7 +39,6 @@ public class ViewCommand
             Player target = Bukkit.getPlayer(args[1]);
             if (target != null) {
                 GUIAction.openViewer(player, target.getUniqueId(), 1);
-                return;
             } else {
                 new BukkitRunnable() {
                     @Override
@@ -47,8 +46,8 @@ public class ViewCommand
                         GUIAction.openViewer(player, Bukkit.getOfflinePlayer(args[1]).getUniqueId(), 1);
                     }
                 }.runTaskLater(Main.getInstance(), 1);
-                return;
             }
+            return;
         }
         MessageUtil.sendMessage(sender, "CrazyAuctions-View");
     }
@@ -65,7 +64,7 @@ public class ViewCommand
                 return getTabPlayersName(args, args.length);
             }
         }
-        return new ArrayList();
+        return new ArrayList<>();
     }
 
     @Override

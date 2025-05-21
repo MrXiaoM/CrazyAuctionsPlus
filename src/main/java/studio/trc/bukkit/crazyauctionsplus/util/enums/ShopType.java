@@ -9,13 +9,13 @@ public enum ShopType {
     /**
      * @param name name of the Shop Type.
      */
-    private ShopType(String name) {
+    ShopType(String name) {
         this.name = name;
     }
     
     /**
      * @param name name of the Type you want.
-     * @return Returns the Type as a Enum.
+     * @return Returns the Type as an Enum.
      */
     public static ShopType getFromName(String name) {
         for (ShopType type : ShopType.values()) {

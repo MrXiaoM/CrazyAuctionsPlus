@@ -48,40 +48,40 @@ public class BuyCommand
             }
             if (!PluginControl.hasCommandPermission(player, "Buy", true)) return;
             if (!PluginControl.isNumber(args[1])) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%arg%", args[1]);
                 MessageUtil.sendMessage(player, "Not-A-Valid-Number", placeholders);
                 return;
             }
-            double reward = Double.valueOf(args[1]);
+            double reward = Double.parseDouble(args[1]);
             double tax = 0;
-            if (!PluginControl.bypassTaxRate(player, ShopType.BUY)) {
+            if (PluginControl.notBypassTaxRate(player, ShopType.BUY)) {
                 tax = reward * PluginControl.getTaxRate(player, ShopType.BUY);
             }
             if (CurrencyManager.getMoney(player) < reward + tax) { 
-                HashMap<String, String> placeholders = new HashMap();
+                HashMap<String, String> placeholders = new HashMap<>();
                 placeholders.put("%Money_Needed%", String.valueOf((reward + tax) - CurrencyManager.getMoney(player)));
                 placeholders.put("%money_needed%", String.valueOf((reward + tax) - CurrencyManager.getMoney(player)));
                 MessageUtil.sendMessage(player, "Need-More-Money", placeholders);
                 return;
             }
             if (reward < FileManager.Files.CONFIG.getFile().getDouble("Settings.Minimum-Buy-Reward")) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%reward%", String.valueOf(FileManager.Files.CONFIG.getFile().getDouble("Settings.Minimum-Buy-Reward")));
                 MessageUtil.sendMessage(player, "Buy-Reward-To-Low", placeholders);
                 return;
             }
             if (reward > FileManager.Files.CONFIG.getFile().getDouble("Settings.Max-Beginning-Buy-Reward")) {
-                Map<String, String> placeholders = new HashMap();
+                Map<String, String> placeholders = new HashMap<>();
                 placeholders.put("%reward%", String.valueOf(FileManager.Files.CONFIG.getFile().getDouble("Settings.Max-Beginning-Buy-Reward")));
                 MessageUtil.sendMessage(player, "Buy-Reward-To-High", placeholders);
                 return;
             }
-            if (!PluginControl.bypassLimit(player, ShopType.BUY)) {
+            if (PluginControl.notBypassLimit(player, ShopType.BUY)) {
                 int limit = PluginControl.getLimit(player, ShopType.BUY);
                 if (limit > -1) {
                     if (CrazyAuctionsCommand.getCrazyAuctions().getNumberOfPlayerItems(player, ShopType.BUY) >= limit) {
-                        Map<String, String> placeholders = new HashMap();
+                        Map<String, String> placeholders = new HashMap<>();
                         placeholders.put("%number%", String.valueOf(limit));
                         MessageUtil.sendMessage(player, "Max-Buying-Items", placeholders);
                         return;
@@ -90,13 +90,13 @@ public class BuyCommand
             }
             int amount = 1;
             if (args.length >= 3) {
-                if (!PluginControl.isInt(args[2])) {
-                    Map<String, String> placeholders = new HashMap();
+                if (PluginControl.isNotInt(args[2])) {
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%arg%", args[1]);
                     MessageUtil.sendMessage(player, "Not-A-Valid-Number", placeholders);
                     return;
                 } else {
-                    amount = Integer.valueOf(args[2]);
+                    amount = Integer.parseInt(args[2]);
                 }
             }
             if (amount > 64) {
@@ -110,13 +110,13 @@ public class BuyCommand
                 try {
                     item = new ItemStack(Material.valueOf(args[3].toUpperCase()), amount);
                 } catch (IllegalArgumentException ex) {
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%item%", args[3]);
                     MessageUtil.sendMessage(sender, "Unknown-Item", placeholders);
                     return;
                 }
                 if (item.getType().equals(Material.AIR)) {
-                    Map<String, String> placeholders = new HashMap();
+                    Map<String, String> placeholders = new HashMap<>();
                     placeholders.put("%item%", args[3]);
                     MessageUtil.sendMessage(sender, "Unknown-Item", placeholders);
                     return;
@@ -149,7 +149,7 @@ public class BuyCommand
             CurrencyManager.removeMoney(player, reward + tax);
             market.addGoods(goods);
             Bukkit.getPluginManager().callEvent(new AuctionListEvent(player, ShopType.BUY, item, reward, tax));
-            Map<String, String> placeholders = new HashMap();
+            Map<String, String> placeholders = new HashMap<>();
             placeholders.put("%reward%", String.valueOf(reward));
             placeholders.put("%tax%", String.valueOf(tax));
             placeholders.put("%item%", LangUtilsHook.getItemName(item));
@@ -165,9 +165,9 @@ public class BuyCommand
     @Override
     public List<String> tabComplete(CommandSender sender, String subCommand, String... args) {
         if (args.length == 4) {
-            return getTabElements(args, 4, Arrays.stream(Material.values()).map(material -> material.name()).collect(Collectors.toList()));
+            return getTabElements(args, 4, Arrays.stream(Material.values()).map(Enum::name).collect(Collectors.toList()));
         }
-        return new ArrayList();
+        return new ArrayList<>();
     }
 
     @Override

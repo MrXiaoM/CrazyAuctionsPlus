@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 
 import studio.trc.bukkit.crazyauctionsplus.command.CrazyAuctionsSubCommand;
@@ -23,9 +24,7 @@ public class ReloadCommand
         if (!PluginControl.hasCommandPermission(sender, "Reload", true)) return;
         if (args.length == 1) {
             PluginControl.reload(PluginControl.ReloadType.ALL);
-            Bukkit.getOnlinePlayers().stream().filter(player -> GUI.openingGUI.containsKey(player.getUniqueId())).forEach(player -> {
-                player.closeInventory();
-            });
+            Bukkit.getOnlinePlayers().stream().filter(player -> GUI.openingGUI.containsKey(player.getUniqueId())).forEach(HumanEntity::closeInventory);
             MessageUtil.sendMessage(sender, "Reload");
         } else if (args.length >= 2) {
             if (args[1].equalsIgnoreCase("database")) {
@@ -80,7 +79,7 @@ public class ReloadCommand
         if (args.length == 2) {
             return getTabElements(args, 2, Arrays.asList("database", "config", "market", "messages", "playerdata", "category", "itemcollection", "all"));
         }
-        return new ArrayList();
+        return new ArrayList<>();
     }
 
     @Override

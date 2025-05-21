@@ -82,7 +82,7 @@ public class GUICommand
         if (args.length == 3) {
             return getTabPlayersName(args, 3);
         }
-        return new ArrayList();
+        return new ArrayList<>();
     }
 
     @Override

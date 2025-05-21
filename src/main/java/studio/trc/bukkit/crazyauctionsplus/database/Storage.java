@@ -16,34 +16,30 @@ public interface Storage
 {
     /**
      * Get player name from configuration file.
-     * @return 
      */
-    public String getName();
+    String getName();
     
     /**
      * Get player's uuid.
-     * @return 
      */
-    public UUID getUUID();
+    UUID getUUID();
     
     /**
      * Get Yaml Configuration Data.
-     * @return 
      */
-    public YamlConfiguration getYamlData();
+    YamlConfiguration getYamlData();
     
     /**
      * Get Player's instance.
-     * @return 
      */
-    public Player getPlayer();
+    Player getPlayer();
     
     /**
      * Save cached data to configuration file.
      */
-    public void saveData();
+    void saveData();
     
-    public static Storage getPlayer(Player player) {
+    static Storage getPlayer(Player player) {
         if (PluginControl.useSplitDatabase()) {
             switch (PluginControl.getItemMailStorageMethod()) {
                 case MySQL: {
@@ -68,13 +64,11 @@ public interface Storage
             return MySQLStorage.getPlayerData(player);
         } else if (PluginControl.useSQLiteStorage()) {
             return SQLiteStorage.getPlayerData(player);
-        } else {
-            return YamlStorage.getPlayerData(player);
         }
-        return null;
+        return YamlStorage.getPlayerData(player);
     }
     
-    public static Storage getPlayer(OfflinePlayer player) {
+    static Storage getPlayer(OfflinePlayer player) {
         if (PluginControl.useSplitDatabase()) {
             switch (PluginControl.getItemMailStorageMethod()) {
                 case MySQL: {
@@ -99,13 +93,11 @@ public interface Storage
             return MySQLStorage.getPlayerData(player);
         } else if (PluginControl.useSQLiteStorage()) {
             return SQLiteStorage.getPlayerData(player);
-        } else {
-            return YamlStorage.getPlayerData(player);
         }
-        return null;
+        return YamlStorage.getPlayerData(player);
     }
     
-    public static Storage getPlayer(UUID uuid) {
+    static Storage getPlayer(UUID uuid) {
         if (PluginControl.useSplitDatabase()) {
             switch (PluginControl.getItemMailStorageMethod()) {
                 case MySQL: {
@@ -130,9 +122,7 @@ public interface Storage
             return MySQLStorage.getPlayerData(uuid);
         } else if (PluginControl.useSQLiteStorage()) {
             return SQLiteStorage.getPlayerData(uuid);
-        } else {
-            return YamlStorage.getPlayerData(uuid);
         }
-        return null;
+        return YamlStorage.getPlayerData(uuid);
     }
 }

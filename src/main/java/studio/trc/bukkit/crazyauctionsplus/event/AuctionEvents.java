@@ -1,7 +1,5 @@
 package studio.trc.bukkit.crazyauctionsplus.event;
 
-import java.lang.reflect.InvocationTargetException;
-
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -70,7 +68,7 @@ public class AuctionEvents
             MarketGoods mg = e.getMarketGoods();
             for (String time : config.getConfigurationSection("Settings.Auction-Process-Settings.Bid-Overtime.Times").getKeys(false)) {
                 try {
-                    double timeTillExpire = Double.valueOf(time);
+                    double timeTillExpire = Double.parseDouble(time);
                     if (timeTillExpire * 1000 >= mg.getTimeTillExpire() - System.currentTimeMillis()) {
                         double overtime = config.getDouble("Settings.Auction-Process-Settings.Bid-Overtime.Times." + time + ".Overtime");
                         mg.setTimeTillExpire(mg.getTimeTillExpire() + (long) (overtime * 1000));

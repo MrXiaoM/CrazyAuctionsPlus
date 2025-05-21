@@ -50,7 +50,6 @@ public class ItemMail
     
     /**
      * Get ItemStack instance.
-     * @return 
      */
     public ItemStack getItem() {
         return is;
@@ -58,7 +57,6 @@ public class ItemMail
     
     /**
      * Get full time.
-     * @return 
      */
     public long getFullTime() {
         return fullTime;
@@ -67,7 +65,6 @@ public class ItemMail
     /**
      * Whether the mail has expired.
      * This method is usually called by automatic update detection.
-     * @return 
      */
     public boolean expired() {
         return System.currentTimeMillis() >= fullTime;
@@ -75,7 +72,6 @@ public class ItemMail
     
     /**
      * Get creation time.
-     * @return 
      */
     public long getAddedTime() {
         if (addedTime == -1) {
@@ -87,7 +83,6 @@ public class ItemMail
     
     /**
      * Does the item mail expire?
-     * @return 
      */
     public boolean isNeverExpire() {
         return neverExpire;
@@ -95,7 +90,6 @@ public class ItemMail
     
     /**
      * Get Player's instance
-     * @return 
      */
     public Player getOwner() {
         return Bukkit.getPlayer(uuid);
@@ -103,7 +97,6 @@ public class ItemMail
     
     /**
      * Get UUID.
-     * @return 
      */
     public UUID getOwnerUUID() {
         return uuid;
@@ -111,7 +104,6 @@ public class ItemMail
     
     /**
      * Get Item Mail's UID
-     * @return 
      */
     public long getUID() {
         return uid;
@@ -121,8 +113,8 @@ public class ItemMail
      * Give Item and delete this item mail.
      */
     public void giveItem() {
-        if (Bukkit.getPlayer(uuid) != null) {
-            Player player = Bukkit.getPlayer(uuid);
+        Player player = Bukkit.getPlayer(uuid);
+        if (player != null) {
             if (player.getInventory().firstEmpty() != -1) {
                 player.getInventory().addItem(is.clone());
             } else {

@@ -80,7 +80,6 @@ public class MarketGoods
     
     /**
      * Get the OfflinePlayer instance of the Top Bidder.
-     * @return 
      */
     public String getTopBidder() {
         return topBidder;
@@ -88,7 +87,6 @@ public class MarketGoods
     
     /**
      * Get product type
-     * @return 
      */
     public ShopType getShopType() {
         return shoptype;
@@ -96,7 +94,6 @@ public class MarketGoods
     
     /**
      * Get the price of an item
-     * @return 
      */
     public double getPrice() {
         return price;
@@ -104,7 +101,6 @@ public class MarketGoods
     
     /**
      * Get paid for goods
-     * @return 
      */
     public double getReward() {
         return reward;
@@ -112,7 +108,6 @@ public class MarketGoods
     
     /**
      * Get Time Till Expire.
-     * @return 
      */
     public long getTimeTillExpire() {
         return timeTillExpire;
@@ -120,7 +115,6 @@ public class MarketGoods
     
     /**
      * Get Full Time
-     * @return 
      */
     public long getFullTime() {
         return fullTime;
@@ -128,7 +122,6 @@ public class MarketGoods
     
     /**
      * Get added time
-     * @return 
      */
     public long getAddedTime() {
         if (addedTime == -1) {
@@ -140,7 +133,6 @@ public class MarketGoods
     
     /**
      * Get the UID of an item.
-     * @return 
      */
     public long getUID() {
         return uid;
@@ -149,7 +141,6 @@ public class MarketGoods
     /**
      * Whether the product has expired.
      * This method is usually called by automatic update detection.
-     * @return 
      */
     public boolean expired() {
         return System.currentTimeMillis() >= timeTillExpire;
@@ -157,7 +148,6 @@ public class MarketGoods
     
     /**
      * Get item.
-     * @return 
      */
     public ItemStack getItem() {
         return item;
@@ -165,7 +155,6 @@ public class MarketGoods
     
     /**
      * Get Item's owner.
-     * @return 
      */
     public ItemOwner getItemOwner() {
         return owner;
@@ -173,7 +162,6 @@ public class MarketGoods
     
     /**
      * Repricing.
-     * @param money 
      */
     public void repricing(double money) {
         switch (shoptype) {
@@ -189,7 +177,6 @@ public class MarketGoods
     }
     
     /**
-     * @param topBidder 
      */
     public void setTopBidder(String topBidder) {
         this.topBidder = topBidder;
@@ -197,7 +184,6 @@ public class MarketGoods
     }
     
     /**
-     * @param player 
      */
     public void setTopBidder(OfflinePlayer player) {
         topBidder = player.getName() + ":" + player.getUniqueId();
@@ -205,7 +191,6 @@ public class MarketGoods
     }
     
     /**
-     * @param price 
      */
     public void setPrice(double price) {
         this.price = price;
@@ -214,7 +199,6 @@ public class MarketGoods
     }
     
     /**
-     * @param timeTillExpire
      */
     public void setTimeTillExpire(long timeTillExpire) {
         this.timeTillExpire = timeTillExpire;

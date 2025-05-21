@@ -1,9 +1,10 @@
 package studio.trc.bukkit.crazyauctionsplus.database.storage;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -23,14 +25,15 @@ import studio.trc.bukkit.crazyauctionsplus.util.ItemMail;
 import studio.trc.bukkit.crazyauctionsplus.database.Storage;
 import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class YamlStorage
     implements Storage
 {
-    public static volatile Map<UUID, YamlStorage> cache = new HashMap();
+    public static volatile Map<UUID, YamlStorage> cache = new HashMap<>();
     
     private final UUID uuid;
     private final YamlConfiguration config = new YamlConfiguration();
-    private final List<ItemMail> mailBox = new ArrayList();
+    private final List<ItemMail> mailBox = new ArrayList<>();
     
     public YamlStorage(Player player) {
         uuid = player.getUniqueId();
@@ -40,7 +43,7 @@ public class YamlStorage
             dataFolder.mkdir();
         }
         
-        File dataFile = new File("plugins/CrazyAuctionsPlus/Players/" + player.getUniqueId().toString() + ".yml");
+        File dataFile = new File("plugins/CrazyAuctionsPlus/Players/" + player.getUniqueId() + ".yml");
         if (!dataFile.exists()) {
             try {
                 dataFile.createNewFile();
@@ -48,7 +51,7 @@ public class YamlStorage
                 PluginControl.printStackTrace(ex);
             }
         }
-        try (InputStreamReader Config = new InputStreamReader(new FileInputStream(dataFile), "UTF-8")) {
+        try (InputStreamReader Config = new InputStreamReader(Files.newInputStream(dataFile.toPath()), StandardCharsets.UTF_8)) {
             config.load(Config);
         } catch (IOException | InvalidConfigurationException ex) {
             dataFileRepair();
@@ -74,7 +77,7 @@ public class YamlStorage
                 PluginControl.printStackTrace(ex);
             }
         }
-        try (InputStreamReader Config = new InputStreamReader(new FileInputStream(dataFile), "UTF-8")) {
+        try (InputStreamReader Config = new InputStreamReader(Files.newInputStream(dataFile.toPath()), StandardCharsets.UTF_8)) {
             config.load(Config);
         } catch (IOException | InvalidConfigurationException ex) {
             dataFileRepair();
@@ -85,47 +88,48 @@ public class YamlStorage
     }
     
     private void loadData() {
-        if (config.get("Name") == null || !config.getString("Name").equals(Bukkit.getOfflinePlayer(uuid).getName())) {
+        String name = config.getString("Name");
+        if (name == null || !name.equals(Bukkit.getOfflinePlayer(uuid).getName())) {
             config.set("Name", Bukkit.getOfflinePlayer(uuid).getName());
             saveData();
         }
-        
-        if (config.get("Items") != null) {
-            for (String path : config.getConfigurationSection("Items").getKeys(false)) {
-                if (config.get("Items." + path) != null) {
-                    ItemMail im;
-                    try {
-                        im = new ItemMail(
-                            config.get("Items." + path + ".UID") != null ? config.getLong("Items." + path + ".UID") : Long.valueOf(path),
-                            Bukkit.getPlayer(uuid),
+
+        ConfigurationSection section = config.getConfigurationSection("Items");
+        if (section != null) for (String path : section.getKeys(false)) {
+            if (config.get("Items." + path) != null) {
+                ItemMail im;
+                try {
+                    im = new ItemMail(
+                            config.get("Items." + path + ".UID") != null ? config.getLong("Items." + path + ".UID") : Long.parseLong(path),
+                            uuid,
                             config.get("Items." + path + ".Item") != null ? config.getItemStack("Items." + path + ".Item") : new ItemStack(Material.AIR),
                             config.getLong("Items." + path + ".Full-Time"),
                             config.get("Items." + path + ".Added-Time") != null ? config.getLong("Items." + path + ".Added-Time") : -1,
                             config.getBoolean("Items." + path + ".Never-Expire")
-                        );
-                    } catch (Exception ex) {
-                        PluginControl.printStackTrace(ex);
-                        continue;
-                    }
-                    mailBox.add(im);
+                    );
+                } catch (Exception ex) {
+                    PluginControl.printStackTrace(ex);
+                    continue;
                 }
+                mailBox.add(im);
             }
         }
     }
     
     private void dataFileRepair() {
+
         File dataFolder = new File("plugins/CrazyAuctionsPlus/Broken-Players");
         if (!dataFolder.exists()) {
             dataFolder.mkdir();
         }
         File dataFile = new File("plugins/CrazyAuctionsPlus/Players/" + uuid.toString() + ".yml");
-        dataFile.renameTo(new File("plugins/CrazyAuctionsPlus/Broken-Players/" + uuid.toString() + ".yml"));
+        dataFile.renameTo(new File("plugins/CrazyAuctionsPlus/Broken-Players/" + uuid + ".yml"));
         try {
             dataFile.createNewFile();
         } catch (IOException ex) {
             PluginControl.printStackTrace(ex);
         }
-        try (InputStreamReader Config = new InputStreamReader(new FileInputStream(dataFile), "UTF-8")) {
+        try (InputStreamReader Config = new InputStreamReader(Files.newInputStream(dataFile.toPath()), StandardCharsets.UTF_8)) {
             config.load(Config);
         } catch (IOException | InvalidConfigurationException ex) {
             PluginControl.printStackTrace(ex);

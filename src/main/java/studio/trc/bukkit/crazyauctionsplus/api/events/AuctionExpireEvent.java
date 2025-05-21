@@ -1,5 +1,6 @@
 package studio.trc.bukkit.crazyauctionsplus.api.events;
 
+import org.jetbrains.annotations.NotNull;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 import studio.trc.bukkit.crazyauctionsplus.util.MarketGoods;
 
@@ -36,7 +37,7 @@ public class AuctionExpireEvent extends Event {
     }
     
     @Override
-    public HandlerList getHandlers() {
+    public @NotNull HandlerList getHandlers() {
         return handlers;
     }
     

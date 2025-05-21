@@ -56,36 +56,36 @@ public enum MessageUtil {
     private List<String> defaultListMessage;
     
     @Deprecated
-    private MessageUtil(String path, String defaultMessage) {
+    MessageUtil(String path, String defaultMessage) {
         this.path = path;
         this.defaultMessage = defaultMessage;
     }
     
     @Deprecated
-    private MessageUtil(String path, List<String> defaultListMessage) {
+    MessageUtil(String path, List<String> defaultListMessage) {
         this.path = path;
         this.defaultListMessage = defaultListMessage;
     }
     
     @Deprecated
     public static String convertList(List<String> list) {
-        String message = "";
+        StringBuilder message = new StringBuilder();
         for (String m : list) {
-            message += PluginControl.color(m) + "\n";
+            message.append(PluginControl.color(m)).append("\n");
         }
-        return message;
+        return message.toString();
     }
     
     @Deprecated
     public static String convertList(List<String> list, HashMap<String, String> placeholders) {
-        String message = "";
+        StringBuilder message = new StringBuilder();
         for (String m : list) {
-            message += PluginControl.color(m) + "\n";
+            message.append(PluginControl.color(m)).append("\n");
         }
         for (String ph : placeholders.keySet()) {
-            message = PluginControl.color(message.replaceAll(ph, placeholders.get(ph))).replaceAll(ph, placeholders.get(ph).toLowerCase());
+            message = new StringBuilder(PluginControl.color(message.toString().replaceAll(ph, placeholders.get(ph))).replaceAll(ph, placeholders.get(ph).toLowerCase()));
         }
-        return message;
+        return message.toString();
     }
     
     @Deprecated
@@ -222,7 +222,7 @@ public enum MessageUtil {
     }
     
     public static List<String> getValueList(String path) {
-        List<String> list = new ArrayList();
+        List<String> list = new ArrayList<>();
         ProtectedConfiguration config = Files.CONFIG.getFile();
         for (String message : Files.MESSAGES.getFile().getStringList(config.getString("Settings.Language") + "." + path)) {
             list.add(PluginControl.color(message.replace("{prefix}", config.getString("Settings.Prefix"))));
