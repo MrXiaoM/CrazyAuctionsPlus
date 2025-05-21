@@ -1,5 +1,5 @@
-This is an enhanced version of the CrazyAuctions plugin, rewritten from open source by @BadBones69 (original author).
-Based on the original CrazyAuctions plugin, I added a variety of new features, and modified and optimized part of the code according to my own characteristics.
-I hope you will like this plugin, and your support is my motivation.
-Depend plugin: Vault.(https://www.spigotmc.org/resources/vault.34315/)
-Downloads: https://www.spigotmc.org/resources/75655/
+# CrazyAuctionsPlus
+Bukkit/Spigot CrazyAuctionsPlus Plugin
+
+由于原插件尚有部分问题，仅作一些修复
+鉴于运用开源代码，故开源此修改部分，仅供参考

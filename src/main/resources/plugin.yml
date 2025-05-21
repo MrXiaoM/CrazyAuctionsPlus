@@ -1,7 +1,9 @@
 name: CrazyAuctionsPlus
 authors:
 - BadBones69
-- TRCStudioDean
+- TRCRedstoner
+- BingYanchi
+- MrXiaoM
 main: studio.trc.bukkit.crazyauctionsplus.Main
 version: ${version}
 api-version: 1.13
