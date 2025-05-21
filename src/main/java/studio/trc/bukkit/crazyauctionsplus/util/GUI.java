@@ -215,22 +215,22 @@ public class GUI
         }
         switch (type) {
             case ANY: {
-                inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Main-GUIName") + " #" + page));
+                inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Main-GUIName") + " #" + page));
                 guiType = GUIType.GLOBALMARKET_MAIN;
                 break;
             }
             case SELL: {
-                inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Sell-GUIName") + " #" + page));
+                inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Sell-GUIName") + " #" + page));
                 guiType = GUIType.GLOBALMARKET_SELL;
                 break;
             }
             case BUY: {
-                inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Buy-GUIName") + " #" + page));
+                inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Buy-GUIName") + " #" + page));
                 guiType = GUIType.GLOBALMARKET_BUY;
                 break;
             }
             case BID: {
-                inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Bid-GUIName") + " #" + page));
+                inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Bid-GUIName") + " #" + page));
                 guiType = GUIType.GLOBALMARKET_BID;
                 break;
             }
@@ -318,7 +318,7 @@ public class GUI
         if (size != 54 && size != 45 && size != 36 && size != 27 && size != 18 && size != 9) {
             size = 54;
         }
-        Inventory inv = Bukkit.createInventory(null, size, PluginControl.color(config.getString("Settings.Categories")));
+        Inventory inv = Bukkit.createInventory(null, size, PluginControl.color(player, config.getString("Settings.Categories")));
         List<String> options = new ArrayList<>();
         options.add("OtherSettings.Categories-Back");
         options.add("OtherSettings.WhatIsThis.Categories");
@@ -359,7 +359,7 @@ public class GUI
         List<ItemStack> items = new ArrayList<>();
         List<Long> ID = new ArrayList<>();
         GlobalMarket market = GlobalMarket.getMarket();
-        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Player-Items-List")));
+        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Player-Items-List")));
         List<String> options = new ArrayList<>();
         options.add("Player-Items-List-Back");
         options.add("WhatIsThis.CurrentItems");
@@ -446,7 +446,7 @@ public class GUI
         }
         int maxPage = PluginControl.getMaxPage(items);
         while (page > maxPage) page--;
-        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Player-Items-Mail") + " #" + page));
+        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Player-Items-Mail") + " #" + page));
         List<String> options = new ArrayList<>();
         options.add("Player-Items-Mail-Back");
         options.add("PreviousPage");
@@ -502,7 +502,7 @@ public class GUI
         }
         int maxPage = PluginControl.getMaxPage(items);
         while (page > maxPage) page--;
-        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Player-Items-Mail") + " #" + page));
+        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Player-Items-Mail") + " #" + page));
         List<String> options = new ArrayList<>();
         options.add("Player-Items-Mail-Back");
         options.add("PreviousPage");
@@ -548,7 +548,7 @@ public class GUI
             player.sendMessage(MessageUtil.getValue("Item-Doesnt-Exist"));
             return;
         }
-        Inventory inv = Bukkit.createInventory(null, 9, PluginControl.color(config.getString("Settings.Buying-Item")));
+        Inventory inv = Bukkit.createInventory(null, 9, PluginControl.color(player, config.getString("Settings.Buying-Item")));
         List<String> options = new ArrayList<>();
         options.add("Confirm");
         options.add("Cancel");
@@ -599,7 +599,7 @@ public class GUI
             player.sendMessage(MessageUtil.getValue("Item-Doesnt-Exist"));
             return;
         }
-        Inventory inv = Bukkit.createInventory(null, 9, PluginControl.color(config.getString("Settings.Selling-Item")));
+        Inventory inv = Bukkit.createInventory(null, 9, PluginControl.color(player, config.getString("Settings.Selling-Item")));
         List<String> options = new ArrayList<>();
         options.add("Confirm");
         options.add("Cancel");
@@ -653,7 +653,7 @@ public class GUI
         }
         MarketGoods mg = market.getMarketGoods(uid);
         bidding.put(player.getUniqueId(), (int) mg.getPrice());
-        Inventory inv = Bukkit.createInventory(null, 27, PluginControl.color(config.getString("Settings.Bidding-On-Item")));
+        Inventory inv = Bukkit.createInventory(null, 27, PluginControl.color(player, config.getString("Settings.Bidding-On-Item")));
         if (!bidding.containsKey(player.getUniqueId())) bidding.put(player.getUniqueId(), 0);
         ConfigurationSection section = config.getConfig().getConfigurationSection("Settings.GUISettings.Auction-Settings.Bidding-Buttons");
         if (section != null) for (String price : section.getKeys(false)) {
@@ -734,7 +734,7 @@ public class GUI
         }
         int maxPage = PluginControl.getMaxPage(items);
         while (page > maxPage) page--;
-        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(config.getString("Settings.Player-Viewer-GUIName") + " #" + page));
+        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Player-Viewer-GUIName") + " #" + page));
         List<String> options = new ArrayList<>();
         options.add("WhatIsThis.Viewing");
         for (String o : options) {

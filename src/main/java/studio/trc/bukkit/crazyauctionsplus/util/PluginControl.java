@@ -49,7 +49,11 @@ public class PluginControl
     public static Map<CommandSender, Boolean> stackTraceVisible = new HashMap<>();
     public static String nmsVersion = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
     private static final Pattern hexColorPattern = Pattern.compile("#[a-fA-F0-9]{6}");
-    
+
+    public static String color(Player player, String text) {
+        return color(PAPI.setPlaceholders(player, text));
+    }
+
     public static String color(String text) {
         if (nmsVersion != null && !nmsVersion.startsWith("v1_7") && !nmsVersion.startsWith("v1_8") && !nmsVersion.startsWith("v1_9") && !nmsVersion.startsWith("v1_10") &&
             !nmsVersion.startsWith("v1_11") && !nmsVersion.startsWith("v1_12") && !nmsVersion.startsWith("v1_13") && !nmsVersion.startsWith("v1_14") && !nmsVersion.startsWith("v1_15")) {
