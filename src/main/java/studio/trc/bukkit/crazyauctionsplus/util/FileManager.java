@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import lombok.Getter;
 
 import studio.trc.bukkit.crazyauctionsplus.Main;
 import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
@@ -40,7 +41,6 @@ import studio.trc.bukkit.crazyauctionsplus.database.engine.SQLiteEngine;
 import studio.trc.bukkit.crazyauctionsplus.util.PluginControl.RollBackMethod;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.Version;
-import studio.trc.bukkit.crazyauctionsplus.util.enums.Messages;
 
 public class FileManager {
     
@@ -165,7 +165,7 @@ public class FileManager {
             }
             for (CommandSender sender : FileManager.syncSenders) {
                 if (sender != null) {
-                    Messages.sendMessage(sender, "Admin-Command.Synchronize.Successfully");
+                    MessageUtil.sendMessage(sender, "Admin-Command.Synchronize.Successfully");
                 }
             }
             syncing = false;
@@ -174,7 +174,7 @@ public class FileManager {
                 if (sender != null) {
                     Map<String, String> placeholders = new HashMap();
                     placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
-                    Messages.sendMessage(sender, "Admin-Command.Synchronize.Failed", placeholders);
+                    MessageUtil.sendMessage(sender, "Admin-Command.Synchronize.Failed", placeholders);
                 }
             }
             syncing = false;
@@ -187,7 +187,7 @@ public class FileManager {
     public static Runnable backupThread = () -> {
         try {
             backingup = true;
-            String fileName = Messages.getValue("Admin-Command.Backup.Backup-Name").replace("%date%", new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date())) + ".db";
+            String fileName = MessageUtil.getValue("Admin-Command.Backup.Backup-Name").replace("%date%", new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date())) + ".db";
             GlobalMarket market = GlobalMarket.getMarket();
             File folder = new File("plugins/CrazyAuctionsPlus/Backup");
             if (!folder.exists()) folder.mkdir();
@@ -300,7 +300,7 @@ public class FileManager {
                 if (sender != null) {
                     Map<String, String> placeholders = new HashMap();
                     placeholders.put("%file%",  fileName);
-                    Messages.sendMessage(sender, "Admin-Command.Backup.Successfully", placeholders);
+                    MessageUtil.sendMessage(sender, "Admin-Command.Backup.Successfully", placeholders);
                 }
             }
             backingup = false;
@@ -309,7 +309,7 @@ public class FileManager {
                 if (sender != null) {
                     Map<String, String> placeholders = new HashMap();
                     placeholders.put("%error%",  ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
-                    Messages.sendMessage(sender, "Admin-Command.Backup.Failed", placeholders);
+                    MessageUtil.sendMessage(sender, "Admin-Command.Backup.Failed", placeholders);
                 }
             }
             backingup = false;
@@ -894,6 +894,7 @@ public class FileManager {
     }
     
     public static class ProtectedConfiguration {
+        @Getter
         private final FileConfiguration config;
         private final Files file;
         
@@ -949,8 +950,10 @@ public class FileManager {
         }
         
         public boolean getBoolean(String path) {
+            if (file.equals(Files.DATABASE)) return config.getBoolean(path);
             if (config.get(path) == null) {
-                return false;
+                reset(path);
+                return config.getBoolean(path);
             } else {
                 return config.getBoolean(path);
             }

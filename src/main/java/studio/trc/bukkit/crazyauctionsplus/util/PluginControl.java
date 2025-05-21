@@ -12,6 +12,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
@@ -42,14 +44,26 @@ import studio.trc.bukkit.crazyauctionsplus.util.AuctionProcess.AuctionUpdateThre
 import studio.trc.bukkit.crazyauctionsplus.util.enums.Version;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.*;
-import studio.trc.bukkit.crazyauctionsplus.util.enums.Messages;
 
 public class PluginControl
 {
     public static Map<CommandSender, Boolean> stackTraceVisible = new HashMap();
+    public static String nmsVersion = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+    private static final Pattern hexColorPattern = Pattern.compile("#[a-fA-F0-9]{6}");
     
-    public static String color(String msg) {
-        return ChatColor.translateAlternateColorCodes('&', msg);
+    public static String color(String text) {
+        if (nmsVersion != null && !nmsVersion.startsWith("v1_7") && !nmsVersion.startsWith("v1_8") && !nmsVersion.startsWith("v1_9") && !nmsVersion.startsWith("v1_10") &&
+            !nmsVersion.startsWith("v1_11") && !nmsVersion.startsWith("v1_12") && !nmsVersion.startsWith("v1_13") && !nmsVersion.startsWith("v1_14") && !nmsVersion.startsWith("v1_15")) {
+            try {
+                Matcher matcher = hexColorPattern.matcher(text);
+                while (matcher.find()) {
+                    String color = text.substring(matcher.start(), matcher.end());
+                    text = text.replace(color, net.md_5.bungee.api.ChatColor.of(color).toString());
+                    matcher = hexColorPattern.matcher(text);
+                }
+            } catch (Throwable t) {}
+        }
+        return ChatColor.translateAlternateColorCodes('&', text);
     }
     
     public static String getPrefix() {
@@ -229,6 +243,8 @@ public class PluginControl
     }
     
     public static boolean isNumber(String value) {
+        if (value.equalsIgnoreCase("Infinity")) return false;
+        if (value.equalsIgnoreCase("NaN")) return false;
         try {
             Double.valueOf(value);
             return true;
@@ -245,6 +261,10 @@ public class PluginControl
         } catch (NumberFormatException ex) {
             return false;
         }
+    }
+    
+    public static boolean enableUpdater() {
+        return Files.CONFIG.getFile().getBoolean("Settings.Updater");
     }
     
     public static Player getPlayer(String name) {
@@ -290,6 +310,14 @@ public class PluginControl
         return false;
     }
     
+    public static void checkUpdate() {
+        String now = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String checkUpdateTime = new SimpleDateFormat("yyyy-MM-dd").format(Updater.getTimeOfLastCheckUpdate());
+        if (!now.equals(checkUpdateTime)) {
+            Updater.checkUpdate();
+        }
+    }
+    
     public static boolean isOnline(UUID uuid) {
         return Bukkit.getPlayer(uuid) != null;
     }
@@ -300,14 +328,14 @@ public class PluginControl
                 return true;
             }
         }
-        Messages.sendMessage(p, "Not-Online");
+        MessageUtil.sendMessage(p, "Not-Online");
         return false;
     }
     
     public static boolean hasCommandPermission(Player player, String perm, boolean message) {
         if (Files.CONFIG.getFile().getBoolean("Settings.Permissions.Commands." + perm + ".Default")) return true;
         if (!player.hasPermission(Files.CONFIG.getFile().getString("Settings.Permissions.Commands." + perm + ".Permission"))) {
-            if (message) Messages.sendMessage(player, "No-Permission");
+            if (message) MessageUtil.sendMessage(player, "No-Permission");
             return false;
         }
         return true;
@@ -316,7 +344,16 @@ public class PluginControl
     public static boolean hasCommandPermission(CommandSender sender, String perm, boolean message) {
         if (Files.CONFIG.getFile().getBoolean("Settings.Permissions.Commands." + perm + ".Default")) return true;
         if (!sender.hasPermission(Files.CONFIG.getFile().getString("Settings.Permissions.Commands." + perm + ".Permission"))) {
-            if (message) Messages.sendMessage(sender, "No-Permission");
+            if (message) MessageUtil.sendMessage(sender, "No-Permission");
+            return false;
+        }
+        return true;
+    }
+    
+    public static boolean hasPermission(Player player, String path, boolean message) {
+        if (Files.CONFIG.getFile().getBoolean("Settings." + path + ".Default")) return true;
+        if (!player.hasPermission(Files.CONFIG.getFile().getString("Settings." + path + ".Permission"))) {
+            if (message) MessageUtil.sendMessage(player, "No-Permission");
             return false;
         }
         return true;
@@ -482,9 +519,32 @@ public class PluginControl
         return maxPage;
     }
     
+    public static int getMaterialAmount(Player player, Material material, ItemMeta meta) {
+        if (player == null) return 0;
+        if (Files.CONFIG.getFile().getBoolean("Settings.Item-NBT-comparison")) {
+            int amount = 0;
+            for (ItemStack targetItem : player.getInventory().getContents()) {
+                if (targetItem == null) continue;
+                if (targetItem.getType().equals(material) && targetItem.getItemMeta().equals(meta)) {
+                    amount += targetItem.getAmount();
+                }
+            }
+            return amount;
+        } else {
+            int amount = 0;
+            for (ItemStack targetItem : player.getInventory().getContents()) {
+                if (targetItem == null) continue;
+                if (targetItem.getType().equals(material)) {
+                    amount += targetItem.getAmount();
+                }
+            }
+            return amount;
+        }
+    }
+    
     public static String convertToTime(long time, boolean isExpire) {
         if (isExpire) {
-            return Messages.getValue("Date-Settings.Never");
+            return MessageUtil.getValue("Date-Settings.Never");
         }
         Calendar C = Calendar.getInstance();
         Calendar cal = Calendar.getInstance();
@@ -500,16 +560,16 @@ public class PluginControl
         S += total;
         StringBuilder sb = new StringBuilder();
         if (D > 0) {
-            sb.append(D).append(Messages.getValue("Date-Settings.Day")).append(" ");
+            sb.append(D).append(MessageUtil.getValue("Date-Settings.Day")).append(" ");
         }
         if (H > 0) {
-            sb.append(H).append(Messages.getValue("Date-Settings.Hour")).append(" ");
+            sb.append(H).append(MessageUtil.getValue("Date-Settings.Hour")).append(" ");
         }
         if (M > 0) {
-            sb.append(M).append(Messages.getValue("Date-Settings.Minute")).append(" ");
+            sb.append(M).append(MessageUtil.getValue("Date-Settings.Minute")).append(" ");
         }
         if (S > 0) {
-            sb.append(S).append(Messages.getValue("Date-Settings.Second"));
+            sb.append(S).append(MessageUtil.getValue("Date-Settings.Second"));
         }
         return sb.toString();
     }
@@ -537,26 +597,16 @@ public class PluginControl
         return player.getInventory().firstEmpty() == -1;
     }
     
-    public static boolean itemExists(Player player, ItemStack is) {
-        Material material = is.getType();
-        if (Files.CONFIG.getFile().getBoolean("Settings.Item-NBT-comparison")) {
-            for (ItemStack items : player.getInventory().getContents()) {
-                if (items == null) continue;
-                if (items.getType().equals(material) && items.getItemMeta().equals(is.getItemMeta()) && items.getAmount() >= is.getAmount()) {
-                    return true;
-                }
-            }
-        } else {
-            for (ItemStack items : player.getInventory().getContents()) {
-                if (items == null) continue;
-                if (items.getType().equals(material)) {
-                    if (is.getAmount() <= items.getAmount()) {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
+    public static boolean isItemBlacklisted(ItemStack item) {
+        return FileManager.Files.CONFIG.getFile().getStringList("Settings.BlackList").stream().anyMatch(id -> item.getType() == PluginControl.makeItem(id, 1).getType());
+    }
+    
+    public static boolean isItemLoreBlacklisted(ItemStack item) {
+        if (item.getItemMeta() == null || item.getItemMeta().getLore() == null) return false;
+        return FileManager.Files.CONFIG.getFile().getStringList("Settings.Lore-Blacklist")
+                .stream().anyMatch(text -> 
+                        item.getItemMeta().getLore().stream()
+                                .anyMatch(lore -> lore.contains(text)));
     }
     
     public static boolean isWorldDisabled(Player player) {
@@ -569,26 +619,67 @@ public class PluginControl
         }
         return false;
     }
+
+    public static boolean hasMaterial(Player player, ItemStack item) {
+        return hasMaterial(player, item.getType(), item.getItemMeta(), item.getAmount());
+    }
     
-    public static void takeItem(Player player, ItemStack item) {
+    public static boolean hasMaterial(Player player, Material material, ItemMeta meta, int amountRequired) {
+        if (player == null) return false;
+        int amount = getMaterialAmount(player, material, meta);
+        return amountRequired <= amount;
+    }
+
+    public static boolean takeMaterial(Player player, ItemStack item) {
+        return takeMaterial(player, item.getType(), item.getItemMeta(), item.getAmount());
+    }
+    
+    public static boolean takeMaterial(Player player, Material material, ItemMeta meta, int amountRequired) {
+        if (player == null) return false;
+        boolean isChanged = false;
+        ItemStack[] contents = player.getInventory().getContents();
         if (Files.CONFIG.getFile().getBoolean("Settings.Item-NBT-comparison")) {
-            for (ItemStack is : player.getInventory().getContents()) {
-                if (is != null) {
-                    if (item.getType().equals(is.getType()) && item.getItemMeta().equals(is.getItemMeta()) && item.getAmount() <= is.getAmount()) {
-                        is.setAmount(is.getAmount() - item.getAmount());
+            for (int sort = 0; sort < contents.length;sort++) {
+                ItemStack targetItem = contents[sort];
+                if (targetItem == null) continue;
+                if (targetItem.getType().equals(material) && targetItem.getItemMeta().equals(meta)) {
+                    if (amountRequired > targetItem.getAmount()) {
+                        amountRequired -= targetItem.getAmount();
+                        player.getInventory().setItem(sort, new ItemStack(Material.AIR));
+                        isChanged = true;
+                    } else {
+                        if (targetItem.getAmount() == amountRequired) {
+                            player.getInventory().setItem(sort, new ItemStack(Material.AIR));
+                        } else {
+                            targetItem.setAmount(targetItem.getAmount() - amountRequired);
+                        }
+                        isChanged = true;
                         break;
                     }
                 }
             }
         } else {
-            for (ItemStack is : player.getInventory().getContents()) {
-                if (is != null) {
-                    if (item.getType().equals(is.getType()) && item.getAmount() <= is.getAmount()) {
-                        is.setAmount(item.getAmount() - is.getAmount());
+            for (int sort = 0; sort < contents.length;sort++) {
+                ItemStack targetItem = contents[sort];
+                if (targetItem == null) continue;
+                if (targetItem.getType().equals(material)) {
+                    if (amountRequired > targetItem.getAmount()) {
+                        amountRequired -= targetItem.getAmount();
+                        player.getInventory().setItem(sort, new ItemStack(Material.AIR));
+                        isChanged = true;
+                    } else {
+                        if (targetItem.getAmount() == amountRequired) {
+                            player.getInventory().setItem(sort, new ItemStack(Material.AIR));
+                        } else {
+                            targetItem.setAmount(targetItem.getAmount() - amountRequired);
+                        }
+                        isChanged = true;
+                        break;
                     }
                 }
             }
         }
+        return isChanged;
     }
     
     public static void printStackTrace(Exception ex) {
@@ -603,7 +694,7 @@ public class PluginControl
                 if (stackTraceVisible.get(player)) {
                     Map<String, String> placeholders = new HashMap();
                     placeholders.put("%stacktrace%", sb.toString());
-                    Messages.sendMessage(player, "Admin-Command.PrintStackTrace.Messages", placeholders);
+                    MessageUtil.sendMessage(player, "Admin-Command.PrintStackTrace.Messages", placeholders);
                 }
             }
         }
@@ -611,7 +702,7 @@ public class PluginControl
             if (stackTraceVisible.get(Bukkit.getServer().getConsoleSender())) {
                 Map<String, String> placeholders = new HashMap();
                 placeholders.put("%stacktrace%", sb.toString());
-                Messages.sendMessage(Bukkit.getServer().getConsoleSender(), "Admin-Command.PrintStackTrace.Messages", placeholders);
+                MessageUtil.sendMessage(Bukkit.getServer().getConsoleSender(), "Admin-Command.PrintStackTrace.Messages", placeholders);
             }
         }
     }
@@ -639,14 +730,8 @@ public class PluginControl
                             Player player = getPlayer(owner);
                             if (player != null) {
                                 Map<String, String> placeholders = new HashMap();
-                                String item;
-                                try {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem());
-                                } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
-                                }
-                                placeholders.put("%item%", item);
-                                Messages.sendMessage(player, "Item-Has-Expired", placeholders);
+                                placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
+                                MessageUtil.sendMessage(player, "Item-Has-Expired", placeholders);
                             }
                             AuctionExpireEvent event = new AuctionExpireEvent(player, mg, ShopType.BUY);
                             new BukkitRunnable() {
@@ -664,14 +749,8 @@ public class PluginControl
                             Player player = getPlayer(owner);
                             if (player != null) {
                                 Map<String, String> placeholders = new HashMap();
-                                String item;
-                                try {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem());
-                                } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
-                                }
-                                placeholders.put("%item%", item);
-                                Messages.sendMessage(player, "Item-Has-Expired", placeholders);
+                                placeholders.put("%item%", LangUtilsHook.getItemName(mg.getItem()));
+                                MessageUtil.sendMessage(player, "Item-Has-Expired", placeholders);
                             }
                             AuctionExpireEvent event = new AuctionExpireEvent(player, mg, ShopType.SELL);
                             new BukkitRunnable() {
@@ -960,6 +1039,8 @@ public class PluginControl
         
         /**
          * Config.yml
+         *//**
+         * Config.yml
          */
         CONFIG,
         
@@ -974,7 +1055,7 @@ public class PluginControl
         MARKET,
         
         /**
-         * Messages.yml
+         * MessageUtil.yml
          */
         MESSAGES,
         
@@ -1011,7 +1092,7 @@ public class PluginControl
         }
         
         public static void backup() throws SQLException, IOException {
-            String fileName = Messages.getValue("Admin-Command.Backup.Backup-Name").replace("%date%", new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date())) + ".db";
+            String fileName = MessageUtil.getValue("Admin-Command.Backup.Backup-Name").replace("%date%", new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date())) + ".db";
             GlobalMarket market = GlobalMarket.getMarket();
             File folder = new File("plugins/CrazyAuctionsPlus/Backup");
             if (!folder.exists()) folder.mkdir();
@@ -1346,14 +1427,14 @@ public class PluginControl
                     if (sender != null) {
                         Map<String, String> placeholders = new HashMap();
                         placeholders.put("%file%", rollBackFile.getName());
-                        Messages.sendMessage(sender, "Admin-Command.RollBack.Successfully", placeholders);
+                        MessageUtil.sendMessage(sender, "Admin-Command.RollBack.Successfully", placeholders);
                     }
                 }
             } catch (Exception ex) {
                 for (CommandSender sender : senders) {
                     Map<String, String> placeholders = new HashMap();
                     placeholders.put("%error%", ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "null");
-                    Messages.sendMessage(sender, "Admin-Command.RollBack.Failed", placeholders);
+                    MessageUtil.sendMessage(sender, "Admin-Command.RollBack.Failed", placeholders);
                 }
                 PluginControl.printStackTrace(ex);
             }

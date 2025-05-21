@@ -130,7 +130,7 @@ public class ItemCollection
     }
     
     public static List<ItemCollection> getCollection() {
-        List<ItemCollection> list = new ArrayList();
+        List<ItemCollection> list = new ArrayList<>();
         ProtectedConfiguration ic = Files.ITEMCOLLECTION.getFile();
         if (ic.get("ItemCollection") != null) {
             for (String items : ic.getConfigurationSection("ItemCollection").getKeys(false)) {

@@ -22,6 +22,8 @@ Settings:
     Max-Beginning-Buy-Reward: 1000000
     Minimum-Bid-Price: 1
     Max-Beginning-Bid-Price: 1000000
+    #检测插件新资讯
+    Updater: true
     #数据库下载文件相关设置
     Download:
         Market: 'plugins/CrazyAuctionsPlus/Download/全球市场-%date%.yml'
@@ -128,9 +130,13 @@ Settings:
         Sound: 'CLICK'
         #1.8 声音列表在这里: http://badbones69.com/javadocs/1.8.8/org/bukkit/Sound.html
         #1.9 声音列表在这里: https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Sound.html
+    #物品黑名单（以下物品禁止上架到市场）
     BlackList:
     - '7'
     - '120'
+    #标签黑名单（包含此标签的物品禁止上架到市场）
+    Lore-Blacklist:
+    - '已绑定'
     #告示牌商店
     #当玩家点击告示牌时打开指定玩家的个人商品界面的功能
     Shop-Sign:
@@ -198,6 +204,59 @@ Settings:
             Messages: 
                 - '{prefix}&a玩家 &e%bidder% &a最终以最高价 &c%price% ￥&a赢得了商品 &r%item% &a的竞拍！ 祝贺他！'
     GUISettings:
+        Auction-Settings:
+            Top-Bidder:
+                Item: '166'
+                Name: '&c你已经是最高价格的竞拍人了.'
+            Bidding:
+                Item: '160:15'
+                Name: '&6拍卖功能'
+                Lore:
+                - ''
+                - '&7<▬▬&a&l加价 &c&l减价&7▬▬>'
+                - '&9你的拍卖价格: &e$%bid%'
+                - '&9最高拍卖价格: &e$%topbid%'
+            Bid:
+                Item: '41'
+                Name: '&e&l确认竞拍'
+                Lore:
+                - ''
+                - '&e点此处开始竞拍你的商品.'
+            #竞拍加减价的按钮
+            Bidding-Buttons:
+                #可以根据以下格式自定义
+                1:
+                    Item: '160:5'
+                    Name: '&a+1'
+                    Slot: 9
+                10:
+                    Item: '160:5'
+                    Name: '&a+10'
+                    Slot: 10
+                100:
+                    Item: '160:5'
+                    Name: '&a+100'
+                    Slot: 11
+                1000:
+                    Item: '160:5'
+                    Name: '&a+1000'
+                    Slot: 12
+                -1:
+                    Item: '160:14'
+                    Name: '&c-1'
+                    Slot: 14
+                -10:
+                    Item: '160:14'
+                    Name: '&c-10'
+                    Slot: 15
+                -100:
+                    Item: '160:14'
+                    Name: '&c-100'
+                    Slot: 16
+                -1000:
+                    Item: '160:14'
+                    Name: '&c-1000'
+                    Slot: 17
         Category-Settings:
             #GUI界面的大小
             GUI-Size: 45
@@ -520,25 +579,12 @@ Settings:
             Not-owned:
                 Item: '166'
                 Name: '&c你未拥有这个物品！'
-            Top-Bidder:
-                Item: '166'
-                Name: '&c你已经是最高价格的竞拍人了.'
-            Bidding:
-                Item: '160:15'
-                Name: '&6拍卖功能'
-                Lore:
-                - ''
-                - '&7<▬▬&a&l加价 &c&l减价&7▬▬>'
-                - '&9你的拍卖价格: &e$%bid%'
-                - '&9最高拍卖价格: &e$%topbid%'
-            Bid:
-                Item: '41'
-                Name: '&e&l确认竞拍'
-                Lore:
-                - ''
-                - '&e点此处开始竞拍你的商品.'
     #权限编辑
     Permissions:
+        #查看更新资讯
+        Updater:
+            Permission: crazyauctionsplus.updater
+            Default: false
         Market:
             #绕过出售物品数量上限
             Sell-Bypass: 

@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+}
+
+group = 'studio.trc'
+version = '1.3.2.1'
+
+repositories {
+    mavenCentral()
+    maven { url = "https://lss233.littleservice.cn/repositories/minecraft" }
+    maven { url 'https://ci.nyaacat.com/maven' }
+    maven { url = 'https://jitpack.io' }
+    maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots' }
+    maven { url = 'https://repo.md-5.net/content/repositories/snapshots' }
+    maven { url = 'https://repo.md-5.net/content/repositories/releases' }
+}
+
+dependencies {
+    compileOnly 'org.bukkit:bukkit:1.16.5-R0.1-SNAPSHOT'
+    compileOnly 'net.md-5:bungeecord-chat:1.16-R0.5-SNAPSHOT'
+    compileOnly 'net.milkbowl.vault:VaultAPI:1.7'
+    compileOnly 'com.meowj:LangUtils:2.3-SNAPSHOT'
+    implementation 'org.projectlombok:lombok:1.18.20'
+    annotationProcessor 'org.projectlombok:lombok:1.18.20'
+}
+
+def targetJavaVersion = 8
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release = targetJavaVersion
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+    filesMatching('plugin.yml') {
+        expand props
+    }
+}

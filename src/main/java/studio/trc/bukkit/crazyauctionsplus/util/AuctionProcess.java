@@ -17,7 +17,6 @@ import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
 import studio.trc.bukkit.crazyauctionsplus.database.Storage;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.Files;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.ProtectedConfiguration;
-import studio.trc.bukkit.crazyauctionsplus.util.enums.Messages;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 
 public class AuctionProcess
@@ -55,7 +54,7 @@ public class AuctionProcess
                             playerdata.addItem(im);
                             market.removeGoods(mg.getUID());
                             if (mg.getItemOwner().getPlayer() != null) {
-                                Messages.sendMessage(mg.getItemOwner().getPlayer(), "Item-Has-Expired", placeholders);
+                                MessageUtil.sendMessage(mg.getItemOwner().getPlayer(), "Item-Has-Expired", placeholders);
                             }
                         } else {
                             UUID buyer = UUID.fromString(mg.getTopBidder().split(":")[1]);
@@ -78,23 +77,18 @@ public class AuctionProcess
                                         Bukkit.getPluginManager().callEvent(event);
                                     }
                                 }.runTask(Main.getInstance());
-                                Messages.sendMessage(player, "Win-Bidding", placeholders);
+                                MessageUtil.sendMessage(player, "Win-Bidding", placeholders);
                             }
                             Player player = Bukkit.getPlayer(seller);
                             if (player != null) {
-                                Messages.sendMessage(player, "Someone-Won-Players-Bid", placeholders);
+                                MessageUtil.sendMessage(player, "Someone-Won-Players-Bid", placeholders);
                             }
                         }
                     } else {
                         if (config.getBoolean("Settings.Auction-Process-Settings.Countdown-Tips.Enabled")) {
                             long l = (mg.getTimeTillExpire() - System.currentTimeMillis()) / 1000;
                             if (config.get("Settings.Auction-Process-Settings.Countdown-Tips.Times." + l) != null) {
-                                String item;
-                                try {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : (String) mg.getItem().getClass().getMethod("getI18NDisplayName").invoke(mg.getItem());
-                                } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                                    item = mg.getItem().getItemMeta().hasDisplayName() ? mg.getItem().getItemMeta().getDisplayName() : mg.getItem().getType().toString().toLowerCase().replace("_", " ");
-                                }
+                                String item = LangUtilsHook.getItemName(mg.getItem());
                                 for (String message : config.getStringList("Settings.Auction-Process-Settings.Countdown-Tips.Times." + l)) {
                                     Bukkit.broadcastMessage(message.replace("%owner%", mg.getItemOwner().getName()).replace("%item%", item).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
                                 }

@@ -26,13 +26,14 @@ Chinese:
     Item-Not-Found: '{prefix}&c你未拥有这个物品！'
     Repricing: "{prefix}&a你正在对 &r%item% &a进行重定价， 请在&e%timeout%秒&a内聊天栏中输入你想更改的&e价格&a， 回车发送即可更改。&7（无需加'/'）&a。"
     Repricing-Undo: "{prefix}&c已取消对物品 &r%item% &c的重定价。"
-    Repricing-Succeeded: '{prefix}&a你已将物品 &r%item% &a的价格/报酬重定价为 &e%money% ￥ &a.'
+    Repricing-Succeeded: '{prefix}&a你已将物品 &r%item% &a的价格/报酬重定价为 &e%money% ￥ &a， 税收 &e%tax% ￥&a。'
     Repricing-Failed: '{prefix}&c无法重定价， 无法在市场上找到这个物品！'
     Email-of-player-owned-items: '{prefix}&a你有新的物品邮件， 请及时使用命令 &e/Ca Mail &a取回！'
     Max-Selling-Items: '{prefix}&c你的出售物品数量已经达到了上限！&8（%number%件）'
     Max-Bidding-Items: '{prefix}&c你的拍卖物品数量已经达到了上限！&8（%number%件）'
     Max-Buying-Items: '{prefix}&c你的收购物品数量已经达到了上限！&8（%number%件）'
     Item-BlackListed: '{prefix}&c该物品不允许在市场上架。'
+    Item-LoreBlackListed: '{prefix}&c该物品包含了禁止的标签，禁止在市场上架。'
     Item-Damaged: '{prefix}&c该物品已损坏，不允许上架.'
     Unknown-Item: '{prefix}&c未知物品: &e%item% .'
     Too-Many-Items: '{prefix}&c物品的数量过多， 请不要超过64个.'
@@ -64,7 +65,7 @@ Chinese:
     CrazyAuctions-Sell: '{prefix}&c你的命令有误， 正确使用方法: /Ca sell [价格] [数量]'
     CrazyAuctions-Bid: '{prefix}&c你的命令有误， 正确使用方法: /Ca bid [价格] [数量]'
     CrazyAuctions-Buy: '{prefix}&c你的命令有误， 正确使用方法: /Ca buy [报酬] [数量] [物品]'
-    CrazyAuctions-Main: '{prefix}&6插件所运行的版本: &a%version% &6, 由&cBadBones69&6与&cTRCRedstoner&7(TRC Studio)&6制作。'
+    CrazyAuctions-Main: '{prefix}&6插件所运行的版本: &a%version% &6, 由&cBadBones69&6与&cTRCStudioDean&7(TRC Studio)&6制作。'
     Date-Settings:
         Second: 秒
         Minute: 分钟
@@ -262,6 +263,13 @@ Chinese:
                 Successfully: '{prefix}&a已将物品 &r%item% &a给予玩家 &c%player%'
                 Player-Offline: '{prefix}&c玩家 &e%player% &c离线， 无法给予物品。'
                 Item-Not-Exist: '{prefix}&c物品 &e%item% &c不存在， 请使用&3/Ca Admin ItemCollection List&c列出所有物品。'
+    Updater:
+        Checked: 
+        - '{prefix}&a发现插件存在最新版本: &bv%version%'
+        - '&6- &3服务器运行版本: &6v%nowVersion%'
+        - '&6- &3下载地址: &d%link%'
+        - '&6- &3更新日志: %description%'
+        Error: '{prefix}&c无法获取插件最新版本, 请检查你的网络是否正常! '
     SellingItemLore:
         - '&7▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
         - '&b&l商品出售'
@@ -363,13 +371,14 @@ English:
     Item-Not-Found: '{prefix}&cYou do not own this item!'
     Repricing: "{prefix}&aYou are repricing &r%item%&a, Please enter the price you want to change in the chat in &e%timeout% seconds&a, and press Enter to send the change. &7(No need to add '/') &a."
     Repricing-Undo: "{prefix}&cRepricing item &r%item% &chas been cancelled."
-    Repricing-Succeeded: '{prefix}&aYou have repriced the Price/Reward of item &r%item% &ato &e$%money% &a.'
+    Repricing-Succeeded: '{prefix}&aYou have repriced the Price/Reward of item &r%item% &ato &e$%money% &a. Tax &e$%tax% &a.'
     Repricing-Failed: '{prefix}&cUnable to reprice, This item cannot be found on the market!'
     Email-of-player-owned-items: '{prefix}&aYou have new item mail, please use the command &e/Ca Mail &ato get it back in time!'
     Max-Selling-Items: '{prefix}&cYou have reached the maximum number of items for sell!&8(%number% items)'
     Max-Bidding-Items: '{prefix}&cYou have reached the maximum number of items for buy!&8(%number% items)'
     Max-Buying-Items: '{prefix}&cYou have reached the maximum number of items for bid!&8(%number% items)'
     Item-BlackListed: '{prefix}&cThat item is not allowed to be sold here.'
+    Item-LoreBlackListed: '{prefix}&cThis item''s lore contains a prohibited text, it not allowed to be sold here.'
     Item-Damaged: '{prefix}&cThat item is damaged and is not allowed to be sold here.'
     Unknown-Item: '{prefix}&cUnknown item name: &e%item% .'
     Too-Many-Items: '{prefix}&cToo many items, please do not exceed 64 items.'
@@ -401,7 +410,7 @@ English:
     CrazyAuctions-Sell: '{prefix}&c/Ca sell <price> [amount of items]'
     CrazyAuctions-Bid: '{prefix}&c/Ca bid <price> [amount of items]'
     CrazyAuctions-Buy: '{prefix}&c/Ca buy <reward> [amount of items] [item name]'
-    CrazyAuctions-Main: '{prefix}&6Plug-in version running: &a%version% &6, Written and produced by &cBadBones69 &6and &cTRCRedstoner &7(TRC Studio)&6.'
+    CrazyAuctions-Main: '{prefix}&6Plug-in version running: &a%version% &6, Written and produced by &cBadBones69 &6and &cTRCStudioDean &7(TRC Studio)&6.'
     Date-Settings:
         Second: second
         Minute: minute
@@ -601,6 +610,13 @@ English:
                 Successfully: '{prefix}&aItem &r%item% &ahas been given to player &c%player%'
                 Player-Offline: '{prefix}&cPlayer &e%player% &cis offline and cannot give items.'
                 Item-Not-Exist: '{prefix}&cItem &e%item% &cdoes not exist, please use &3/Ca Admin ItemCollection List &cto list all items.'
+    Updater:
+        Checked: 
+        - '{prefix}&aA new version has been released: &bv%version%'
+        - '&6- &3Now version: &6v%nowVersion%'
+        - '&6- &3Download link: &d%link%'
+        - '&6- &3Update log: %description%'
+        Error: '{prefix}&cUnable to check new version, please check whether network is normal!'
     SellingItemLore: #The lore on items that are being sold.
         - '&7▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬'
         - '&b&lItems for sale'

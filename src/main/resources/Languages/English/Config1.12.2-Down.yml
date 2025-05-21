@@ -29,6 +29,7 @@ Settings:
     Category-Page-Opens-First: False #If set to true the categories page will open when they do /CA.
     Item-NBT-comparison: true #Does the item match the buyer's and seller's NBT when purchasing the item.
     Automatic-Backup: false #Whether to enable automatic backup, automatically back up the stored data every time the server is shut down.
+    Updater: true #Check the new information of the plug-in
     Download: #Database download file related settings
         Market: 'plugins/CrazyAuctionsPlus/Download/GlobalMarket-%date%.yml'
         PlayerData: 'plugins/CrazyAuctionsPlus/Download/Player/%player%-%uuid%.yml'
@@ -86,6 +87,9 @@ Settings:
     BlackList: #Item Black List
     - '7'
     - '120'
+    #Item lores blacklist (If this lore text is included, it will not be listed into market)
+    Lore-Blacklist: 
+    - '[Blacklist]' #If this text "[Blacklist]" is included in item's lore, it will not be listed into market.
     #Sign's Shop
     #When the player clicks on the sign, open the shop viewer of the specified player
     Shop-Sign:
@@ -136,6 +140,55 @@ Settings:
             Messages: 
                 - '{prefix}&aPlayer &e%bidder% &awon the auction for item &r%item% &aat the highest price of &e$%price%&a! Congratulations!'
     GUISettings: #Settings for things in the gui.
+        Auction-Settings:
+            Top-Bidder: #The item for when a player is already the top bidder.
+                Item: '166'
+                Name: '&cYou are already the top bidder.'
+            Bidding: #The item in the middle when bidding on an item.
+                Item: '160:15'
+                Name: '&7Bidding'
+                Lore:
+                - '&7<--&aAdd &cRemove&7-->'
+                - '&9Your Current Bid: &e$%bid%'
+                - '&9Current Top Bid: &e$%topbid%'
+            Bid: #The button for when you want to confirm your bid.
+                Item: '160:3'
+                Name: '&bBid Now'
+                Lore:
+                - '&7Click here to Bid Now.'
+            Bidding-Buttons:
+                1:
+                    Item: '160:5'
+                    Name: '&a+1'
+                    Slot: 9
+                10:
+                    Item: '160:5'
+                    Name: '&a+10'
+                    Slot: 10
+                100:
+                    Item: '160:5'
+                    Name: '&a+100'
+                    Slot: 11
+                1000:
+                    Item: '160:5'
+                    Name: '&a+1000'
+                    Slot: 12
+                -1:
+                    Item: '160:14'
+                    Name: '&c-1'
+                    Slot: 14
+                -10:
+                    Item: '160:14'
+                    Name: '&c-10'
+                    Slot: 15
+                -100:
+                    Item: '160:14'
+                    Name: '&c-100'
+                    Slot: 16
+                -1000:
+                    Item: '160:14'
+                    Name: '&c-1000'
+                    Slot: 17
         Category-Settings:
             GUI-Size: 45 #GUI interface size
             ShopType-Category:
@@ -461,23 +514,12 @@ Settings:
             Not-owned: #When you can't pay for what you need.
                 Item: '166'
                 Name: '&cYou do not own this item!'
-            Top-Bidder: #The item for when a player is already the top bidder.
-                Item: '166'
-                Name: '&cYou are already the top bidder.'
-            Bidding: #The item in the middle when bidding on an item.
-                Item: '160:15'
-                Name: '&7Bidding'
-                Lore:
-                - '&7<--&aAdd &cRemove&7-->'
-                - '&9Your Current Bid: &e$%bid%'
-                - '&9Current Top Bid: &e$%topbid%'
-            Bid: #The button for when you want to confirm your bid.
-                Item: '160:3'
-                Name: '&bBid Now'
-                Lore:
-                - '&7Click here to Bid Now.'
     #Permission's settings
     Permissions:
+        #View update information
+        Updater:
+            Permission: crazyauctionsplus.updater
+            Default: false
         Market:
             #Bypass the maximum number of items for sale
             Sell-Bypass: 

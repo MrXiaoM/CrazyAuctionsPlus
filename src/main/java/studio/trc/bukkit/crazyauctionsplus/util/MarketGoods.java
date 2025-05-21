@@ -209,14 +209,7 @@ public class MarketGoods
      */
     public void setPrice(double price) {
         this.price = price;
-        GlobalMarket.getMarket().saveData();
-    }
-    
-    /**
-     * @param reward 
-     */
-    public void setReward(double reward) {
-        this.reward = reward;
+        this.reward = price;
         GlobalMarket.getMarket().saveData();
     }
     

@@ -1,7 +1,6 @@
-package studio.trc.bukkit.crazyauctionsplus.util.enums;
+package studio.trc.bukkit.crazyauctionsplus.util;
 
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.*;
-import studio.trc.bukkit.crazyauctionsplus.util.PluginControl;
 
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +9,7 @@ import java.util.ArrayList;
 
 import org.bukkit.command.CommandSender;
 
-public enum Messages {
+public enum MessageUtil {
     
     @Deprecated PLAYERS_ONLY("Players-Only", "&cOnly players can use this command."),
     @Deprecated RELOAD("Reload", "&cYou have just reloaded the Crazy Auctions Files."),
@@ -57,13 +56,13 @@ public enum Messages {
     private List<String> defaultListMessage;
     
     @Deprecated
-    private Messages(String path, String defaultMessage) {
+    private MessageUtil(String path, String defaultMessage) {
         this.path = path;
         this.defaultMessage = defaultMessage;
     }
     
     @Deprecated
-    private Messages(String path, List<String> defaultListMessage) {
+    private MessageUtil(String path, List<String> defaultListMessage) {
         this.path = path;
         this.defaultListMessage = defaultListMessage;
     }
@@ -93,7 +92,7 @@ public enum Messages {
     public static void addMissingMessages() {
         ProtectedConfiguration messages = Files.MESSAGES.getFile();
         boolean saveFile = false;
-        for (Messages message : values()) {
+        for (MessageUtil message : values()) {
             if (!messages.contains("Messages." + message.getPath())) {
                 saveFile = true;
                 if (message.getDefaultMessage() != null) {
@@ -128,7 +127,7 @@ public enum Messages {
     /**
      * Send message to command sender.
      * @param sender Command sender.
-     * @param path Messages.yml's path
+     * @param path MessageUtil.yml's path
      */
     public static void sendMessage(CommandSender sender, String path) {
         if (sender == null) return;
@@ -145,7 +144,7 @@ public enum Messages {
     /**
      * Send message to command sender.
      * @param sender Command sender.
-     * @param path Messages.yml's path
+     * @param path MessageUtil.yml's path
      * @param placeholders If the text contains a placeholder,
      *                      The placeholder will be replaced with the specified text.
      */
@@ -171,7 +170,7 @@ public enum Messages {
     /**
      * 
      * @param sender Command sender.
-     * @param path Messages.yml's path
+     * @param path MessageUtil.yml's path
      * @param placeholders If the text contains a placeholder,
      *                      The placeholder will be replaced with the specified text.
      * @param visible If the text contains a placeholder,

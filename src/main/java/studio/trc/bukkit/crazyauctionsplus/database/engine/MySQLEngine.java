@@ -204,40 +204,36 @@ public class MySQLEngine
     @Override
     public void executeUpdate(PreparedStatement statement) {
         while (databaseReloading) {}
-        new Thread(() -> {
+        try {
+            while (!databaseExist()) {}
+            statement.executeUpdate();
+        }  catch (SQLException ex) {
+            if (Main.language.get("MySQL-DataSavingError") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("MySQL-DataSavingError").replace("{error}", ex.getLocalizedMessage()).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
             try {
-                while (!databaseExist()) {}
-                statement.executeUpdate();
-            }  catch (SQLException ex) {
-                if (Main.language.get("MySQL-DataSavingError") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("MySQL-DataSavingError").replace("{error}", ex.getLocalizedMessage()).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
-                try {
-                    if (getConnection().isClosed()) repairConnection();
-                } catch (SQLException ex1) {
-                    PluginControl.printStackTrace(ex1);
-                }
-                PluginControl.printStackTrace(ex);
+                if (getConnection().isClosed()) repairConnection();
+            } catch (SQLException ex1) {
+                PluginControl.printStackTrace(ex1);
             }
-        }, "MySQLExecuteUpdateThread").start();
-    }
+            PluginControl.printStackTrace(ex);
+        }
+}
 
     @Deprecated
     @Override
     public void executeUpdate(String sql) {
         while (databaseReloading) {}
-        new Thread(() -> {
+        try {
+            while (!databaseExist()) {}
+            connection.createStatement().executeUpdate(sql);
+        } catch (SQLException ex) {
+            if (Main.language.get("MySQL-DataSavingError") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("MySQL-DataSavingError").replace("{error}", ex.getLocalizedMessage()).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
             try {
-                while (!databaseExist()) {}
-                connection.createStatement().executeUpdate(sql);
-            } catch (SQLException ex) {
-                if (Main.language.get("MySQL-DataSavingError") != null) Main.getInstance().getServer().getConsoleSender().sendMessage(Main.language.getProperty("MySQL-DataSavingError").replace("{error}", ex.getLocalizedMessage()).replace("{prefix}", PluginControl.getPrefix()).replace("&", "§"));
-                try {
-                    if (getConnection().isClosed()) repairConnection();
-                } catch (SQLException ex1) {
-                    PluginControl.printStackTrace(ex1);
-                }
-                PluginControl.printStackTrace(ex);
+                if (getConnection().isClosed()) repairConnection();
+            } catch (SQLException ex1) {
+                PluginControl.printStackTrace(ex1);
             }
-        }, "MySQLExecuteUpdateThread").start();
+            PluginControl.printStackTrace(ex);
+        }
     }
 
     @Override
