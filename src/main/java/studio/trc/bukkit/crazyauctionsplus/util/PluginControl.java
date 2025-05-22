@@ -141,7 +141,6 @@ public class PluginControl
     }
     
     public static ItemStack makeItem(String type, int amount, String name, List<String> lore) {
-        ArrayList<String> l = new ArrayList<>();
         int ty = 0;
         if (type.contains(":")) {
             String[] b = type.split(":");
@@ -162,7 +161,6 @@ public class PluginControl
     }
     
     public static ItemStack makeItem(Material material, int amount, int type, String name, List<String> lore) {
-        ArrayList<String> l = new ArrayList<>();
         ItemStack item = makeItem(material, amount, type);
         AdventureItemStack.setItemDisplayName(item, name);
         AdventureItemStack.setItemLoreMiniMessage(item, lore);
@@ -262,15 +260,7 @@ public class PluginControl
     public static OfflinePlayer getOfflinePlayer(UUID uuid) {
         return Bukkit.getOfflinePlayer(uuid);
     }
-    
-    public static Location getLoc(Player player) {
-        return player.getLocation();
-    }
-    
-    public static void runCMD(Player player, String CMD) {
-        player.performCommand(CMD);
-    }
-    
+
     @Deprecated
     public static boolean isOnline(String name) {
         for (Player player : Bukkit.getServer().getOnlinePlayers()) {
@@ -417,67 +407,26 @@ public class PluginControl
         throw new IllegalStateException("插件配置错误，无法读取玩家 " + player.getName() + " 的权限组");
     }
     
-    public static List<ItemStack> getPage(List<ItemStack> list, Integer page) {
-        List<ItemStack> items = new ArrayList<>();
+    public static <T> List<T> getPage(List<T> list, int page, int max) {
+        List<T> subList = new ArrayList<>();
         if (page <= 0) page = 1;
-        int max = 45;
         int index = page * max - max;
         int endIndex = index >= list.size() ? list.size() - 1 : index + max;
         for (; index < endIndex; index++) {
-            if (index < list.size()) items.add(list.get(index));
+            if (index < list.size()) subList.add(list.get(index));
         }
-        for (; items.isEmpty(); page--) {
+        for (; subList.isEmpty(); page--) {
             if (page <= 0) break;
             index = page * max - max;
             endIndex = index >= list.size() ? list.size() - 1 : index + max;
             for (; index < endIndex; index++) {
-                if (index < list.size()) items.add(list.get(index));
+                if (index < list.size()) subList.add(list.get(index));
             }
         }
-        return items;
+        return subList;
     }
-    
-    public static List<Long> getMarketPageUIDs(List<Long> list, Integer page) {
-        List<Long> items = new ArrayList<>();
-        if (page <= 0) page = 1;
-        int max = 45;
-        int index = page * max - max;
-        int endIndex = index >= list.size() ? list.size() - 1 : index + max;
-        for (; index < endIndex; index++) {
-            if (index < list.size()) items.add(list.get(index));
-        }
-        for (; items.isEmpty(); page--) {
-            if (page <= 0) break;
-            index = page * max - max;
-            endIndex = index >= list.size() ? list.size() - 1 : index + max;
-            for (; index < endIndex; index++) {
-                if (index < list.size()) items.add(list.get(index));
-            }
-        }
-        return items;
-    }
-    
-    public static List<Long> getMailPageUIDs(List<Long> list, Integer page) {
-        List<Long> items = new ArrayList<>();
-        if (page <= 0) page = 1;
-        int max = 45;
-        int index = page * max - max;
-        int endIndex = index >= list.size() ? list.size() - 1 : index + max;
-        for (; index < endIndex; index++) {
-            if (index < list.size()) items.add(list.get(index));
-        }
-        for (; items.isEmpty(); page--) {
-            if (page <= 0) break;
-            index = page * max - max;
-            endIndex = index >= list.size() ? list.size() - 1 : index + max;
-            for (; index < endIndex; index++) {
-                if (index < list.size()) items.add(list.get(index));
-            }
-        }
-        return items;
-    }
-    
-    public static int getMaxPage(List<ItemStack> list) {
+
+    public static int getMaxPage(List<?> list) {
         int maxPage = 1;
         int amount = list.size();
         while (amount > 45) {
@@ -1016,10 +965,7 @@ public class PluginControl
     }
 
     public enum ReloadType {
-        
-        /*
-          Config.yml
-         */ /**
+        /**
          * Config.yml
          */
         CONFIG,
@@ -1060,6 +1006,7 @@ public class PluginControl
         ALL
     }
     
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public static class RollBackMethod {
         private final File rollBackFile;
         private final FileManager fm;

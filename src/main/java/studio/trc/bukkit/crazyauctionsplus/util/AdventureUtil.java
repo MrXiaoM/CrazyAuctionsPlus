@@ -48,7 +48,7 @@ public class AdventureUtil {
                 .build();
     }
 
-    protected static void init(JavaPlugin plugin) {
+    public static void init(JavaPlugin plugin) {
         adventure = BukkitAudiences.builder(plugin).build();
         miniMessage = create();
         AdventureItemStack.init();

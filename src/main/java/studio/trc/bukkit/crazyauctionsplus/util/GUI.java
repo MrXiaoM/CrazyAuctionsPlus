@@ -21,6 +21,8 @@ import studio.trc.bukkit.crazyauctionsplus.event.GUIAction;
 import studio.trc.bukkit.crazyauctionsplus.util.FileManager.ProtectedConfiguration;
 import studio.trc.bukkit.crazyauctionsplus.util.enums.ShopType;
 
+import static studio.trc.bukkit.crazyauctionsplus.util.MenuIcon.icon;
+
 public class GUI
 {
     /**
@@ -46,12 +48,12 @@ public class GUI
     /**
      * "List< Long >": UID of this item in the global market.
      */
-    protected final static Map<UUID, List<Long>> itemUID = new HashMap<>();
+    protected final static Map<UUID, Map<Integer, MenuIcon>> itemUID = new HashMap<>();
     
     /**
      * "List< Long >": UID of this item in the item mail.
      */
-    protected final static Map<UUID, List<Long>> mailUID = new HashMap<>();
+    protected final static Map<UUID, Map<Integer, MenuIcon>> mailUID = new HashMap<>();
     
     /**
      * Unknown... from old CrazyAuctions plug-in.
@@ -70,7 +72,31 @@ public class GUI
      * Record the type of GUI window opened by the player.
      */
     public final static Map<UUID, GUIType> openingGUI = new HashMap<>();
-    
+
+    public static List<Integer> getInvIndexes(ProtectedConfiguration section, String key) {
+        List<Integer> list = new ArrayList<>();
+        char[] array = String.join("", section.getStringList(key)).toCharArray();
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == '#') {
+                list.add(i);
+            }
+        }
+        return list;
+    }
+
+    private static Map<Integer, MenuIcon> getPage(Inventory inv, List<MenuIcon> items, List<Integer> indexes, int page) {
+        Map<Integer, MenuIcon> ids = new HashMap<>();
+        List<MenuIcon> iconList = PluginControl.getPage(items, page, indexes.size());
+        int pageLength = Math.min(indexes.size(), iconList.size());
+        for (int i = 0; i < pageLength; i++) {
+            int slot = indexes.get(i);
+            MenuIcon icon = iconList.get(i);
+            inv.setItem(slot, icon.item);
+            ids.put(slot, icon);
+        }
+        return ids;
+    }
+
     public static void openShop(Player player, ShopType type, Category cat, int page) {
         if (FileManager.isBackingUp() || FileManager.isRollingBack() || PluginControl.isWorldDisabled(player)) {
             player.closeInventory();
@@ -78,8 +104,7 @@ public class GUI
         }
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
-        List<ItemStack> items = new ArrayList<>();
-        List<Long> ID = new ArrayList<>();
+        List<MenuIcon> items = new ArrayList<>();
         GlobalMarket market = GlobalMarket.getMarket();
         if (cat != null) {
             shopCategory.put(player.getUniqueId(), cat);
@@ -108,8 +133,7 @@ public class GUI
                             }
 
                             if (mg.getItem() == null) continue;
-                            items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                            ID.add(mg.getUID());
+                            items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                         }
                         break;
                     }
@@ -125,8 +149,7 @@ public class GUI
                                         .replace("%addedtime%", addedTime)
                                         .replace("%time%", time));
                             }
-                            items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                            ID.add(mg.getUID());
+                            items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                         }
                         break;
                     }
@@ -144,8 +167,7 @@ public class GUI
                                          .replace("%time%", time));
                             }
                             if (mg.getItem() == null) continue;
-                            items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                            ID.add(mg.getUID());
+                            items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                         }
                         break;
                     }
@@ -165,8 +187,7 @@ public class GUI
                                             .replace("%time%", time));
                                 }
                                 if (mg.getItem() == null) continue;
-                                items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                                ID.add(mg.getUID());
+                                items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                                 break;
                             }
                             case BUY: {
@@ -181,8 +202,7 @@ public class GUI
                                             .replace("%addedtime%", addedTime)
                                             .replace("%time%", time));
                                 }
-                                items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                                ID.add(mg.getUID());
+                                items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                                 break;
                             }
                             case SELL: {
@@ -197,8 +217,7 @@ public class GUI
                                             .replace("%time%", time));
                                 }
                                 if (mg.getItem() == null) continue;
-                                items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                                ID.add(mg.getUID());
+                                items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                                 break;
                             }
                         }
@@ -307,16 +326,12 @@ public class GUI
             }
             inv.setItem(slot - 1, item);
         }
-        for (ItemStack item : PluginControl.getPage(items, page)) {
-            int slot = inv.firstEmpty();
-            inv.setItem(slot, item);
-        }
-        List<Long> Id = new ArrayList<>(PluginControl.getMarketPageUIDs(ID, page));
-        itemUID.put(player.getUniqueId(), Id);
+        List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Content-Slots");
+        itemUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), guiType);
     }
-    
+
     public static void openCategories(Player player, ShopType shop) {
         if (FileManager.isBackingUp() || FileManager.isRollingBack() || PluginControl.isWorldDisabled(player)) {
             player.closeInventory();
@@ -376,8 +391,7 @@ public class GUI
         }
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
-        List<ItemStack> items = new ArrayList<>();
-        List<Long> ID = new ArrayList<>();
+        List<MenuIcon> items = new ArrayList<>();
         GlobalMarket market = GlobalMarket.getMarket();
         Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Player-Items-List")));
         List<String> options = new ArrayList<>();
@@ -418,8 +432,7 @@ public class GUI
                         lore.add(l.replace("%price%", String.valueOf(mg.getPrice())).replace("%topbid%", String.valueOf(mg.getPrice())).replace("%owner%", owner).replace("%topbidder%", topbidder).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
                     }
                     if (mg.getItem() == null) continue;
-                    items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                    ID.add(mg.getUID());
+                    items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                 }
                 if (mg.getShopType().equals(ShopType.BUY) || mg.getShopType().equals(ShopType.ANY)) {
                     for (String l : MessageUtil.getValueList("CurrentBuyingItemLore")) {
@@ -430,25 +443,19 @@ public class GUI
                                 .replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime())))
                                 .replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
                     }
-                    items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                    ID.add(mg.getUID());
+                    items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                 }
                 if (mg.getShopType().equals(ShopType.SELL) || mg.getShopType().equals(ShopType.ANY)) {
                     for (String l : MessageUtil.getValueList("CurrentSellingItemLore")) {
                         lore.add(l.replace("%price%", String.valueOf(mg.getPrice())).replace("%Owner%", mg.getItemOwner().getName()).replace("%owner%", mg.getItemOwner().getName()).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%time%", PluginControl.convertToTime(mg.getTimeTillExpire(), false)));
                     }
                     if (mg.getItem() == null) continue;
-                    items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                    ID.add(mg.getUID());
+                    items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                 }
             }
         }
-        for (ItemStack item : PluginControl.getPage(items, page)) {
-            int slot = inv.firstEmpty();
-            inv.setItem(slot, item);
-        }
-        List<Long> Id = new ArrayList<>(PluginControl.getMarketPageUIDs(ID, page));
-        itemUID.put(player.getUniqueId(), Id);
+        List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Content-Slots");
+        itemUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_LIST);
     }
@@ -460,8 +467,7 @@ public class GUI
         }
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
-        List<ItemStack> items = new ArrayList<>();
-        List<Long> ID = new ArrayList<>();
+        List<MenuIcon> items = new ArrayList<>();
         Storage playerData = Storage.getPlayer(player);
         if (!playerData.getMailBox().isEmpty()) {
             for (ItemMail im : playerData.getMailBox()) {
@@ -470,8 +476,7 @@ public class GUI
                 for (String l : MessageUtil.getValueList("Item-Mail-Lore")) {
                     lore.add(l.replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(im.getAddedTime()))).replace("%time%", PluginControl.convertToTime(im.getFullTime(), im.isNeverExpire())));
                 }
-                items.add(PluginControl.addLore(im.getItem().clone(), lore));
-                ID.add(im.getUID());
+                items.add(icon(im.getUID(), PluginControl.addLore(im.getItem().clone(), lore)));
             }
         }
         int maxPage = PluginControl.getMaxPage(items);
@@ -508,12 +513,8 @@ public class GUI
             }
             inv.setItem(slot - 1, item);
         }
-        for (ItemStack item : PluginControl.getPage(items, page)) {
-            int slot = inv.firstEmpty();
-            inv.setItem(slot, item);
-        }
-        List<Long> Id = new ArrayList<>(PluginControl.getMailPageUIDs(ID, page));
-        mailUID.put(player.getUniqueId(), Id);
+        List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Mail-Slots");
+        mailUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_MAIL);
         GUIAction.openingMail.put(player.getUniqueId(), player.getUniqueId());
@@ -526,8 +527,7 @@ public class GUI
         }
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
-        List<ItemStack> items = new ArrayList<>();
-        List<Long> ID = new ArrayList<>();
+        List<MenuIcon> items = new ArrayList<>();
         Storage playerData = Storage.getPlayer(uuid);
         if (!playerData.getMailBox().isEmpty()) {
             for (ItemMail im : playerData.getMailBox()) {
@@ -536,8 +536,7 @@ public class GUI
                 for (String l : MessageUtil.getValueList("Item-Mail-Lore")) {
                     lore.add(l.replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(im.getAddedTime()))).replace("%time%", PluginControl.convertToTime(im.getFullTime(), im.isNeverExpire())));
                 }
-                items.add(PluginControl.addLore(im.getItem().clone(), lore));
-                ID.add(im.getUID());
+                items.add(icon(im.getUID(), PluginControl.addLore(im.getItem().clone(), lore)));
             }
         }
         int maxPage = PluginControl.getMaxPage(items);
@@ -574,12 +573,8 @@ public class GUI
             }
             inv.setItem(slot - 1, item);
         }
-        for (ItemStack item : PluginControl.getPage(items, page)) {
-            int slot = inv.firstEmpty();
-            inv.setItem(slot, item);
-        }
-        List<Long> Id = new ArrayList<>(PluginControl.getMailPageUIDs(ID, page));
-        mailUID.put(player.getUniqueId(), Id);
+        List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Mail-Slots");
+        mailUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_MAIL);
         GUIAction.openingMail.put(player.getUniqueId(), uuid);
@@ -745,8 +740,7 @@ public class GUI
         PluginControl.updateCacheData();
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
         GlobalMarket market = GlobalMarket.getMarket();
-        List<ItemStack> items = new ArrayList<>();
-        List<Long> ID = new ArrayList<>();
+        List<MenuIcon> items = new ArrayList<>();
         for (MarketGoods mg : market.getItems()) {
             if (mg.getItemOwner().getUUID().equals(uuid)) {
                 List<String> lore = new ArrayList<>();
@@ -764,8 +758,7 @@ public class GUI
                                 .replace("%time%", time));
                     }
                     if (mg.getItem() == null) continue;
-                    items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                    ID.add(mg.getUID());
+                    items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                 }
                 if (mg.getShopType().equals(ShopType.BUY) || mg.getShopType().equals(ShopType.ANY)) {
                     for (String l : MessageUtil.getValueList("BuyingItemLore")) {
@@ -778,8 +771,7 @@ public class GUI
                                 .replace("%addedtime%", addedTime)
                                 .replace("%time%", time));
                     }
-                    items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                    ID.add(mg.getUID());
+                    items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                 }
                 if (mg.getShopType().equals(ShopType.SELL) || mg.getShopType().equals(ShopType.ANY)) {
                     for (String l : MessageUtil.getValueList("SellingItemLore")) {
@@ -793,8 +785,7 @@ public class GUI
                                 .replace("%time%", time));
                     }
                     if (mg.getItem() == null) continue;
-                    items.add(PluginControl.addLore(mg.getItem().clone(), lore));
-                    ID.add(mg.getUID());
+                    items.add(icon(mg.getUID(), PluginControl.addLore(mg.getItem().clone(), lore)));
                 }
             }
         }
@@ -828,11 +819,8 @@ public class GUI
             }
             inv.setItem(slot - 1, item);
         }
-        for (ItemStack item : PluginControl.getPage(items, page)) {
-            int slot = inv.firstEmpty();
-            inv.setItem(slot, item);
-        }
-        itemUID.put(player.getUniqueId(), new ArrayList<>(PluginControl.getMarketPageUIDs(ID, page)));
+        List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Content-Slots");
+        itemUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
         player.openInventory(inv);
         GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_VIEWER);
     }

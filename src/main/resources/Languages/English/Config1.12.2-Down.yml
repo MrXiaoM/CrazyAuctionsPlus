@@ -298,6 +298,21 @@ Settings:
                     - '&7This category contains all'
                     - '&7items currently being sold.'
         OtherSettings: #Other Settings for the GUIs.
+            # Position of every element in the page of GUI interface
+            Content-Slots:
+                - '#########'
+                - '#########'
+                - '#########'
+                - '#########'
+                - '#########'
+                - '         '
+            Mail-Slots:
+                - '#########'
+                - '#########'
+                - '#########'
+                - '#########'
+                - '#########'
+                - '         '
             Commoditys: #The button for your current items.
                 Item: '264' #The item that this button is.
                 Toggle: true #If the item is in the gui or not.

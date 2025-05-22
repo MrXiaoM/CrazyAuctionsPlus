@@ -51,6 +51,7 @@ public class Main
     
     @Override
     public void onEnable() {
+        AdventureUtil.init(this);
         LangUtilsHook.initialize();
         PAPI.initialize();
         long time = System.currentTimeMillis();
