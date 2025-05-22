@@ -13,8 +13,10 @@ import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import org.jetbrains.annotations.NotNull;
 import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
 import studio.trc.bukkit.crazyauctionsplus.database.Storage;
 import studio.trc.bukkit.crazyauctionsplus.event.GUIAction;
@@ -234,23 +236,23 @@ public class GUI
         }
         switch (type) {
             case ANY: {
-                inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Main-GUIName") + " #" + page));
                 guiType = GUIType.GLOBALMARKET_MAIN;
+                inv = holder(guiType).with(54, PluginControl.color(player, config.getString("Settings.Main-GUIName") + " #" + page));
                 break;
             }
             case SELL: {
-                inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Sell-GUIName") + " #" + page));
                 guiType = GUIType.GLOBALMARKET_SELL;
+                inv = holder(guiType).with(54, PluginControl.color(player, config.getString("Settings.Sell-GUIName") + " #" + page));
                 break;
             }
             case BUY: {
-                inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Buy-GUIName") + " #" + page));
                 guiType = GUIType.GLOBALMARKET_BUY;
+                inv = holder(guiType).with(54, PluginControl.color(player, config.getString("Settings.Buy-GUIName") + " #" + page));
                 break;
             }
             case BID: {
-                inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Bid-GUIName") + " #" + page));
                 guiType = GUIType.GLOBALMARKET_BID;
+                inv = holder(guiType).with(54, PluginControl.color(player, config.getString("Settings.Bid-GUIName") + " #" + page));
                 break;
             }
             default: {
@@ -343,7 +345,8 @@ public class GUI
         if (size != 54 && size != 45 && size != 36 && size != 27 && size != 18 && size != 9) {
             size = 54;
         }
-        Inventory inv = Bukkit.createInventory(null, size, PluginControl.color(player, config.getString("Settings.Categories")));
+        GUIType guiType = GUIType.CATEGORY;
+        Inventory inv = holder(guiType).with(size, PluginControl.color(player, config.getString("Settings.Categories")));
         List<String> options = new ArrayList<>();
         options.add("OtherSettings.Categories-Back");
         options.add("OtherSettings.WhatIsThis.Categories");
@@ -381,7 +384,7 @@ public class GUI
         }
         shopType.put(player.getUniqueId(), shop);
         player.openInventory(inv);
-        GUIAction.openingGUI.put(player.getUniqueId(), GUIType.CATEGORY);
+        GUIAction.openingGUI.put(player.getUniqueId(), guiType);
     }
     
     public static void openPlayersCurrentList(Player player, int page) {
@@ -393,7 +396,8 @@ public class GUI
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
         List<MenuIcon> items = new ArrayList<>();
         GlobalMarket market = GlobalMarket.getMarket();
-        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Player-Items-List")));
+        GUIType guiType = GUIType.ITEM_LIST;
+        Inventory inv = holder(guiType).with(54, PluginControl.color(player, config.getString("Settings.Player-Items-List")));
         List<String> options = new ArrayList<>();
         options.add("Player-Items-List-Back");
         options.add("WhatIsThis.CurrentItems");
@@ -457,7 +461,7 @@ public class GUI
         List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Content-Slots");
         itemUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
         player.openInventory(inv);
-        GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_LIST);
+        GUIAction.openingGUI.put(player.getUniqueId(), guiType);
     }
     
     public static void openPlayersMail(Player player, int page) {
@@ -481,7 +485,8 @@ public class GUI
         }
         int maxPage = PluginControl.getMaxPage(items);
         while (page > maxPage) page--;
-        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Player-Items-Mail") + " #" + page));
+        GUIType guiType = GUIType.ITEM_MAIL;
+        Inventory inv = holder(guiType).with(54, PluginControl.color(player, config.getString("Settings.Player-Items-Mail") + " #" + page));
         List<String> options = new ArrayList<>();
         options.add("Player-Items-Mail-Back");
         options.add("PreviousPage");
@@ -516,7 +521,7 @@ public class GUI
         List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Mail-Slots");
         mailUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
         player.openInventory(inv);
-        GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_MAIL);
+        GUIAction.openingGUI.put(player.getUniqueId(), guiType);
         GUIAction.openingMail.put(player.getUniqueId(), player.getUniqueId());
     }
     
@@ -541,7 +546,8 @@ public class GUI
         }
         int maxPage = PluginControl.getMaxPage(items);
         while (page > maxPage) page--;
-        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Player-Items-Mail") + " #" + page));
+        GUIType guiType = GUIType.ITEM_MAIL;
+        Inventory inv = holder(guiType).with(54, PluginControl.color(player, config.getString("Settings.Player-Items-Mail") + " #" + page));
         List<String> options = new ArrayList<>();
         options.add("Player-Items-Mail-Back");
         options.add("PreviousPage");
@@ -576,7 +582,7 @@ public class GUI
         List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Mail-Slots");
         mailUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
         player.openInventory(inv);
-        GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_MAIL);
+        GUIAction.openingGUI.put(player.getUniqueId(), guiType);
         GUIAction.openingMail.put(player.getUniqueId(), uuid);
     }
     
@@ -593,7 +599,8 @@ public class GUI
             player.sendMessage(MessageUtil.getValue("Item-Doesnt-Exist"));
             return;
         }
-        Inventory inv = Bukkit.createInventory(null, 9, PluginControl.color(player, config.getString("Settings.Buying-Item")));
+        GUIType guiType = GUIType.BUYING_ITEM;
+        Inventory inv = holder(guiType).with(9, PluginControl.color(player, config.getString("Settings.Buying-Item")));
         List<String> options = new ArrayList<>();
         options.add("Confirm");
         options.add("Cancel");
@@ -636,7 +643,7 @@ public class GUI
         inv.setItem(4, PluginControl.addLore(item.clone(), lore));
         IDs.put(player.getUniqueId(), uid);
         player.openInventory(inv);
-        GUIAction.openingGUI.put(player.getUniqueId(), GUIType.BUYING_ITEM);
+        GUIAction.openingGUI.put(player.getUniqueId(), guiType);
     }
     
     public static void openSelling(Player player, long uid) {
@@ -652,7 +659,8 @@ public class GUI
             player.sendMessage(MessageUtil.getValue("Item-Doesnt-Exist"));
             return;
         }
-        Inventory inv = Bukkit.createInventory(null, 9, PluginControl.color(player, config.getString("Settings.Selling-Item")));
+        GUIType guiType = GUIType.SELLING_ITEM;
+        Inventory inv = holder(guiType).with(9, PluginControl.color(player, config.getString("Settings.Selling-Item")));
         List<String> options = new ArrayList<>();
         options.add("Confirm");
         options.add("Cancel");
@@ -696,7 +704,7 @@ public class GUI
         inv.setItem(4, PluginControl.addLore(item.clone(), lore));
         IDs.put(player.getUniqueId(), uid);
         player.openInventory(inv);
-        GUIAction.openingGUI.put(player.getUniqueId(), GUIType.SELLING_ITEM);
+        GUIAction.openingGUI.put(player.getUniqueId(), guiType);
     }
     
     public static void openBidding(Player player, long uid) {
@@ -714,7 +722,8 @@ public class GUI
         }
         MarketGoods mg = market.getMarketGoods(uid);
         bidding.put(player.getUniqueId(), (int) mg.getPrice());
-        Inventory inv = Bukkit.createInventory(null, 27, PluginControl.color(player, config.getString("Settings.Bidding-On-Item")));
+        GUIType guiType = GUIType.BIDDING_ITEM;
+        Inventory inv = holder(guiType).with(27, PluginControl.color(player, config.getString("Settings.Bidding-On-Item")));
         if (!bidding.containsKey(player.getUniqueId())) bidding.put(player.getUniqueId(), 0);
         ConfigurationSection section = config.getConfig().getConfigurationSection("Settings.GUISettings.Auction-Settings.Bidding-Buttons");
         if (section != null) for (String price : section.getKeys(false)) {
@@ -729,7 +738,7 @@ public class GUI
         inv.setItem(4, getBiddingItem(player, uid));
         player.openInventory(inv);
 
-        GUIAction.openingGUI.put(player.getUniqueId(), GUIType.BIDDING_ITEM);
+        GUIAction.openingGUI.put(player.getUniqueId(), guiType);
     }
     
     public static void openViewer(Player player, UUID uuid, int page) {
@@ -791,7 +800,8 @@ public class GUI
         }
         int maxPage = PluginControl.getMaxPage(items);
         while (page > maxPage) page--;
-        Inventory inv = Bukkit.createInventory(null, 54, PluginControl.color(player, config.getString("Settings.Player-Viewer-GUIName") + " #" + page));
+        GUIType guiType = GUIType.ITEM_VIEWER;
+        Inventory inv = holder(guiType).with(54, PluginControl.color(player, config.getString("Settings.Player-Viewer-GUIName") + " #" + page));
         List<String> options = new ArrayList<>();
         options.add("WhatIsThis.Viewing");
         for (String o : options) {
@@ -822,7 +832,7 @@ public class GUI
         List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Content-Slots");
         itemUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
         player.openInventory(inv);
-        GUIAction.openingGUI.put(player.getUniqueId(), GUIType.ITEM_VIEWER);
+        GUIAction.openingGUI.put(player.getUniqueId(), guiType);
     }
     
     public static ItemStack getBiddingGlass(Player player, long uid) {
@@ -893,6 +903,29 @@ public class GUI
             return null;
         }
         return openingGUI.get(player.getUniqueId());
+    }
+
+    public static class Holder implements InventoryHolder {
+        private Inventory inventory;
+        private final GUIType type;
+        private Holder(GUIType type) {
+            this.type = type;
+        }
+        private Inventory with(int size, String title) {
+            return inventory = Bukkit.createInventory(this, size, title);
+        }
+        public GUIType getType() {
+            return type;
+        }
+        @NotNull
+        @Override
+        public Inventory getInventory() {
+            return inventory;
+        }
+    }
+
+    private static Holder holder(GUIType type) {
+        return new Holder(type);
     }
     
     public enum GUIType {
