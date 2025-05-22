@@ -369,9 +369,10 @@ Settings:
                 #Command format: '[target]:[command]'
                 #Example:
                 # - 'server:say hello' Executed by the console.
-                # - 'op:say hello' Performed by the player, bypassing permissions restrictions.
                 # - 'player:say hello' Performed by the player.
+                # - 'message:hee'      Send message to player's chat screen.
                 #Placeholders: %player% = player's name, %player_uuid% = player's uuid.
+                #PAPI placeholders supported.
                 Commands:
                 - 'server:dm open menu %player%'
             Shopping: #Switch between Selling, Buying, Bidding and All.

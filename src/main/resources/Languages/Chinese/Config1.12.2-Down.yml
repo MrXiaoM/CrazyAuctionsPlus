@@ -437,9 +437,10 @@ Settings:
                 #命令格式: '[执行对象]:[命令]'
                 #示例:
                 # - 'server:say hello' 由控制台执行.
-                # - 'op:say hello' 由玩家执行，无视命令权限限制.
                 # - 'player:say hello' 由玩家执行.
+                # - 'message:嘻嘻'     在玩家视角显示聊天消息.
                 #变量: %player% = 玩家名字, %player_uuid% 玩家UUID
+                #支持使用PAPI变量
                 Commands:
                 - 'server:dm open menu %player%'
             Shopping:

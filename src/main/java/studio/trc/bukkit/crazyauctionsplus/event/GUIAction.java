@@ -377,16 +377,23 @@ public class GUIAction
                 if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Custom.Name")))) {
                     List<String> commands = config.getStringList("Settings.GUISettings.OtherSettings.Custom.Commands");
                     for (String line : PAPI.setPlaceholders(player, commands)) {
-                        if (line.toLowerCase().startsWith("server:")) {
+                        String lower = line.toLowerCase();
+                        if (lower.startsWith("server:")) {
                             String command = line.substring(7)
                                     .replace("%player%", player.getName())
                                     .replace("%player_uuid%", player.getUniqueId().toString());
                             Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
-                        } else if (line.toLowerCase().startsWith("player:")) {
+                        } else if (lower.startsWith("player:")) {
                             String command = line.substring(7)
                                     .replace("%player%", player.getName())
                                     .replace("%player_uuid%", player.getUniqueId().toString());
                             player.performCommand(command);
+                        } else if (lower.startsWith("messages:")) {
+                            String message = line.substring(9);
+                            AdventureUtil.sendMessage(player, message);
+                        } else if (lower.startsWith("message:")) {
+                            String message = line.substring(8);
+                            AdventureUtil.sendMessage(player, message);
                         }
                     }
                     playClick(player);
