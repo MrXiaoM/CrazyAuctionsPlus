@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -135,11 +136,7 @@ public class PluginControl
         }
         Material m = Material.matchMaterial(type);
         ItemStack item = makeItem(m, amount, ty);
-        ItemMeta me = item.getItemMeta();
-        if (me != null) {
-            me.setDisplayName(color(name));
-            item.setItemMeta(me);
-        }
+        AdventureItemStack.setItemDisplayName(item, name);
         return item;
     }
     
@@ -153,79 +150,46 @@ public class PluginControl
         }
         Material m = Material.matchMaterial(type);
         ItemStack item = makeItem(m, amount, ty);
-        ItemMeta me = item.getItemMeta();
-        if (me != null) {
-            me.setDisplayName(color(name));
-            for (String L : lore)
-                l.add(color(L));
-            me.setLore(l);
-            item.setItemMeta(me);
-        }
+        AdventureItemStack.setItemDisplayName(item, name);
+        AdventureItemStack.setItemLoreMiniMessage(item, lore);
         return item;
     }
     
     public static ItemStack makeItem(Material material, int amount, int type, String name) {
         ItemStack item = makeItem(material, amount, type);
-        ItemMeta m = item.getItemMeta();
-        if (m != null) {
-            m.setDisplayName(color(name));
-            item.setItemMeta(m);
-        }
+        AdventureItemStack.setItemDisplayName(item, name);
         return item;
     }
     
     public static ItemStack makeItem(Material material, int amount, int type, String name, List<String> lore) {
         ArrayList<String> l = new ArrayList<>();
         ItemStack item = makeItem(material, amount, type);
-        ItemMeta m = item.getItemMeta();
-        if (m != null) {
-            m.setDisplayName(color(name));
-            for (String L : lore)
-                l.add(color(L));
-            m.setLore(l);
-            item.setItemMeta(m);
-        }
+        AdventureItemStack.setItemDisplayName(item, name);
+        AdventureItemStack.setItemLoreMiniMessage(item, lore);
         return item;
     }
     
     public static ItemStack makeItem(Material material, int amount, int type, String name, List<String> lore, Map<Enchantment, Integer> enchants) {
         ItemStack item = makeItem(material, amount, type);
-        ItemMeta m = item.getItemMeta();
-        if (m != null) {
-            m.setDisplayName(name);
-            m.setLore(lore);
-            item.setItemMeta(m);
-        }
+        AdventureItemStack.setItemDisplayName(item, name);
+        AdventureItemStack.setItemLoreMiniMessage(item, lore);
         item.addUnsafeEnchantments(enchants);
         return item;
     }
     
     public static ItemStack addLore(ItemStack item, String i) {
-        List<String> lore = new ArrayList<>();
-        ItemMeta m = item.getItemMeta();
-        if (m == null) return item;
-        List<String> oldLore = m.hasLore() ? m.getLore() : null;
-        if (oldLore != null) {
-            lore.addAll(oldLore);
-        }
-        lore.add(i);
-        m.setLore(lore);
-        item.setItemMeta(m);
+        if (item == null || item.getType().equals(Material.AIR)) return item;
+        List<Component> lore = AdventureItemStack.getItemLore(item);
+        lore.add(AdventureUtil.miniMessage(i));
+        AdventureItemStack.setItemLore(item, lore);
         return item;
     }
     
     public static ItemStack addLore(ItemStack item, List<String> list) {
-        List<String> lore = new ArrayList<>();
-        ItemMeta m = item.getItemMeta();
-        if (m == null) return item;
-        List<String> oldLore = m.hasLore() ? m.getLore() : null;
-        if (oldLore != null) {
-            lore.addAll(oldLore);
-        }
-        for (String i : list)
-            lore.add(color(i));
-        m.setLore(lore);
-        item.setItemMeta(m);
+        if (item == null || item.getType().equals(Material.AIR)) return item;
+        List<Component> lore = AdventureItemStack.getItemLore(item);
+        lore.addAll(AdventureUtil.miniMessage(list));
+        AdventureItemStack.setItemLore(item, lore);
         return item;
     }
     
