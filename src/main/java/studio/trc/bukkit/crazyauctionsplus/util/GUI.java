@@ -278,6 +278,7 @@ public class GUI
                 break;
             }
         }
+        // 添加选项按钮
         for (String o : options) {
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Toggle")) {
                 if (!config.getBoolean("Settings.GUISettings.OtherSettings." + o + ".Toggle")) {
@@ -286,16 +287,25 @@ public class GUI
             }
             String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
             String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
+            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
+            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
             List<String> lore = new ArrayList<>();
             int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
                 for (String l : config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                    lore.add(l.replace("%category%", shopCategory.get(player.getUniqueId()).getDisplayName() != null ? shopCategory.get(player.getUniqueId()).getDisplayName() : shopCategory.get(player.getUniqueId()).getName()));
+                    Category category = shopCategory.get(player.getUniqueId());
+                    lore.add(l.replace("%category%", category.getDisplayName() != null
+                            ? category.getDisplayName()
+                            : category.getName()));
                 }
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name, lore));
-            } else {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name));
             }
+            ItemStack item = lore.isEmpty()
+                    ? PluginControl.makeItem(id, 1, name)
+                    : PluginControl.makeItem(id, 1, name, lore);
+            if (customModel != null) {
+                AdventureItemStack.setCustomModelData(item, customModel);
+            }
+            inv.setItem(slot - 1, item);
         }
         for (ItemStack item : PluginControl.getPage(items, page)) {
             int slot = inv.firstEmpty();
@@ -336,13 +346,23 @@ public class GUI
                 }
             }
             String id = config.getString("Settings.GUISettings." + o + ".Item");
+            String customModelKey = "Settings.GUISettings." + o + ".CustomModelData";
+            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
             String name = config.getString("Settings.GUISettings." + o + ".Name");
             int slot = config.getInt("Settings.GUISettings." + o + ".Slot");
+            List<String> lore;
             if (config.contains("Settings.GUISettings." + o + ".Lore")) {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name, config.getStringList("Settings.GUISettings." + o + ".Lore")));
+                lore = config.getStringList("Settings.GUISettings." + o + ".Lore");
             } else {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name));
+                lore = null;
             }
+            ItemStack item = lore == null
+                    ? PluginControl.makeItem(id, 1, name)
+                    : PluginControl.makeItem(id, 1, name, lore);
+            if (customModel != null) {
+                AdventureItemStack.setCustomModelData(item, customModel);
+            }
+            inv.setItem(slot - 1, item);
         }
         shopType.put(player.getUniqueId(), shop);
         player.openInventory(inv);
@@ -370,13 +390,23 @@ public class GUI
                 }
             }
             String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
+            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
+            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
             String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
             int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
+            List<String> lore;
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name, config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore")));
+                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
             } else {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name));
+                lore = null;
             }
+            ItemStack item = lore == null
+                    ? PluginControl.makeItem(id, 1, name)
+                    : PluginControl.makeItem(id, 1, name, lore);
+            if (customModel != null) {
+                AdventureItemStack.setCustomModelData(item, customModel);
+            }
+            inv.setItem(slot - 1, item);
         }
         for (MarketGoods mg : market.getItems()) {
             if (mg.getItemOwner().getUUID().equals(player.getUniqueId())) {
@@ -460,13 +490,23 @@ public class GUI
                 }
             }
             String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
+            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
+            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
             String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
             int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
+            List<String> lore;
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name, config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore")));
+                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
             } else {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name));
+                lore = null;
             }
+            ItemStack item = lore == null
+                    ? PluginControl.makeItem(id, 1, name)
+                    : PluginControl.makeItem(id, 1, name, lore);
+            if (customModel != null) {
+                AdventureItemStack.setCustomModelData(item, customModel);
+            }
+            inv.setItem(slot - 1, item);
         }
         for (ItemStack item : PluginControl.getPage(items, page)) {
             int slot = inv.firstEmpty();
@@ -516,13 +556,23 @@ public class GUI
                 }
             }
             String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
+            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
+            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
             String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
             int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
+            List<String> lore;
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name, config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore")));
+                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
             } else {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name));
+                lore = null;
             }
+            ItemStack item = lore == null
+                    ? PluginControl.makeItem(id, 1, name)
+                    : PluginControl.makeItem(id, 1, name, lore);
+            if (customModel != null) {
+                AdventureItemStack.setCustomModelData(item, customModel);
+            }
+            inv.setItem(slot - 1, item);
         }
         for (ItemStack item : PluginControl.getPage(items, page)) {
             int slot = inv.firstEmpty();
@@ -554,12 +604,20 @@ public class GUI
         options.add("Cancel");
         for (String o : options) {
             String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
+            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
+            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
             String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
-            ItemStack item;
+            List<String> lore;
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                item = PluginControl.makeItem(id, 1, name, config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore"));
+                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
             } else {
-                item = PluginControl.makeItem(id, 1, name);
+                lore = null;
+            }
+            ItemStack item = lore == null
+                    ? PluginControl.makeItem(id, 1, name)
+                    : PluginControl.makeItem(id, 1, name, lore);
+            if (customModel != null) {
+                AdventureItemStack.setCustomModelData(item, customModel);
             }
             if (o.equals("Confirm")) {
                 inv.setItem(0, item);
@@ -605,12 +663,20 @@ public class GUI
         options.add("Cancel");
         for (String o : options) {
             String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
+            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
+            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
             String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
-            ItemStack item;
+            List<String> lore;
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                item = PluginControl.makeItem(id, 1, name, config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore"));
+                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
             } else {
-                item = PluginControl.makeItem(id, 1, name);
+                lore = null;
+            }
+            ItemStack item = lore == null
+                    ? PluginControl.makeItem(id, 1, name)
+                    : PluginControl.makeItem(id, 1, name, lore);
+            if (customModel != null) {
+                AdventureItemStack.setCustomModelData(item, customModel);
             }
             if (o.equals("Confirm")) {
                 inv.setItem(0, item);
@@ -744,13 +810,23 @@ public class GUI
                 }
             }
             String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
+            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
+            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
             String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
             int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
+            List<String> lore;
             if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name, config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore")));
+                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
             } else {
-                inv.setItem(slot - 1, PluginControl.makeItem(id, 1, name));
+                lore = null;
             }
+            ItemStack item = lore == null
+                    ? PluginControl.makeItem(id, 1, name)
+                    : PluginControl.makeItem(id, 1, name, lore);
+            if (customModel != null) {
+                AdventureItemStack.setCustomModelData(item, customModel);
+            }
+            inv.setItem(slot - 1, item);
         }
         for (ItemStack item : PluginControl.getPage(items, page)) {
             int slot = inv.firstEmpty();
