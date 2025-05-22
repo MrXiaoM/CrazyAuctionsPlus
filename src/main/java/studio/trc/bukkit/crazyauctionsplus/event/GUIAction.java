@@ -30,6 +30,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -374,27 +375,18 @@ public class GUIAction
                     return;
                 }
                 if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Custom.Name")))) {
-                    for (String commands : config.getStringList("Settings.GUISettings.OtherSettings.Custom.Commands")) {
-                        if (commands.toLowerCase().startsWith("server:")) {
-                            String[] command = commands.split(":");
-                            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command[1].replace("%player%", player.getName()).replace("%player_uuid%", player.getUniqueId().toString()));
-                        } else if (commands.toLowerCase().startsWith("op:")) {
-                            String[] command = commands.split(":");
-                            if (!player.isOp()) {
-                                try {
-                                    player.setOp(true);
-                                    player.performCommand(command[1].replace("%player%", player.getName()).replace("%player_uuid%", player.getUniqueId().toString()));
-                                    player.setOp(false);
-                                } catch (Exception ex) {
-                                    player.setOp(false);
-                                    PluginControl.printStackTrace(ex);
-                                }
-                            } else {
-                                player.performCommand(command[1].replace("%player%", player.getName()).replace("%player_uuid%", player.getUniqueId().toString()));
-                            }
-                        } else if (commands.toLowerCase().startsWith("player:")) {
-                            String[] command = commands.split(":");
-                            player.performCommand(command[1].replace("%player%", player.getName()).replace("%player_uuid%", player.getUniqueId().toString()));
+                    List<String> commands = config.getStringList("Settings.GUISettings.OtherSettings.Custom.Commands");
+                    for (String line : PAPI.setPlaceholders(player, commands)) {
+                        if (line.toLowerCase().startsWith("server:")) {
+                            String command = line.substring(7)
+                                    .replace("%player%", player.getName())
+                                    .replace("%player_uuid%", player.getUniqueId().toString());
+                            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+                        } else if (line.toLowerCase().startsWith("player:")) {
+                            String command = line.substring(7)
+                                    .replace("%player%", player.getName())
+                                    .replace("%player_uuid%", player.getUniqueId().toString());
+                            player.performCommand(command);
                         }
                     }
                     playClick(player);
