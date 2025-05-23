@@ -876,8 +876,9 @@ public class AdminCommand
             if (itemMailConfirm.containsKey(sender) && itemMailConfirm.get(sender).equalsIgnoreCase("ca admin player " + name + " clear market")) {
                 List<MarketGoods> marketGoods = market.getItems();
                 for (int i = marketGoods.size() - 1;i > -1;i--) {
-                    if (marketGoods.get(i).getItemOwner().getUUID().equals(uuid)) {
-                        marketGoods.remove(i);
+                    MarketGoods goods = marketGoods.get(i);
+                    if (goods.getItemOwner().getUUID().equals(uuid)) {
+                        market.removeGoodsFromCache(goods);
                     }
                 }
                 market.saveData();

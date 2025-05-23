@@ -6,9 +6,11 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import com.google.common.collect.Lists;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -41,7 +43,7 @@ public class YamlMarket
 
     @Override
     public List<MarketGoods> getItems() {
-        return marketGoods;
+        return Collections.unmodifiableList(Lists.newArrayList(marketGoods));
     }
     
     @Override
@@ -80,12 +82,7 @@ public class YamlMarket
 
     @Override
     public void removeGoods(MarketGoods goods) {
-        for (MarketGoods mg : marketGoods) {
-            if (mg.equals(goods)) {
-                marketGoods.remove(mg);
-                break;
-            }
-        }
+        removeGoodsFromCache(goods);
         saveData();
     }
     
@@ -99,7 +96,12 @@ public class YamlMarket
         }
         saveData();
     }
-    
+
+    @Override
+    public void removeGoodsFromCache(MarketGoods goods) {
+        marketGoods.remove(goods);
+    }
+
     @Override
     public void clearGlobalMarket() {
         marketGoods.clear();

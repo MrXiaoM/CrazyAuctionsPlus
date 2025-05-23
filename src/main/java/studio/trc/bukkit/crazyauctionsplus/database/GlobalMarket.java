@@ -16,7 +16,7 @@ public interface GlobalMarket
      * Get data for all products in the market
      */
     List<MarketGoods> getItems();
-    
+
     /**
      * Get goods with uid.
      */
@@ -36,7 +36,12 @@ public interface GlobalMarket
      * Remove item with specified UID
      */
     void removeGoods(long uid);
-    
+
+    /**
+     * Remove specified items from the market cache
+     */
+    void removeGoodsFromCache(MarketGoods goods);
+
     /**
      * Clear global market.
      */
