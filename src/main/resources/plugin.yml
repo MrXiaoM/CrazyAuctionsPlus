@@ -16,4 +16,4 @@ softdepend:
 commands:
     ca:
         description: Crazy Auctions Plus Main command.
-        aliases: [cap, crazyauction, crazyauctions, crazyauctionsplus]
+        aliases: [cap, crazyauction, crazyauctions, crazyauctionsplus, market]
