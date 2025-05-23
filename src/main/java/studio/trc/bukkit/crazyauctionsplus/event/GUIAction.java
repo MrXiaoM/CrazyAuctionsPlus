@@ -180,47 +180,45 @@ public class GUIAction
             int slot, ItemStack item,
             InventoryClickEvent e
     ) {
-        ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : null;
-        if (meta != null) {
-            if (meta.hasDisplayName()) {
-                for (String name : config.getConfigurationSection("Settings.GUISettings.Category-Settings.Custom-Category").getKeys(false)) {
-                    Category category = Category.getModule(config.getString("Settings.GUISettings.Category-Settings.Custom-Category." + name + ".Category-Module"));
-                    if (category == null) continue;
-                    if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.Category-Settings.Custom-Category." + name + ".Name")))) {
-                        openShop(player, shopType.get(player.getUniqueId()), category, 1);
-                        playClick(player);
-                        return;
-                    }
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Categories-Back.Name")))) {
-                    openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+        String itemFlag = getFlag(item);
+        if (itemFlag != null) {
+            for (String name : config.getConfigurationSection("Settings.GUISettings.Category-Settings.Custom-Category").getKeys(false)) {
+                Category category = Category.getModule(config.getString("Settings.GUISettings.Category-Settings.Custom-Category." + name + ".Category-Module"));
+                if (category == null) continue;
+                if (itemFlag.equals("Category-Settings.Custom-Category." + name)) {
+                    openShop(player, shopType.get(player.getUniqueId()), category, 1);
                     playClick(player);
                     return;
                 }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.Category-Settings.ShopType-Category.Selling.Name")))) {
-                    openShop(player, ShopType.SELL, shopCategory.get(player.getUniqueId()), 1);
-                    shopType.put(player.getUniqueId(), ShopType.SELL);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.Category-Settings.ShopType-Category.Buying.Name")))) {
-                    openShop(player, ShopType.BUY, shopCategory.get(player.getUniqueId()), 1);
-                    shopType.put(player.getUniqueId(), ShopType.BUY);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.Category-Settings.ShopType-Category.Bidding.Name")))) {
-                    openShop(player, ShopType.BID, shopCategory.get(player.getUniqueId()), 1);
-                    shopType.put(player.getUniqueId(), ShopType.BID);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.Category-Settings.ShopType-Category.None.Name")))) {
-                    openShop(player, ShopType.ANY, shopCategory.get(player.getUniqueId()), 1);
-                    shopType.put(player.getUniqueId(), ShopType.ANY);
-                    playClick(player);
-                    return;
-                }
+            }
+            if (itemFlag.equals("OtherSettings.Categories-Back")) {
+                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Category-Settings.ShopType-Category.Selling")) {
+                openShop(player, ShopType.SELL, shopCategory.get(player.getUniqueId()), 1);
+                shopType.put(player.getUniqueId(), ShopType.SELL);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Category-Settings.ShopType-Category.Buying")) {
+                openShop(player, ShopType.BUY, shopCategory.get(player.getUniqueId()), 1);
+                shopType.put(player.getUniqueId(), ShopType.BUY);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Category-Settings.ShopType-Category.Bidding")) {
+                openShop(player, ShopType.BID, shopCategory.get(player.getUniqueId()), 1);
+                shopType.put(player.getUniqueId(), ShopType.BID);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Category-Settings.ShopType-Category.None")) {
+                openShop(player, ShopType.ANY, shopCategory.get(player.getUniqueId()), 1);
+                shopType.put(player.getUniqueId(), ShopType.ANY);
+                playClick(player);
+                return;
             }
         }
     }
@@ -233,72 +231,70 @@ public class GUIAction
             int slot, ItemStack item,
             InventoryClickEvent e
     ) {
-        ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : null;
-        if (meta != null) {
-            if (meta.hasDisplayName()) {
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.Auction-Settings.Bid.Name")))) {
-                    long ID = biddingID.get(player.getUniqueId());
-                    double bid = bidding.get(player.getUniqueId());
-                    MarketGoods mg = market.getMarketGoods(ID);
-                    if (mg == null) {
-                        e.setCancelled(true);
-                        player.closeInventory();
-                        return;
-                    }
-                    String topBidder = mg.getTopBidder();
-                    if (CurrencyManager.getMoney(player) < bid) {
-                        Map<String, String> placeholders = new HashMap<>();
-                        placeholders.put("%Money_Needed%", String.valueOf(bid - CurrencyManager.getMoney(player)));
-                        placeholders.put("%money_needed%", String.valueOf(bid - CurrencyManager.getMoney(player)));
-                        MessageUtil.sendMessage(player, "Need-More-Money", placeholders);
-                        return;
-                    }
-                    if (mg.getPrice() > bid) {
-                        MessageUtil.sendMessage(player, "Bid-More-Money");
-                        return;
-                    }
-                    if (mg.getPrice() >= bid && !topBidder.equalsIgnoreCase("None")) {
-                        MessageUtil.sendMessage(player, "Bid-More-Money");
-                        return;
-                    }
-                    if (!topBidder.equalsIgnoreCase("None")) {
-                        String[] oldTopBidder = mg.getTopBidder().split(":");
-                        CurrencyManager.addMoney(Bukkit.getOfflinePlayer(UUID.fromString(oldTopBidder[1])), mg.getPrice());
-                    }
-                    Bukkit.getPluginManager().callEvent(new AuctionNewBidEvent(player, mg, bid));
-                    CurrencyManager.removeMoney(player, bid);
-                    mg.setPrice(bid);
-                    mg.setTopBidder(player.getName() + ":" + player.getUniqueId());
-                    Map<String, String> placeholders = new HashMap<>();
-                    placeholders.put("%Bid%", String.valueOf(bid));
-                    placeholders.put("%bid%", String.valueOf(bid));
-                    MessageUtil.sendMessage(player, "Bid-Msg", placeholders);
-                    bidding.put(player.getUniqueId(), 0);
+        String itemFlag = getFlag(item);
+        if (itemFlag != null) {
+            if (itemFlag.equals("Bidding-Buttons.Bid")) {
+                long ID = biddingID.get(player.getUniqueId());
+                double bid = bidding.get(player.getUniqueId());
+                MarketGoods mg = market.getMarketGoods(ID);
+                if (mg == null) {
+                    e.setCancelled(true);
                     player.closeInventory();
-                    playClick(player);
                     return;
-                } else {
-                    Map<String, Integer> priceEdits = new HashMap<>();
-                    ConfigurationSection section = config.getConfig().getConfigurationSection("Settings.GUISettings.Auction-Settings.Bidding-Buttons");
-                    if (section != null) for (String price : section.getKeys(false)) {
-                        if (PluginControl.isNumber(price)) {
-                            String name = config.getConfig().getString("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Name");
-                            priceEdits.put(name, Integer.valueOf(price));
-                        }
+                }
+                String topBidder = mg.getTopBidder();
+                if (CurrencyManager.getMoney(player) < bid) {
+                    Map<String, String> placeholders = new HashMap<>();
+                    placeholders.put("%Money_Needed%", String.valueOf(bid - CurrencyManager.getMoney(player)));
+                    placeholders.put("%money_needed%", String.valueOf(bid - CurrencyManager.getMoney(player)));
+                    MessageUtil.sendMessage(player, "Need-More-Money", placeholders);
+                    return;
+                }
+                if (mg.getPrice() > bid) {
+                    MessageUtil.sendMessage(player, "Bid-More-Money");
+                    return;
+                }
+                if (mg.getPrice() >= bid && !topBidder.equalsIgnoreCase("None")) {
+                    MessageUtil.sendMessage(player, "Bid-More-Money");
+                    return;
+                }
+                if (!topBidder.equalsIgnoreCase("None")) {
+                    String[] oldTopBidder = mg.getTopBidder().split(":");
+                    CurrencyManager.addMoney(Bukkit.getOfflinePlayer(UUID.fromString(oldTopBidder[1])), mg.getPrice());
+                }
+                Bukkit.getPluginManager().callEvent(new AuctionNewBidEvent(player, mg, bid));
+                CurrencyManager.removeMoney(player, bid);
+                mg.setPrice(bid);
+                mg.setTopBidder(player.getName() + ":" + player.getUniqueId());
+                Map<String, String> placeholders = new HashMap<>();
+                placeholders.put("%Bid%", String.valueOf(bid));
+                placeholders.put("%bid%", String.valueOf(bid));
+                MessageUtil.sendMessage(player, "Bid-Msg", placeholders);
+                bidding.put(player.getUniqueId(), 0);
+                player.closeInventory();
+                playClick(player);
+                return;
+            } else {
+                Map<String, Integer> priceEdits = new HashMap<>();
+                ConfigurationSection section = config.getConfig().getConfigurationSection("Settings.GUISettings.Auction-Settings.Bidding-Buttons");
+                if (section != null) for (String price : section.getKeys(false)) {
+                    if (PluginControl.isNumber(price)) {
+                        String name = "Bidding-Buttons." + price;
+                        priceEdits.put(name, Integer.valueOf(price));
                     }
-                    for (String price : priceEdits.keySet()) {
-                        if (meta.getDisplayName().equals(PluginControl.color(price))) {
-                            try {
-                                bidding.put(player.getUniqueId(), (bidding.get(player.getUniqueId()) + priceEdits.get(price)));
-                                inv.setItem(4, getBiddingItem(player, biddingID.get(player.getUniqueId())));
-                                inv.setItem(13, getBiddingGlass(player, biddingID.get(player.getUniqueId())));
-                                playClick(player);
-                                return;
-                            } catch (Exception ex) {
-                                player.closeInventory();
-                                MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
-                                return;
-                            }
+                }
+                for (String price : priceEdits.keySet()) {
+                    if (itemFlag.equals(price)) {
+                        try {
+                            bidding.put(player.getUniqueId(), (bidding.get(player.getUniqueId()) + priceEdits.get(price)));
+                            inv.setItem(4, getBiddingItem(player, biddingID.get(player.getUniqueId())));
+                            inv.setItem(13, getBiddingGlass(player, biddingID.get(player.getUniqueId())));
+                            playClick(player);
+                            return;
+                        } catch (Exception ex) {
+                            player.closeInventory();
+                            MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
+                            return;
                         }
                     }
                 }
@@ -314,244 +310,209 @@ public class GUIAction
             int slot, ItemStack item,
             InventoryClickEvent e
     ) {
-        ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : null;
-        if (meta != null) {
-            if (meta.hasDisplayName()) {
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.NextPage.Name")))) {
-                    PluginControl.updateCacheData();
-                    int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
-                    openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), page + 1);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.PreviousPage.Name")))) {
-                    PluginControl.updateCacheData();
-                    int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
-                    if (page == 1) page++;
-                    openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), page - 1);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Refesh.Name")))) {
-                    PluginControl.updateCacheData();
-                    int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
-                    openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), page);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Shopping.Others.Name")))) {
-                    openShop(player, ShopType.SELL, shopCategory.get(player.getUniqueId()), 1);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Shopping.Selling.Name")))) {
-                    openShop(player, ShopType.BUY, shopCategory.get(player.getUniqueId()), 1);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Shopping.Buying.Name")))) {
-                    openShop(player, ShopType.BID, shopCategory.get(player.getUniqueId()), 1);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Shopping.Bidding.Name")))) {
-                    openShop(player, ShopType.ANY, shopCategory.get(player.getUniqueId()), 1);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Items-Mail.Name")))) {
-                    openPlayersMail(player, 1);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Commoditys.Name")))) {
-                    openPlayersCurrentList(player, 1);
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Category.Name")))) {
-                    openCategories(player, shopType.get(player.getUniqueId()));
-                    playClick(player);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Custom.Name")))) {
-                    List<String> commands = config.getStringList("Settings.GUISettings.OtherSettings.Custom.Commands");
-                    for (String line : PAPI.setPlaceholders(player, commands)) {
-                        String lower = line.toLowerCase();
-                        if (lower.startsWith("server:")) {
-                            String command = line.substring(7)
-                                    .replace("%player%", player.getName())
-                                    .replace("%player_uuid%", player.getUniqueId().toString());
-                            Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
-                        } else if (lower.startsWith("player:")) {
-                            String command = line.substring(7)
-                                    .replace("%player%", player.getName())
-                                    .replace("%player_uuid%", player.getUniqueId().toString());
-                            player.performCommand(command);
-                        } else if (lower.startsWith("messages:")) {
-                            String message = line.substring(9);
-                            AdventureUtil.sendMessage(player, message);
-                        } else if (lower.startsWith("message:")) {
-                            String message = line.substring(8);
-                            AdventureUtil.sendMessage(player, message);
-                        }
-                    }
-                    playClick(player);
-                    if (config.getBoolean("Settings.GUISettings.OtherSettings.Custom.Close")) {
-                        player.closeInventory();
-                    }
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Your-Item.Name")))) {
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Cant-Afford.Name")))) {
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.Auction-Settings.Top-Bidder.Name")))) {
-                    return;
-                }
+        String itemFlag = getFlag(item);
+        if (itemFlag != null) {
+            if (itemFlag.equals("NextPage")) {
+                PluginControl.updateCacheData();
+                int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
+                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), page + 1);
+                playClick(player);
+                return;
             }
-            Map<Integer, MenuIcon> map = itemUID.get(player.getUniqueId());
-            MenuIcon icon = map == null ? null : map.get(slot);
-            if (icon != null) {
-                long uid = icon.uid;
-                for (MarketGoods mgs : market.getItems()) {
-                    if (uid == mgs.getUID()) {
-                        if (PluginControl.hasMarketPermission(player, "Cancelled-Item")) {
-                            if (e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-                                UUID owner = mgs.getItemOwner().getUUID();
-                                Player p = Bukkit.getPlayer(owner);
-                                if (p != null) {
-                                    MessageUtil.sendMessage(p, "Admin-Force-Cancelled-To-Player");
-                                }
-                                switch (mgs.getShopType()) {
-                                    case BID: {
-                                        AuctionCancelledEvent event = new AuctionCancelledEvent((p != null ? p : Bukkit.getOfflinePlayer(owner)), mgs, CancelledReason.ADMIN_FORCE_CANCEL, ShopType.BID);
-                                        Bukkit.getPluginManager().callEvent(event);
-                                        Storage playerData = Storage.getPlayer(Bukkit.getOfflinePlayer(owner));
-                                        if (mgs.getTopBidder() != null && !mgs.getTopBidder().equalsIgnoreCase("None")) {
-                                            OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(mgs.getTopBidder().split(":")[1]));
-                                            if (op != null) {
-                                                CurrencyManager.addMoney(op, mgs.getPrice());
-                                            }
-                                        }
-                                        playerData.addItem(new ItemMail(playerData.makeUID(), Bukkit.getOfflinePlayer(owner), mgs.getItem(), mgs.getFullTime(), System.currentTimeMillis(), false));
-                                        market.removeGoods(mgs.getUID());
-                                        break;
-                                    }
-                                    case BUY: {
-                                        AuctionCancelledEvent event = new AuctionCancelledEvent((p != null ? p : Bukkit.getOfflinePlayer(owner)), mgs, CancelledReason.ADMIN_FORCE_CANCEL, ShopType.BUY);
-                                        Bukkit.getPluginManager().callEvent(event);
-                                        CurrencyManager.addMoney(Bukkit.getOfflinePlayer(owner), mgs.getReward());
-                                        market.removeGoods(uid);
-                                        break;
-                                    }
-                                    case SELL: {
-                                        AuctionCancelledEvent event = new AuctionCancelledEvent((p != null ? p : Bukkit.getOfflinePlayer(owner)), mgs, CancelledReason.ADMIN_FORCE_CANCEL, ShopType.SELL);
-                                        Bukkit.getPluginManager().callEvent(event);
-                                        Storage playerData = Storage.getPlayer(Bukkit.getOfflinePlayer(owner));
-                                        playerData.addItem(new ItemMail(playerData.makeUID(), Bukkit.getOfflinePlayer(owner), mgs.getItem(), mgs.getFullTime(), System.currentTimeMillis(), false));
-                                        market.removeGoods(mgs.getUID());
-                                        break;
-                                    }
-                                }
-                                MessageUtil.sendMessage(player, "Admin-Force-Cancelled");
-                                playClick(player);
-                                int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
-                                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), page);
-                                return;
-                            }
-                        }
-                        Runnable runnable = () -> inv.setItem(slot, item);
-                        if (mgs.getItemOwner().getUUID().equals(player.getUniqueId())) {
-                            String it = config.getString("Settings.GUISettings.OtherSettings.Your-Item.Item");
-                            String name = config.getString("Settings.GUISettings.OtherSettings.Your-Item.Name");
-                            ItemStack I;
-                            if (config.contains("Settings.GUISettings.OtherSettings.Your-Item.Lore")) {
-                                I = PluginControl.makeItem(it, 1, name, config.getStringList("Settings.GUISettings.OtherSettings.Your-Item.Lore"));
-                            } else {
-                                I = PluginControl.makeItem(it, 1, name);
-                            }
-                            inv.setItem(slot, I);
-                            playClick(player);
-                            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable, 3 * 20);
-                            return;
-                        }
-                        double cost = mgs.getPrice();
-                        if (mgs.getShopType().equals(ShopType.BUY)) {
-                            cost = mgs.getReward();
-                        }
-                        if (CurrencyManager.getMoney(player) < cost && !mgs.getShopType().equals(ShopType.BUY)) {
-                            String it = config.getString("Settings.GUISettings.OtherSettings.Cant-Afford.Item");
-                            String name = config.getString("Settings.GUISettings.OtherSettings.Cant-Afford.Name");
-                            ItemStack I;
-                            if (config.contains("Settings.GUISettings.OtherSettings.Cant-Afford.Lore")) {
-                                I = PluginControl.makeItem(it, 1, name, config.getStringList("Settings.GUISettings.OtherSettings.Cant-Afford.Lore"));
-                            } else {
-                                I = PluginControl.makeItem(it, 1, name);
-                            }
-                            inv.setItem(slot, I);
-                            playClick(player);
-                            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable, 3 * 20);
-                            return;
-                        } else if (mgs.getShopType().equals(ShopType.BUY) && PluginControl.hasNoMaterial(player, mgs.getItem())) {
-                            String it = config.getString("Settings.GUISettings.OtherSettings.Not-owned.Item");
-                            String name = config.getString("Settings.GUISettings.OtherSettings.Not-owned.Name");
-                            ItemStack I;
-                            if (config.contains("Settings.GUISettings.OtherSettings.Not-owned.Lore")) {
-                                I = PluginControl.makeItem(it, 1, name, config.getStringList("Settings.GUISettings.OtherSettings.Not-owned.Lore"));
-                            } else {
-                                I = PluginControl.makeItem(it, 1, name);
-                            }
-                            inv.setItem(slot, I);
-                            playClick(player);
-                            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable, 3 * 20);
-                            return;
-                        }
-                        switch (mgs.getShopType()) {
-                            case BID: {
-                                if (!mgs.getTopBidder().equalsIgnoreCase("None") && UUID.fromString(mgs.getTopBidder().split(":")[1]).equals(player.getUniqueId())) {
-                                    String it = config.getString("Settings.GUISettings.Auction-Settings.Top-Bidder.Item");
-                                    String name = config.getString("Settings.GUISettings.Auction-Settings.Top-Bidder.Name");
-                                    ItemStack I;
-                                    if (config.contains("Settings.GUISettings.Auction-Settings.Top-Bidder.Lore")) {
-                                        I = PluginControl.makeItem(it, 1, name, config.getStringList("Settings.GUISettings.Auction-Settings.Top-Bidder.Lore"));
-                                    } else {
-                                        I = PluginControl.makeItem(it, 1, name);
-                                    }
-                                    inv.setItem(slot, I);
-                                    playClick(player);
-                                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, runnable, 3 * 20);
-                                    return;
-                                }
-                                playClick(player);
-                                openBidding(player, mgs.getUID());
-                                biddingID.put(player.getUniqueId(), mgs.getUID());
-                                break;
-                            }
-                            case BUY: {
-                                playClick(player);
-                                openSelling(player, mgs.getUID());
-                                break;
-                            }
-                            case SELL: {
-                                playClick(player);
-                                openBuying(player, mgs.getUID());
-                                break;
-                            }
-                        }
-                        return;
+            if (itemFlag.equals("PreviousPage")) {
+                PluginControl.updateCacheData();
+                int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
+                if (page == 1) page++;
+                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), page - 1);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Refesh")) {
+                PluginControl.updateCacheData();
+                int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
+                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), page);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Shopping.Others")) {
+                openShop(player, ShopType.SELL, shopCategory.get(player.getUniqueId()), 1);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Shopping.Selling")) {
+                openShop(player, ShopType.BUY, shopCategory.get(player.getUniqueId()), 1);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Shopping.Buying")) {
+                openShop(player, ShopType.BID, shopCategory.get(player.getUniqueId()), 1);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Shopping.Bidding")) {
+                openShop(player, ShopType.ANY, shopCategory.get(player.getUniqueId()), 1);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Items-Mail")) {
+                openPlayersMail(player, 1);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Commoditys")) {
+                openPlayersCurrentList(player, 1);
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Category")) {
+                openCategories(player, shopType.get(player.getUniqueId()));
+                playClick(player);
+                return;
+            }
+            if (itemFlag.equals("Custom")) {
+                List<String> commands = config.getStringList("Settings.GUISettings.OtherSettings.Custom.Commands");
+                for (String line : PAPI.setPlaceholders(player, commands)) {
+                    String lower = line.toLowerCase();
+                    if (lower.startsWith("server:")) {
+                        String command = line.substring(7)
+                                .replace("%player%", player.getName())
+                                .replace("%player_uuid%", player.getUniqueId().toString());
+                        Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), command);
+                    } else if (lower.startsWith("player:")) {
+                        String command = line.substring(7)
+                                .replace("%player%", player.getName())
+                                .replace("%player_uuid%", player.getUniqueId().toString());
+                        player.performCommand(command);
+                    } else if (lower.startsWith("messages:")) {
+                        String message = line.substring(9);
+                        AdventureUtil.sendMessage(player, message);
+                    } else if (lower.startsWith("message:")) {
+                        String message = line.substring(8);
+                        AdventureUtil.sendMessage(player, message);
                     }
                 }
                 playClick(player);
-                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
-                MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
+                if (config.getBoolean("Settings.GUISettings.OtherSettings.Custom.Close")) {
+                    player.closeInventory();
+                }
+                return;
+            }
+            if (itemFlag.equals("Your-Item") || itemFlag.equals("Cant-Afford") || itemFlag.equals("Top-Bidder") || itemFlag.equals("Not-owned")) {
+                return;
+            }
+        }
+        Map<Integer, MenuIcon> map = itemUID.get(player.getUniqueId());
+        MenuIcon icon = map == null ? null : map.get(slot);
+        if (icon != null) {
+            long uid = icon.uid;
+            MarketGoods mgs = null;
+            for (MarketGoods goods : market.getItems()) {
+                if (goods.getUID() == uid) {
+                    mgs = goods;
+                    break;
+                }
+            }
+            if (mgs != null) {
+                if (PluginControl.hasMarketPermission(player, "Cancelled-Item")) {
+                    if (e.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+                        UUID owner = mgs.getItemOwner().getUUID();
+                        Player p = Bukkit.getPlayer(owner);
+                        if (p != null) {
+                            MessageUtil.sendMessage(p, "Admin-Force-Cancelled-To-Player");
+                        }
+                        switch (mgs.getShopType()) {
+                            case BID: {
+                                AuctionCancelledEvent event = new AuctionCancelledEvent((p != null ? p : Bukkit.getOfflinePlayer(owner)), mgs, CancelledReason.ADMIN_FORCE_CANCEL, ShopType.BID);
+                                Bukkit.getPluginManager().callEvent(event);
+                                Storage playerData = Storage.getPlayer(Bukkit.getOfflinePlayer(owner));
+                                if (mgs.getTopBidder() != null && !mgs.getTopBidder().equalsIgnoreCase("None")) {
+                                    OfflinePlayer op = Bukkit.getOfflinePlayer(UUID.fromString(mgs.getTopBidder().split(":")[1]));
+                                    if (op != null) {
+                                        CurrencyManager.addMoney(op, mgs.getPrice());
+                                    }
+                                }
+                                playerData.addItem(new ItemMail(playerData.makeUID(), Bukkit.getOfflinePlayer(owner), mgs.getItem(), mgs.getFullTime(), System.currentTimeMillis(), false));
+                                market.removeGoods(mgs.getUID());
+                                break;
+                            }
+                            case BUY: {
+                                AuctionCancelledEvent event = new AuctionCancelledEvent((p != null ? p : Bukkit.getOfflinePlayer(owner)), mgs, CancelledReason.ADMIN_FORCE_CANCEL, ShopType.BUY);
+                                Bukkit.getPluginManager().callEvent(event);
+                                CurrencyManager.addMoney(Bukkit.getOfflinePlayer(owner), mgs.getReward());
+                                market.removeGoods(uid);
+                                break;
+                            }
+                            case SELL: {
+                                AuctionCancelledEvent event = new AuctionCancelledEvent((p != null ? p : Bukkit.getOfflinePlayer(owner)), mgs, CancelledReason.ADMIN_FORCE_CANCEL, ShopType.SELL);
+                                Bukkit.getPluginManager().callEvent(event);
+                                Storage playerData = Storage.getPlayer(Bukkit.getOfflinePlayer(owner));
+                                playerData.addItem(new ItemMail(playerData.makeUID(), Bukkit.getOfflinePlayer(owner), mgs.getItem(), mgs.getFullTime(), System.currentTimeMillis(), false));
+                                market.removeGoods(mgs.getUID());
+                                break;
+                            }
+                        }
+                        MessageUtil.sendMessage(player, "Admin-Force-Cancelled");
+                        playClick(player);
+                        int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
+                        openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), page);
+                        return;
+                    }
+                }
+                Runnable restoreItem = () -> inv.setItem(slot, item);
+                if (mgs.getItemOwner().getUUID().equals(player.getUniqueId())) {
+                    inv.setItem(slot, makeStandardIcon(config, "Settings.GUISettings.OtherSettings.Your-Item", "Your-Item"));
+                    playClick(player);
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, restoreItem, 3 * 20);
+                    return;
+                }
+                double cost = mgs.getPrice();
+                if (mgs.getShopType().equals(ShopType.BUY)) {
+                    cost = mgs.getReward();
+                }
+                if (CurrencyManager.getMoney(player) < cost && !mgs.getShopType().equals(ShopType.BUY)) {
+                    inv.setItem(slot, makeStandardIcon(config, "Settings.GUISettings.OtherSettings.Cant-Afford", "Cant-Afford"));
+                    playClick(player);
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, restoreItem, 3 * 20);
+                    return;
+                } else if (mgs.getShopType().equals(ShopType.BUY) && PluginControl.hasNoMaterial(player, mgs.getItem())) {
+                    inv.setItem(slot, makeStandardIcon(config, "Settings.GUISettings.OtherSettings.Not-owned", "Not-owned"));
+                    playClick(player);
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, restoreItem, 3 * 20);
+                    return;
+                }
+                switch (mgs.getShopType()) {
+                    case BID: {
+                        if (!mgs.getTopBidder().equalsIgnoreCase("None") && UUID.fromString(mgs.getTopBidder().split(":")[1]).equals(player.getUniqueId())) {
+                            inv.setItem(slot, makeStandardIcon(config, "Settings.GUISettings.Auction-Settings.Top-Bidder", "Top-Bidder"));
+                            playClick(player);
+                            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, restoreItem, 3 * 20);
+                            return;
+                        }
+                        playClick(player);
+                        openBidding(player, mgs.getUID());
+                        biddingID.put(player.getUniqueId(), mgs.getUID());
+                        break;
+                    }
+                    case BUY: {
+                        playClick(player);
+                        openSelling(player, mgs.getUID());
+                        break;
+                    }
+                    case SELL: {
+                        playClick(player);
+                        openBuying(player, mgs.getUID());
+                        break;
+                    }
+                }
                 return;
             }
             playClick(player);
+            openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+            MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
             return;
         }
+        playClick(player);
+        return;
     }
 
     private void clickBuyingItem(
@@ -562,62 +523,60 @@ public class GUIAction
             int slot, ItemStack item,
             InventoryClickEvent e
     ) {
-        ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : null;
-        if (meta != null) {
-            if (meta.hasDisplayName()) {
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Confirm.Name")))) {
-                    long uid = IDs.get(player.getUniqueId());
-                    MarketGoods mg = market.getMarketGoods(uid);
-                    if (mg == null) {
-                        playClick(player);
-                        openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
-                        MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
-                        return;
-                    }
-                    if (PluginControl.isInvFull(player)) {
-                        playClick(player);
-                        player.closeInventory();
-                        MessageUtil.sendMessage(player, "Inventory-Full");
-                        return;
-                    }
-                    if (CurrencyManager.getMoney(player) < mg.getPrice()) {
-                        playClick(player);
-                        player.closeInventory();
-                        HashMap<String, String> placeholders = new HashMap<>();
-                        placeholders.put("%Money_Needed%", String.valueOf(mg.getPrice() - CurrencyManager.getMoney(player)));
-                        placeholders.put("%money_needed%", String.valueOf(mg.getPrice() - CurrencyManager.getMoney(player)));
-                        MessageUtil.sendMessage(player, "Need-More-Money", placeholders);
-                        return;
-                    }
-                    UUID owner = mg.getItemOwner().getUUID();
-                    Bukkit.getPluginManager().callEvent(new AuctionBuyEvent(player, mg, mg.getPrice()));
-                    CurrencyManager.removeMoney(player, mg.getPrice());
-                    CurrencyManager.addMoney(PluginControl.getOfflinePlayer(owner), mg.getPrice());
-                    Map<String, String> placeholders = new HashMap<>();
-                    placeholders.put("%Price%", String.valueOf(mg.getPrice()));
-                    placeholders.put("%price%", String.valueOf(mg.getPrice()));
-                    placeholders.put("%Player%", player.getName());
-                    placeholders.put("%player%", player.getName());
-                    MessageUtil.sendMessage(player, "Bought-Item", placeholders);
-                    if (PluginControl.isOnline(owner) && PluginControl.getPlayer(owner) != null) {
-                        Player p = PluginControl.getPlayer(owner);
-                        MessageUtil.sendMessage(p, "Player-Bought-Item", placeholders);
-                    }
-                    if (player.getInventory().firstEmpty() != -1) {
-                        player.getInventory().addItem(mg.getItem());
-                    } else {
-                        player.getWorld().dropItem(player.getLocation(), mg.getItem());
-                    }
-                    market.removeGoods(uid);
+        String itemFlag = getFlag(item);
+        if (itemFlag != null) {
+            if (itemFlag.equals("Confirm")) {
+                long uid = IDs.get(player.getUniqueId());
+                MarketGoods mg = market.getMarketGoods(uid);
+                if (mg == null) {
                     playClick(player);
                     openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                    MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
                     return;
                 }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Cancel.Name")))) {
-                    openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                if (PluginControl.isInvFull(player)) {
                     playClick(player);
+                    player.closeInventory();
+                    MessageUtil.sendMessage(player, "Inventory-Full");
                     return;
                 }
+                if (CurrencyManager.getMoney(player) < mg.getPrice()) {
+                    playClick(player);
+                    player.closeInventory();
+                    HashMap<String, String> placeholders = new HashMap<>();
+                    placeholders.put("%Money_Needed%", String.valueOf(mg.getPrice() - CurrencyManager.getMoney(player)));
+                    placeholders.put("%money_needed%", String.valueOf(mg.getPrice() - CurrencyManager.getMoney(player)));
+                    MessageUtil.sendMessage(player, "Need-More-Money", placeholders);
+                    return;
+                }
+                UUID owner = mg.getItemOwner().getUUID();
+                Bukkit.getPluginManager().callEvent(new AuctionBuyEvent(player, mg, mg.getPrice()));
+                CurrencyManager.removeMoney(player, mg.getPrice());
+                CurrencyManager.addMoney(PluginControl.getOfflinePlayer(owner), mg.getPrice());
+                Map<String, String> placeholders = new HashMap<>();
+                placeholders.put("%Price%", String.valueOf(mg.getPrice()));
+                placeholders.put("%price%", String.valueOf(mg.getPrice()));
+                placeholders.put("%Player%", player.getName());
+                placeholders.put("%player%", player.getName());
+                MessageUtil.sendMessage(player, "Bought-Item", placeholders);
+                if (PluginControl.isOnline(owner) && PluginControl.getPlayer(owner) != null) {
+                    Player p = PluginControl.getPlayer(owner);
+                    MessageUtil.sendMessage(p, "Player-Bought-Item", placeholders);
+                }
+                if (player.getInventory().firstEmpty() != -1) {
+                    player.getInventory().addItem(mg.getItem());
+                } else {
+                    player.getWorld().dropItem(player.getLocation(), mg.getItem());
+                }
+                market.removeGoods(uid);
+                playClick(player);
+                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                return;
+            }
+            if (itemFlag.equals("Cancel")) {
+                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                playClick(player);
+                return;
             }
         }
     }
@@ -630,52 +589,50 @@ public class GUIAction
             int slot, ItemStack item,
             InventoryClickEvent e
     ) {
-        ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : null;
-        if (meta != null) {
-            if (meta.hasDisplayName()) {
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Confirm.Name")))) {
-                    long uid = IDs.get(player.getUniqueId());
-                    MarketGoods mg = market.getMarketGoods(uid);
-                    if (mg == null) {
-                        playClick(player);
-                        openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
-                        MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
-                        return;
-                    }
-                    ItemStack i = mg.getItem();
-                    if (PluginControl.hasNoMaterial(player, i)) {
-                        playClick(player);
-                        MessageUtil.sendMessage(player, "Item-Not-Found");
-                        return;
-                    }
-                    UUID owner = mg.getItemOwner().getUUID();
-                    Bukkit.getPluginManager().callEvent(new AuctionSellEvent(player, mg, mg.getReward()));
-                    HashMap<String, String> placeholders = new HashMap<>();
-                    placeholders.put("%reward%", String.valueOf(mg.getReward()));
-                    placeholders.put("%Player%", player.getName());
-                    placeholders.put("%player%", player.getName());
-                    if (!PluginControl.takeMaterial(player, i)) {
-                        MessageUtil.sendMessage(player, "Item-Not-Found");
-                        return;
-                    }
-                    CurrencyManager.addMoney(player, mg.getReward());
-                    Storage playerData = Storage.getPlayer(Bukkit.getOfflinePlayer(owner));
-                    playerData.addItem(new ItemMail(playerData.makeUID(), Bukkit.getOfflinePlayer(owner), mg.getItem(), PluginControl.convertToMill(FileManager.Files.CONFIG.getFile().getString("Settings.Full-Expire-Time")), System.currentTimeMillis(), true));
-                    market.removeGoods(uid);
-                    MessageUtil.sendMessage(player, "Sell-Item", placeholders);
-                    if (PluginControl.isOnline(owner) && PluginControl.getPlayer(owner) != null) {
-                        Player p = PluginControl.getPlayer(owner);
-                        MessageUtil.sendMessage(p, "Player-Sell-Item", placeholders);
-                    }
+        String itemFlag = getFlag(item);
+        if (itemFlag != null) {
+            if (itemFlag.equals("Confirm")) {
+                long uid = IDs.get(player.getUniqueId());
+                MarketGoods mg = market.getMarketGoods(uid);
+                if (mg == null) {
                     playClick(player);
                     openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                    MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
                     return;
                 }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Cancel.Name")))) {
-                    openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                ItemStack i = mg.getItem();
+                if (PluginControl.hasNoMaterial(player, i)) {
                     playClick(player);
+                    MessageUtil.sendMessage(player, "Item-Not-Found");
                     return;
                 }
+                UUID owner = mg.getItemOwner().getUUID();
+                Bukkit.getPluginManager().callEvent(new AuctionSellEvent(player, mg, mg.getReward()));
+                HashMap<String, String> placeholders = new HashMap<>();
+                placeholders.put("%reward%", String.valueOf(mg.getReward()));
+                placeholders.put("%Player%", player.getName());
+                placeholders.put("%player%", player.getName());
+                if (!PluginControl.takeMaterial(player, i)) {
+                    MessageUtil.sendMessage(player, "Item-Not-Found");
+                    return;
+                }
+                CurrencyManager.addMoney(player, mg.getReward());
+                Storage playerData = Storage.getPlayer(Bukkit.getOfflinePlayer(owner));
+                playerData.addItem(new ItemMail(playerData.makeUID(), Bukkit.getOfflinePlayer(owner), mg.getItem(), PluginControl.convertToMill(FileManager.Files.CONFIG.getFile().getString("Settings.Full-Expire-Time")), System.currentTimeMillis(), true));
+                market.removeGoods(uid);
+                MessageUtil.sendMessage(player, "Sell-Item", placeholders);
+                if (PluginControl.isOnline(owner) && PluginControl.getPlayer(owner) != null) {
+                    Player p = PluginControl.getPlayer(owner);
+                    MessageUtil.sendMessage(p, "Player-Sell-Item", placeholders);
+                }
+                playClick(player);
+                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                return;
+            }
+            if (itemFlag.equals("Cancel")) {
+                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                playClick(player);
+                return;
             }
         }
     }
@@ -687,15 +644,14 @@ public class GUIAction
             int slot, ItemStack item,
             InventoryClickEvent e
     ) {
-        ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : null;
-        if (meta != null) {
-            if (meta.hasDisplayName()) {
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Player-Items-List-Back.Name")))) {
-                    openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
-                    playClick(player);
-                    return;
-                }
+        String itemFlag = getFlag(item);
+        if (itemFlag != null) {
+            if (itemFlag.equals("Player-Items-List-Back")) {
+                openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+                playClick(player);
+                return;
             }
+
             Map<Integer, MenuIcon> map = itemUID.get(player.getUniqueId());
             MenuIcon icon = map == null ? null : map.get(slot);
             if (icon != null) {
@@ -789,70 +745,68 @@ public class GUIAction
             InventoryClickEvent e
     ) {
         Storage playerData = Storage.getPlayer(openingMail.get(player.getUniqueId()));
-        ItemMeta meta = item.hasItemMeta() ? item.getItemMeta() : null;
-        if (meta != null) {
-            if (meta.hasDisplayName()) {
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Player-Items-Mail-Back.Name")))) {
-                    PluginControl.updateCacheData();
-                    playClick(player);
-                    openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.PreviousPage.Name")))) {
-                    PluginControl.updateCacheData();
-                    int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
-                    if (page == 1) page++;
-                    playClick(player);
-                    openPlayersMail(player, (page - 1));
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.Return.Name")))) {
-                    PluginControl.updateCacheData();
-                    int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
-                    for (ItemMail im : playerData.getMailBox()) {
-                        if (PluginControl.isInvFull(player)) {
-                            MessageUtil.sendMessage(player, "Inventory-Full");
-                            playerData.saveData();
-                            return;
-                        }
-                        im.giveItem();
-                    }
-                    playerData.clearMailBox();
-                    MessageUtil.sendMessage(player, "Got-All-Item-Back");
-                    playClick(player);
-                    openPlayersMail(player, page);
-                    return;
-                }
-                if (meta.getDisplayName().equals(PluginControl.color(config.getString("Settings.GUISettings.OtherSettings.NextPage.Name")))) {
-                    PluginControl.updateCacheData();
-                    int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
-                    playClick(player);
-                    openPlayersMail(player, (page + 1));
-                    return;
-                }
-            }
-            Map<Integer, MenuIcon> map = mailUID.get(player.getUniqueId());
-            MenuIcon icon = map == null ? null : map.get(slot);
-            if (icon != null) {
-                long uid = icon.uid;
-                for (ItemMail im : playerData.getMailBox()) {
-                    if (uid == im.getUID()) {
-                        if (!PluginControl.isInvFull(player)) {
-                            MessageUtil.sendMessage(player, "Got-Item-Back");
-                            im.giveItem();
-                            playerData.saveData();
-                            playClick(player);
-                            openPlayersMail(player, 1);
-                        } else {
-                            MessageUtil.sendMessage(player, "Inventory-Full");
-                        }
-                        return;
-                    }
-                }
+        String itemFlag = getFlag(item);
+        if (itemFlag != null) {
+            if (itemFlag.equals("Player-Items-Mail-Back")) {
+                PluginControl.updateCacheData();
                 playClick(player);
                 openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
-                MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
+                return;
             }
+            if (itemFlag.equals("PreviousPage")) {
+                PluginControl.updateCacheData();
+                int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
+                if (page == 1) page++;
+                playClick(player);
+                openPlayersMail(player, (page - 1));
+                return;
+            }
+            if (itemFlag.equals("NextPage")) {
+                PluginControl.updateCacheData();
+                int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
+                playClick(player);
+                openPlayersMail(player, (page + 1));
+                return;
+            }
+            if (itemFlag.equals("Return")) {
+                PluginControl.updateCacheData();
+                int page = Integer.parseInt(e.getView().getTitle().split("#")[1]);
+                for (ItemMail im : playerData.getMailBox()) {
+                    if (PluginControl.isInvFull(player)) {
+                        MessageUtil.sendMessage(player, "Inventory-Full");
+                        playerData.saveData();
+                        return;
+                    }
+                    im.giveItem();
+                }
+                playerData.clearMailBox();
+                MessageUtil.sendMessage(player, "Got-All-Item-Back");
+                playClick(player);
+                openPlayersMail(player, page);
+                return;
+            }
+        }
+        Map<Integer, MenuIcon> map = mailUID.get(player.getUniqueId());
+        MenuIcon icon = map == null ? null : map.get(slot);
+        if (icon != null) {
+            long uid = icon.uid;
+            for (ItemMail im : playerData.getMailBox()) {
+                if (uid == im.getUID()) {
+                    if (!PluginControl.isInvFull(player)) {
+                        MessageUtil.sendMessage(player, "Got-Item-Back");
+                        im.giveItem();
+                        playerData.saveData();
+                        playClick(player);
+                        openPlayersMail(player, 1);
+                    } else {
+                        MessageUtil.sendMessage(player, "Inventory-Full");
+                    }
+                    return;
+                }
+            }
+            playClick(player);
+            openShop(player, shopType.get(player.getUniqueId()), shopCategory.get(player.getUniqueId()), 1);
+            MessageUtil.sendMessage(player, "Item-Doesnt-Exist");
         }
     }
 

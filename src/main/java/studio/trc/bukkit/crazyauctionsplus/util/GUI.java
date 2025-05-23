@@ -7,8 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
+import de.tr7zw.changeme.nbtapi.NBT;
+import de.tr7zw.changeme.nbtapi.NBTType;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -16,7 +20,9 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import studio.trc.bukkit.crazyauctionsplus.database.GlobalMarket;
 import studio.trc.bukkit.crazyauctionsplus.database.Storage;
 import studio.trc.bukkit.crazyauctionsplus.event.GUIAction;
@@ -74,6 +80,69 @@ public class GUI
      * Record the type of GUI window opened by the player.
      */
     public final static Map<UUID, GUIType> openingGUI = new HashMap<>();
+    public static final String ICON_KEY = "CrazyAuctionsPlus_ICON";
+
+    @Nullable
+    @Contract("null -> null")
+    public static String getFlag(ItemStack item) {
+        if (item == null || item.getType().equals(Material.AIR)) return null;
+        return NBT.get(item, nbt -> {
+            if (nbt.hasTag(ICON_KEY, NBTType.NBTTagString)) {
+                return nbt.getString(ICON_KEY);
+            }
+            return null;
+        });
+    }
+
+    public static void putFlag(ItemStack item, @Nullable String value) {
+        if (item == null || item.getType().equals(Material.AIR)) return;
+        NBT.modify(item, nbt -> {
+            if (value == null) {
+                if (nbt.hasTag(ICON_KEY))
+                    nbt.removeKey(ICON_KEY);
+            } else {
+                nbt.setString(ICON_KEY, value);
+            }
+        });
+    }
+
+    public static ItemStack makeStandardIcon(ProtectedConfiguration config, String prefix, String flag) {
+        return makeStandardIcon(config, prefix, flag, null);
+    }
+    public static ItemStack makeStandardIcon(ProtectedConfiguration config, String prefix, String flag, Function<List<String>, List<String>> loreModifier) {
+        String id = config.getString(prefix + ".Item");
+        String customModelKey = prefix + ".CustomModelData";
+        Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
+        String name = config.getString(prefix + ".Name");
+        List<String> lore;
+        if (config.contains(prefix + ".Lore")) {
+            lore = loreModifier.apply(config.getStringList(prefix + ".Lore"));
+        } else {
+            lore = null;
+        }
+        ItemStack item = lore == null
+                ? PluginControl.makeItem(id, 1, name)
+                : PluginControl.makeItem(id, 1, name, lore);
+        putFlag(item, flag);
+        if (customModel != null) {
+            AdventureItemStack.setCustomModelData(item, customModel);
+        }
+        return item;
+    }
+
+    public static void addStandardIcon(ProtectedConfiguration config, Inventory inv, String prefix, String flag) {
+        addStandardIcon(config, inv, prefix, flag, null);
+    }
+    public static void addStandardIcon(ProtectedConfiguration config, Inventory inv, String prefix, String flag, Function<List<String>, List<String>> loreModifier) {
+        ItemStack item = makeStandardIcon(config, prefix, flag, loreModifier);
+        List<Integer> slots = config.getConfig().getIntegerList(prefix + ".Slots");
+        if (config.contains(prefix + ".Slot")) {
+            slots.add(config.getInt(prefix + ".Slot"));
+        }
+        for (int slot : slots) {
+            inv.setItem(slot - 1, item);
+        }
+    }
 
     public static List<Integer> getInvIndexes(ProtectedConfiguration section, String key) {
         List<Integer> list = new ArrayList<>();
@@ -306,27 +375,16 @@ public class GUI
                     continue;
                 }
             }
-            String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
-            String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
-            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
-            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
-            List<String> lore = new ArrayList<>();
-            int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
-            if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                for (String l : config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                    Category category = shopCategory.get(player.getUniqueId());
+            addStandardIcon(config, inv, "Settings.GUISettings.OtherSettings." + o, o, oldLore -> {
+                Category category = shopCategory.get(player.getUniqueId());
+                List<String> lore = new ArrayList<>();
+                for (String l : oldLore) {
                     lore.add(l.replace("%category%", category.getDisplayName() != null
                             ? category.getDisplayName()
                             : category.getName()));
                 }
-            }
-            ItemStack item = lore.isEmpty()
-                    ? PluginControl.makeItem(id, 1, name)
-                    : PluginControl.makeItem(id, 1, name, lore);
-            if (customModel != null) {
-                AdventureItemStack.setCustomModelData(item, customModel);
-            }
-            inv.setItem(slot - 1, item);
+                return lore;
+            });
         }
         List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Content-Slots");
         itemUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
@@ -363,24 +421,7 @@ public class GUI
                     continue;
                 }
             }
-            String id = config.getString("Settings.GUISettings." + o + ".Item");
-            String customModelKey = "Settings.GUISettings." + o + ".CustomModelData";
-            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
-            String name = config.getString("Settings.GUISettings." + o + ".Name");
-            int slot = config.getInt("Settings.GUISettings." + o + ".Slot");
-            List<String> lore;
-            if (config.contains("Settings.GUISettings." + o + ".Lore")) {
-                lore = config.getStringList("Settings.GUISettings." + o + ".Lore");
-            } else {
-                lore = null;
-            }
-            ItemStack item = lore == null
-                    ? PluginControl.makeItem(id, 1, name)
-                    : PluginControl.makeItem(id, 1, name, lore);
-            if (customModel != null) {
-                AdventureItemStack.setCustomModelData(item, customModel);
-            }
-            inv.setItem(slot - 1, item);
+            addStandardIcon(config, inv, "Settings.GUISettings." + o, o);
         }
         shopType.put(player.getUniqueId(), shop);
         player.openInventory(inv);
@@ -407,24 +448,7 @@ public class GUI
                     continue;
                 }
             }
-            String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
-            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
-            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
-            String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
-            int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
-            List<String> lore;
-            if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
-            } else {
-                lore = null;
-            }
-            ItemStack item = lore == null
-                    ? PluginControl.makeItem(id, 1, name)
-                    : PluginControl.makeItem(id, 1, name, lore);
-            if (customModel != null) {
-                AdventureItemStack.setCustomModelData(item, customModel);
-            }
-            inv.setItem(slot - 1, item);
+            addStandardIcon(config, inv, "Settings.GUISettings.OtherSettings." + o, o);
         }
         for (MarketGoods mg : market.getItems()) {
             if (mg.getItemOwner().getUUID().equals(player.getUniqueId())) {
@@ -499,24 +523,7 @@ public class GUI
                     continue;
                 }
             }
-            String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
-            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
-            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
-            String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
-            int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
-            List<String> lore;
-            if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
-            } else {
-                lore = null;
-            }
-            ItemStack item = lore == null
-                    ? PluginControl.makeItem(id, 1, name)
-                    : PluginControl.makeItem(id, 1, name, lore);
-            if (customModel != null) {
-                AdventureItemStack.setCustomModelData(item, customModel);
-            }
-            inv.setItem(slot - 1, item);
+            addStandardIcon(config, inv, "Settings.GUISettings.OtherSettings." + o, o);
         }
         List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Mail-Slots");
         mailUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
@@ -560,24 +567,7 @@ public class GUI
                     continue;
                 }
             }
-            String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
-            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
-            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
-            String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
-            int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
-            List<String> lore;
-            if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
-            } else {
-                lore = null;
-            }
-            ItemStack item = lore == null
-                    ? PluginControl.makeItem(id, 1, name)
-                    : PluginControl.makeItem(id, 1, name, lore);
-            if (customModel != null) {
-                AdventureItemStack.setCustomModelData(item, customModel);
-            }
-            inv.setItem(slot - 1, item);
+            addStandardIcon(config, inv, "Settings.GUISettings.OtherSettings." + o, o);
         }
         List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Mail-Slots");
         mailUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
@@ -727,14 +717,17 @@ public class GUI
         if (!bidding.containsKey(player.getUniqueId())) bidding.put(player.getUniqueId(), 0);
         ConfigurationSection section = config.getConfig().getConfigurationSection("Settings.GUISettings.Auction-Settings.Bidding-Buttons");
         if (section != null) for (String price : section.getKeys(false)) {
-            int slot = config.getConfig().getInt("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Slot");
-            String item = config.getConfig().getString("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Item", "PAPER");
-            String name = config.getConfig().getString("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Name");
-            inv.setItem(slot, PluginControl.makeItem(item, 1, name));
+            List<Integer> slots = config.getConfig().getIntegerList("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Slots");
+            if (config.contains("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Slot")) {
+                slots.add(config.getInt("Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price + ".Slot"));
+            }
+            ItemStack item = makeStandardIcon(config, "Settings.GUISettings.Auction-Settings.Bidding-Buttons." + price, "Bidding-Buttons." + price);
+            for (int slot : slots) {
+                inv.setItem(slot, item);
+            }
         }
         inv.setItem(13, getBiddingGlass(player, uid));
-        inv.setItem(22, PluginControl.makeItem(config.getString("Settings.GUISettings.Auction-Settings.Bid.Item"), 1, config.getString("Settings.GUISettings.Auction-Settings.Bid.Name"), config.getStringList("Settings.GUISettings.Auction-Settings.Bid.Lore")));
-        
+        inv.setItem(22, makeStandardIcon(config, "Settings.GUISettings.Auction-Settings.Bid", "Bidding-Buttons.Bid"));
         inv.setItem(4, getBiddingItem(player, uid));
         player.openInventory(inv);
 
@@ -810,24 +803,7 @@ public class GUI
                     continue;
                 }
             }
-            String id = config.getString("Settings.GUISettings.OtherSettings." + o + ".Item");
-            String customModelKey = "Settings.GUISettings.OtherSettings." + o + ".CustomModelData";
-            Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
-            String name = config.getString("Settings.GUISettings.OtherSettings." + o + ".Name");
-            int slot = config.getInt("Settings.GUISettings.OtherSettings." + o + ".Slot");
-            List<String> lore;
-            if (config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-                lore = config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore");
-            } else {
-                lore = null;
-            }
-            ItemStack item = lore == null
-                    ? PluginControl.makeItem(id, 1, name)
-                    : PluginControl.makeItem(id, 1, name, lore);
-            if (customModel != null) {
-                AdventureItemStack.setCustomModelData(item, customModel);
-            }
-            inv.setItem(slot - 1, item);
+            addStandardIcon(config, inv, "Settings.GUISettings.OtherSettings." + o, o);
         }
         List<Integer> indexes = getInvIndexes(config, "Settings.GUISettings.OtherSettings.Content-Slots");
         itemUID.put(player.getUniqueId(), getPage(inv, items, indexes, page));
@@ -836,37 +812,42 @@ public class GUI
     }
     
     public static ItemStack getBiddingGlass(Player player, long uid) {
+        // 这个图标不需要处理点击操作
         FileManager.ProtectedConfiguration config = FileManager.Files.CONFIG.getFile();
-        String id = config.getString("Settings.GUISettings.Auction-Settings.Bidding.Item");
-        String name = config.getString("Settings.GUISettings.Auction-Settings.Bidding.Name");
         MarketGoods mg = GlobalMarket.getMarket().getMarketGoods(uid);
-        ItemStack item;
+
         int bid = bidding.get(player.getUniqueId());
-        if (config.contains("Settings.GUISettings.Auction-Settings.Bidding.Lore")) {
+        String price = String.valueOf(mg.getPrice());
+
+        return makeStandardIcon(config, "Settings.GUISettings.Auction-Settings.Bidding", null, oldLore -> {
             List<String> lore = new ArrayList<>();
-            for (String l : config.getStringList("Settings.GUISettings.Auction-Settings.Bidding.Lore")) {
-                String price = String.valueOf(mg.getPrice());
+            for (String l : oldLore) {
                 lore.add(l.replace("%bid%", String.valueOf(bid))
                         .replace("%topbid%", price));
             }
-            item = PluginControl.makeItem(id, 1, name, lore);
-        } else {
-            item = PluginControl.makeItem(id, 1, name);
-        }
-        return item;
+            return lore;
+        });
     }
     
     public static ItemStack getBiddingItem(Player player, long uid) {
+        // 这个图标不需要处理点击操作
         GlobalMarket market = GlobalMarket.getMarket();
         MarketGoods mg = market.getMarketGoods(uid);
-        String owner = mg.getItemOwner().getName(); 
-        String topbidder = mg.getTopBidder().split(":")[0];
+
+        String price = String.valueOf(mg.getPrice());
+        String owner = mg.getItemOwner().getName();
+        String topBidder = mg.getTopBidder().split(":")[0];
+        String addedTime = new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()));
+        String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
+
         ItemStack item = mg.getItem();
         List<String> lore = new ArrayList<>();
-        String price = String.valueOf(mg.getPrice());
-        String time = PluginControl.convertToTime(mg.getTimeTillExpire(), false);
         for (String l : MessageUtil.getValueList("BiddingItemLore")) {
-            lore.add(l.replace("%topbid%", price).replace("%owner%", owner).replace("%topbidder%", topbidder).replace("%addedtime%", new SimpleDateFormat(MessageUtil.getValue("Date-Format")).format(new Date(mg.getAddedTime()))).replace("%time%", time));
+            lore.add(l.replace("%topbid%", price)
+                    .replace("%owner%", owner)
+                    .replace("%topbidder%", topBidder)
+                    .replace("%addedtime%", addedTime)
+                    .replace("%time%", time));
         }
         return PluginControl.addLore(item.clone(), lore);
     }
