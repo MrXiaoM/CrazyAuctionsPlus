@@ -106,17 +106,20 @@ public class GUI
         });
     }
 
+    @NotNull
     public static ItemStack makeStandardIcon(ProtectedConfiguration config, String prefix, String flag) {
         return makeStandardIcon(config, prefix, flag, null);
     }
-    public static ItemStack makeStandardIcon(ProtectedConfiguration config, String prefix, String flag, Function<List<String>, List<String>> loreModifier) {
+    @NotNull
+    public static ItemStack makeStandardIcon(ProtectedConfiguration config, String prefix, String flag, @Nullable Function<List<String>, List<String>> loreModifier) {
         String id = config.getString(prefix + ".Item");
         String customModelKey = prefix + ".CustomModelData";
         Integer customModel = config.contains(customModelKey) ? config.getInt(customModelKey) : null;
         String name = config.getString(prefix + ".Name");
         List<String> lore;
         if (config.contains(prefix + ".Lore")) {
-            lore = loreModifier.apply(config.getStringList(prefix + ".Lore"));
+            List<String> list = config.getStringList(prefix + ".Lore");
+            lore = loreModifier == null ? list : loreModifier.apply(list);
         } else {
             lore = null;
         }
@@ -133,7 +136,7 @@ public class GUI
     public static void addStandardIcon(ProtectedConfiguration config, Inventory inv, String prefix, String flag) {
         addStandardIcon(config, inv, prefix, flag, null);
     }
-    public static void addStandardIcon(ProtectedConfiguration config, Inventory inv, String prefix, String flag, Function<List<String>, List<String>> loreModifier) {
+    public static void addStandardIcon(ProtectedConfiguration config, Inventory inv, String prefix, String flag, @Nullable Function<List<String>, List<String>> loreModifier) {
         ItemStack item = makeStandardIcon(config, prefix, flag, loreModifier);
         List<Integer> slots = config.getConfig().getIntegerList(prefix + ".Slots");
         if (config.contains(prefix + ".Slot")) {
